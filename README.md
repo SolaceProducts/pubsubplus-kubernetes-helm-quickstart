@@ -24,7 +24,7 @@ This is a 5 step process:
 
 1. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
 
-- Download and execute the clustre create and deployment script in the google cloud shell.  Replace ??? with the release tag of the image in the container registry.
+- Download and execute the cluster create and deployment script on command line.  Replace ??? with the release tag of the image in the container registry.
 
 ```Shell
 PASSWORD=<YourAdminPassword>
@@ -35,7 +35,7 @@ chmod 755 start_vmr.sh
 ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
 ```
 
-- Now you can validate you deployment, in the google cloud shell:
+- Now you can validate you deployment on command line:
 
 ```sh
 prompt:~$ kubectl get deployment,svc,pods,pvc
