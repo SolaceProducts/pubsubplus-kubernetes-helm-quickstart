@@ -16,13 +16,17 @@ This is a 5 step process:
 
 1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install miniKube, etc.
 
-1. Register and recieve an link to Solace VMR Docker Image.
+2. Go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Do a right click "Copy Hyperlink" on the "Download the VMR Community Edition for Docker" hyperlink.  This link is of the form "http<nolink>://em.solace.com ?" will be needed in the following section.
 
-1. Load the Solace VMR image into a Docker registry.
+<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
+    <img src="https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/register.png"/>
+</a>
 
-1. Create a Kubernetes Cluster
+3. Load the Solace VMR image into a Docker registry.
 
-1. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
+4. Create a Kubernetes Cluster
+
+5. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
 
 - Download and execute the cluster create and deployment script on command line.  Replace ??? with the release tag of the image in the container registry.
 
