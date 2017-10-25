@@ -37,7 +37,7 @@ chmod 755 start_vmr.sh
 
 - Now you can validate you deployment, in the google cloud shell:
 
-```Shell
+```sh
 prompt:~$ kubectl get deployment,svc,pods,pvc
 
 NAME            DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
@@ -101,6 +101,6 @@ This project is licensed under the Apache License, Version 2.0. - See the [LICEN
 
 For more information about Solace technology in general please visit these resources:
 
-* The Solace Developer Portal website at: http://dev.solace.com
-* Understanding [Solace technology.](http://dev.solace.com/tech/)
-* Ask the [Solace community](http://dev.solace.com/community/).
+- The Solace Developer Portal website at: http://dev.solace.com
+- Understanding [Solace technology.](http://dev.solace.com/tech/)
+- Ask the [Solace community](http://dev.solace.com/community/).

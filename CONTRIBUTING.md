@@ -9,9 +9,9 @@ We'd love for you to contribute and welcome your help. Here are some guidelines 
 
 ## <a name="issue"></a> Did you find a issue?
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues).
+- **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues).
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
 
 ## <a name="submitting"></a> Did you write a patch that fixes a bug?
 
@@ -19,7 +19,7 @@ Open a new GitHub pull request with the patch following the steps outlined below
 
 Before you submit your pull request consider the following guidelines:
 
-* Search [GitHub](/https://github.com/SolaceProducts/solace-kubernetes-quickstart/pulls) for an open or closed Pull Request
+- Search [GitHub](/https://github.com/SolaceProducts/solace-kubernetes-quickstart/pulls) for an open or closed Pull Request
   that relates to your submission. You don't want to duplicate effort.
 
 ### Submitting a Pull Request
@@ -32,7 +32,7 @@ Fork the project and clone your fork
 locally.
 
 ```sh
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
+prompt:~$ git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 ```
 
 #### Step 2: Branch
@@ -40,7 +40,7 @@ git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 Make your changes on a new git branch in your fork of the repository.
 
 ```sh
-git checkout -b my-fix-branch master
+prompt:~$ git checkout -b my-fix-branch master
 ```
 
 #### Step 3: Commit
@@ -48,7 +48,7 @@ git checkout -b my-fix-branch master
 Commit your changes using a descriptive commit message.
 
 ```sh
-git commit -a -m "Your Commit Message"
+prompt:~$ git commit -a -m "Your Commit Message"
 ```
 
 Note: the optional commit `-a` command line option will automatically "add" and "rm" edited files.
@@ -61,14 +61,14 @@ repository.
 If you have not set the upstream, do so as follows:
 
 ```sh
-$ git remote add upstream https://github.com/SolaceProducts/solace-kubernetes-quickstart
+prompt:~$ git remote add upstream https://github.com/SolaceProducts/solace-kubernetes-quickstart
 ```
 
 then:
 
 ```sh
-$ git fetch upstream
-$ git rebase upstream/master
+prompt:~$ git fetch upstream
+prompt:~$ git rebase upstream/master
 ```
 
 #### Step 4b: Merge (if you have already pushed our branch to origin)
@@ -80,9 +80,9 @@ First ensure there are not any changes to master that you need to pick up, then 
 You may need to resolve any conflicts on either of the merge steps.
 
 ```sh
-$ git merge master
-$ git checkout master
-$ git merge my-fix-branch
+prompt:~$ git merge master
+prompt:~$ git checkout master
+prompt:~$ git merge my-fix-branch
 ```
 
 
@@ -91,25 +91,25 @@ $ git merge my-fix-branch
 Push your branch to your fork in GitHub:
 
 ```sh
-git push origin my-fix-branch
+prompt:~$ git push origin my-fix-branch
 ```
 
 #### Step 6: Pull Request
 
-In GitHub, send a pull request to `solace-samples-semp:master`. 
+In GitHub, send a pull request to `solace-samples-semp:master`.
 
 When fixing an existing issue, use the [commit message keywords](https://help.github.com/articles/closing-issues-via-commit-messages/) to close the associated GitHub issue.
 
-* If we suggest changes then:
-  * Make the required updates.
-  * Commit these changes to your branch (ex: my-fix-branch)
+- If we suggest changes then:
+  - Make the required updates.
+  - Commit these changes to your branch (ex: my-fix-branch)
 
 That's it! Thank you for your contribution!
 
 ## <a name="features"></a> **Do you have an ideas for a new feature or a change to an existing one?**
 
-* Open a GitHub [enhancement request issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues) and describe the new functionality.
+- Open a GitHub [enhancement request issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues) and describe the new functionality.
 
 ##  <a name="questions"></a> Do you have questions about the source code?
 
-* Ask any question about the code or how to use Solace messaging in the [Solace community](http://dev.solace.com/community/).
+- Ask any question about the code or how to use Solace messaging in the [Solace community](http://dev.solace.com/community/).
