@@ -59,12 +59,17 @@ echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
 git checkout 68545
+cd helm
 
+IFS=':' read -ra container_array <<< "$solace_image"
 
+sed -i "s/SOLOS_IMAGE_REPO/${container_array[0]}/g" small-direct-noha.yaml
+sed -i "s/SOLOS_IMAGE_TAG/${container_array[1]}/g" small-direct-noha.yaml
+sed -i "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
-helm install 
+helm install . -f  small-direct-noha.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
