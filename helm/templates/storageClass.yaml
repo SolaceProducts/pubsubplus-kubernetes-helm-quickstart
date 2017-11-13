@@ -1,0 +1,14 @@
+# If there is a need to external disks for Assured Delivery perforamance or scale reasons
+{{ if .Values.storage }}{{ if .Values.storage.persistent }}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.storage.type }}
+provisioner: kubernetes.io/gce-pd
+parameters:
+{{- if .Values.storage.zone }}
+  zone: {{ .Values.storage.zone }}
+{{- end }}
+  type: {{- if eq .Values.storage.type "fast" }} pd-ssd {{ else }} pd-standard {{ end -}}
+{{ end  }}{{end}}

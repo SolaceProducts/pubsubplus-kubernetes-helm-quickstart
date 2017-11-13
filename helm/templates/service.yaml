@@ -1,0 +1,24 @@
+# Load Service part of template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ template "name" . }}
+{{- if .Values.service.internal }}
+  annotations:
+    cloud.google.com/load-balancer-type: "internal"
+{{- end }}
+spec:
+  type: {{.Values.service.type}}
+  ports:{{ range $item := .Values.service.externalPort }}
+  - port: {{ $item.port }}
+    protocol: {{ $item.protocol }}
+    name: {{ $item.name }}{{end}}
+  selector:
+    app: {{ template "name" . }}
+    release: {{ .Release.Name }}

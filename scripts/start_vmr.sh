@@ -46,10 +46,17 @@ verbose=1
 echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
 
 
-echo "`date` INFO: DOWNLOAD KOMPOSE"
+echo "`date` INFO: DOWNLOAD HELM"
 echo "#############################################################"
-curl -L https://github.com/kubernetes/kompose/releases/download/v1.3.0/kompose-linux-amd64 -o kompose
-chmod 755 kompose
+wget -O https://storage.googleapis.com/kubernetes-helm/helm-v2.7.0-linux-amd64.tar.gz
+tar zxf helm-v2.7.0-linux-amd64.tar.gz
+mv linux-amd64 helm
+export PATH=$PATH:~/helm
+
+echo "`date` INFO: BUILD HELM CHARTS"
+echo "#############################################################"
+https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+
 
 cat > ./solace-compose.yaml << EOL
 version: "3"
