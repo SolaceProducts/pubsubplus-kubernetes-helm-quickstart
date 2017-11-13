@@ -36,8 +36,8 @@ spec:
         resources:
           requests:
 {{- if eq .Values.solace.size "small" }}
-            cpu: "1.5"
-            memory: 7.5Gi
+            cpu: "1.2"
+            memory: 6.0Gi
 {{- else if eq .Values.solace.size "medium" }}
             cpu: "3.5"
             memory: 15Gi

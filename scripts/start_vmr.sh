@@ -30,7 +30,7 @@ solace_password=""
 solace_image=""
 verbose=0
 
-while getopts "i:p:z:" opt; do
+while getopts "i:p:" opt; do
     case "$opt" in
     i)  solace_image=$OPTARG
         ;;
@@ -62,9 +62,8 @@ git checkout 68545
 cd helm
 
 IFS=':' read -ra container_array <<< "$solace_image"
-
-sed -i "s/SOLOS_IMAGE_REPO/${container_array[0]}/g" small-direct-noha.yaml
-sed -i "s/SOLOS_IMAGE_TAG/${container_array[1]}/g" small-direct-noha.yaml
+sed -i "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" small-direct-noha.yaml
+sed -i "s:SOLOS_IMAGE_TAG:${container_array[1]}:g" small-direct-noha.yaml
 sed -i "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
