@@ -68,6 +68,8 @@ sed -i "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSe
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
+# [TODO] Need to figure out how to tell helm tiller is up and ready to accept a release
+sleep 60
 helm install . -f  small-direct-noha.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
