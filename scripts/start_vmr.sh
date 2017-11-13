@@ -48,59 +48,23 @@ echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
 
 echo "`date` INFO: DOWNLOAD HELM"
 echo "#############################################################"
-wget -O https://storage.googleapis.com/kubernetes-helm/helm-v2.7.0-linux-amd64.tar.gz
+wget https://storage.googleapis.com/kubernetes-helm/helm-v2.7.0-linux-amd64.tar.gz
 tar zxf helm-v2.7.0-linux-amd64.tar.gz
 mv linux-amd64 helm
 export PATH=$PATH:~/helm
+helm init
 
 echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
-https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
+cd solace-kubernetes-quickstart
+git checkout 68545
 
-
-cat > ./solace-compose.yaml << EOL
-version: "3"
-services:
-  solace:
-    image: ${solace_image}
-    environment:
-      - service_ssh_port=2222
-      - username_admin_globalaccesslevel=admin
-      - username_admin_password=${solace_password}
-    network_mode: "host"
-    userns_mode: "host"
-    volumes:
-      - dshm:/dev/shm
-    cap_add:
-      - IPC_LOCK
-      - SYS_NICE
-    ulimits:
-      core: -1
-      memlock: -1
-      nofile:
-        soft: 2448
-        hard: 38048
-    restart: always
-    ports:
-      - "80"
-      - "8080"
-      - "2222"
-      - "55555"
-      - "1883"
-    labels:
-      kompose.service.type: LoadBalancer
-volumes:
-  dshm:
-    driver_opts:
-      size: 2G
-      type: tmpfs
-      device: tmpfs
-EOL
 
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
-./kompose -f ./solace-compose.yaml up
+helm install 
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
