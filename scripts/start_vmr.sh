@@ -74,4 +74,4 @@ helm install . -f  small-direct-noha.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
-echo "`date` INFO: View status with 'kubectl get deployment,svc,pods,pvc'"
+echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc'"

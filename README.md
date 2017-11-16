@@ -42,31 +42,34 @@ chmod 755 start_vmr.sh
 - Now you can validate you deployment on command line:
 
 ```sh
-prompt:~$ kubectl get deployment,svc,pods,pvc
+prompt:~$kubectl get statefulset,services,pods,pvc
+NAME                                          DESIRED   CURRENT   AGE
+statefulsets/XXX-XXX-solace-kubernetes   1         1         2m
+NAME                                 TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
+svc/kubernetes                       ClusterIP      10.19.240.1     <none>           443/TCP                                       26m
+svc/XXX-XXX-solace-kubernetes   LoadBalancer   10.19.245.131   104.154.136.44   22:31061/TCP,8080:30037/TCP,55555:31723/TCP   2m
+NAME                                  READY     STATUS    RESTARTS   AGE
+po/XXX-XXX-solace-kubernetes-0   1/1       Running   0          2m
+NAME                                        STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            AGE
+pvc/data-XXX-XXX-solace-kubernetes-0   Bound     pvc-63ce3ad3-cae1-11e7-ae62-42010a800120   30Gi       RWO            XXX-XXX-standard   2
 
-NAME            DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-deploy/solace   1         1         1            1           1h
-NAME             CLUSTER-IP     EXTERNAL-IP      PORT(S)     AGE
-svc/kubernetes   XX.XX.XX.XX    <none>           443/TCP     18h
-svc/solace       10.15.250.74   104.154.54.154   80:31918/TCP,8080:31910/TCP,2222:31020/TCP,55555:32120/TCP,1883:32061/TCP   1h
-NAME                         READY     STATUS    RESTARTS   AGE
-po/solace-2554909293-tgqmk   1/1       Running   0          1h
-NAME       STATUS    VOLUME                                     CAPACITY   ACCESSMODES   STORAGECLASS   AGE
-pvc/dshm   Bound     pvc-5cb52cd8-b408-11e7-a882-42010af001ea   1Gi        RWO           standard       1h
 
-prompt:~$ kubectl describe service solace
-Name:                   solace
-Namespace:              default
-Labels:                 io.kompose.service=solace
-Annotations:            kompose.cmd=./kompose -f solace-compose.yaml up
-                        kompose.service.type=LoadBalancer
-                        kompose.version=
-Selector:               io.kompose.service=solace
-Type:                   LoadBalancer
-IP:                     10.15.250.74
-LoadBalancer Ingress:   104.154.54.154
-Port:                   80      80/TCP
-NodePort:               80      31918/TCP
+prompt:~$ kubectl describe service XXX-XXX-solace-kubernetes
+Name:                     XXX-XXX-solace-kubernetes
+Namespace:                default
+Labels:                   app=solace-kubernetes
+                          chart=solace-kubernetes-0.1.0
+                          heritage=Tiller
+                          release=XXX-XXX
+Annotations:              <none>
+Selector:                 app=solace-kubernetes,release=XXX-XXX
+Type:                     LoadBalancer
+IP:                       10.19.245.131
+LoadBalancer Ingress:     104.154.136.44
+Port:                     ssh  22/TCP
+TargetPort:               22/TCP
+NodePort:                 ssh  31061/TCP
+Endpoints:                10.16.0.12:22
 :
 :
 ```
