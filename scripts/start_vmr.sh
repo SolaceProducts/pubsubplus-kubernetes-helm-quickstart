@@ -58,7 +58,7 @@ case ${os_type} in
     helm_type="darwin-amd64"
     sed_options="-iE"
     ;;
-  "Linux" }
+  "Linux" )
     helm_type="linux-amd64"
     sed_options="-i"
     ;;
