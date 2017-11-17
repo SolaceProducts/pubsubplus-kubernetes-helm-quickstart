@@ -45,6 +45,10 @@ shift $((OPTIND-1))
 verbose=1
 echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
 
+# [TODO] Need proper way to set service account for tiller
+#kubectl create serviceaccount --namespace kube-system tiller
+#kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+#kubectl edit deploy --namespace kube-system tiller-deploy #and add the line serviceAccount: tiller to spec/template/spec
 
 echo "`date` INFO: DOWNLOAD HELM"
 echo "#############################################################"
@@ -74,4 +78,4 @@ helm install . -f  small-direct-noha.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
-echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc'"
+echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc,pv'"

@@ -1,4 +1,3 @@
-
 # Create the StatefullSet, (petset), needed for redundancy
 ---
 apiVersion: apps/v1beta1
@@ -66,15 +65,6 @@ spec:
           periodSeconds: 5
           tcpSocket:
             port: 55555
-        command:
-         - bash
-         - "-ec"
-         - |
-           IP=$(hostname -I)
-           ENVS_FILE=.envs
-           touch ${ENVS_FILE}
-           echo "export routername=$(echo $(hostname) | sed 's/-//g')" >> ${ENVS_FILE}
-           source ${ENVS_FILE}; /usr/sbin/boot.sh
         securityContext:
           privileged: true
           capabilities:
@@ -100,7 +90,6 @@ spec:
 {{- if eq .Values.solace.size "small" }}
           value: "1000"
 {{- else if eq .Values.solace.size "medium" }}
-
           value: "10000"
 {{- else if eq .Values.solace.size "large" }}
           value: "100000"
@@ -108,9 +97,6 @@ spec:
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm
-        - name: data
-          mountPath: /usr/sw/var
-          subPath: var
         - name: data
           mountPath: /usr/sw/jail
           subPath: jail
@@ -123,15 +109,10 @@ spec:
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
-        - name: data
-          mountPath: /var/run
-          subPath: run
         ports:{{ range $item := .Values.service.internalPort }}
         - containerPort: {{ $item.port }}
           protocol: {{ $item.protocol }}{{end}}
       volumes:
-        - name: run
-          emptyDir: {}
         - name: dshm
           emptyDir:
             medium: Memory
