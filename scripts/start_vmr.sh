@@ -50,11 +50,25 @@ echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
 #kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 #kubectl edit deploy --namespace kube-system tiller-deploy #and add the line serviceAccount: tiller to spec/template/spec
 
+helm_version=v2.7.2
+os_type=`uname`
+
+case ${os_type} in 
+  "Darwin" )
+    helm_type="darwin-amd64"
+    sed_options="-iE"
+    ;;
+  "Linux" }
+    helm_type="linux-amd64"
+    sed_options="-i"
+    ;;
+esac
+
 echo "`date` INFO: DOWNLOAD HELM"
 echo "#############################################################"
-wget https://storage.googleapis.com/kubernetes-helm/helm-v2.7.0-linux-amd64.tar.gz
-tar zxf helm-v2.7.0-linux-amd64.tar.gz
-mv linux-amd64 helm
+wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
+tar zxf helm-${helm_version}-${helm_type}.tar.gz
+mv ${helm_type} helm
 export PATH=$PATH:~/helm
 helm init
 
@@ -66,9 +80,9 @@ git checkout 68545
 cd helm
 
 IFS=':' read -ra container_array <<< "$solace_image"
-sed -i "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
-sed -i "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
-sed -i "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
+sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
+sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
+sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
@@ -79,3 +93,5 @@ helm install . -f  values.yaml
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
 echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc,pv'"
+
+
