@@ -1,4 +1,4 @@
-
+# Create a PV of specified size and type, bind PVC to PV 
 configurationFiles: false
 solace:
   redundancy: false
@@ -42,4 +42,6 @@ service:
     - port: 5405
       protocol: UDP
 storage:
-  persistent: false
+  type: fast
+  persistent: true
+  size: 500Gi
