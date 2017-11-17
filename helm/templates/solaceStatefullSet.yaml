@@ -3,20 +3,20 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ template "solace.fullname" . }}
   labels:
-    app: {{ template "name" . }}
+    app: {{ template "solace.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  serviceName: {{ template "fullname" . }}-discovery
+  serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
   podManagementPolicy: Parallel
   template:
     metadata:
       labels:
-        app: {{ template "name" . }}
+        app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
     spec:
 {{- if .Values.service.nodeSelector }}
@@ -81,7 +81,7 @@ spec:
         - name: SERVICE_SSH_PORT
           value: '22'
         - name: STATEFULSET_NAME
-          value: {{ template "fullname" . }}
+          value: {{ template "solace.fullname" . }}
         - name: STATEFULSET_NAMESPACE
           valueFrom:
             fieldRef:

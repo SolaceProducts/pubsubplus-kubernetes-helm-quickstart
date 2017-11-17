@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ template "solace.fullname" . }}
   labels:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app: {{ template "name" . }}
+    app: {{ template "solace.name" . }}
 {{- if .Values.service.internal }}
   annotations:
     cloud.google.com/load-balancer-type: "internal"
@@ -20,5 +20,5 @@ spec:
     protocol: {{ $item.protocol }}
     name: {{ $item.name }}{{end}}
   selector:
-    app: {{ template "name" . }}
+    app: {{ template "solace.name" . }}
     release: {{ .Release.Name }}
