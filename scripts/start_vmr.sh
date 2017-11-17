@@ -66,15 +66,15 @@ git checkout 68545
 cd helm
 
 IFS=':' read -ra container_array <<< "$solace_image"
-sed -i "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" small-direct-noha.yaml
-sed -i "s:SOLOS_IMAGE_TAG:${container_array[1]}:g" small-direct-noha.yaml
+sed -i "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
+sed -i "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
 sed -i "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
 # [TODO] Need to figure out how to tell helm tiller is up and ready to accept a release
 sleep 60
-helm install . -f  small-direct-noha.yaml
+helm install . -f  values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
