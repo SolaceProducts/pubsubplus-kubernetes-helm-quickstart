@@ -121,16 +121,13 @@ spec:
 {{- if .Values.storage.hostPath }}
           hostPath:
             path: {{ .Values.storage.hostPath }}
-          {{ - end }}
-{{- if .Values.storage.existingVolume }}
+{{- else if .Values.storage.existingVolume }}
           gcePersistentDisk:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
-          {{- end }}  
-# [TODO]  Need a proper if{}elseif{}else{}end 
-{{- if not .Values.storage.hostPath }}{{- if not .Values.storage.existingVolume }}               
+{{ else }}             
           emptyDir: {}
-          {{- end }}{{- end }}
+{{- end }}
 {{ else }}
   volumeClaimTemplates:
   - metadata:
