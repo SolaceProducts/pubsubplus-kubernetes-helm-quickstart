@@ -19,15 +19,6 @@ spec:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
     spec:
-{{- if .Values.service.nodeSelector }}
-      nodeSelector:
-{{- range $item := .Values.service.nodeSelector }}
-{{- range $key,$val := $item }}
-        {{ $key }}: {{ $val | quote}}
-{{- end }}
-{{- end }}
-{{- end }}
-      # hostNetwork: true
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -118,6 +109,8 @@ spec:
           value: "100000"
 {{- end }}
         volumeMounts:
+        - name: config-map
+          mountPath: /mnt/disks/solace
         - name: dshm
           mountPath: /dev/shm
         - name: data
@@ -136,6 +129,9 @@ spec:
         - containerPort: {{ $item.port }}
           protocol: {{ $item.protocol }}{{end}}
       volumes:
+        - name: config-map
+          configMap:
+            name: {{ template "fullname" . }}
         - name: dshm
           emptyDir:
             medium: Memory
