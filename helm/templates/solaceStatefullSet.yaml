@@ -72,8 +72,31 @@ spec:
               - IPC_LOCK
               - SYS_NICE
         env:
+{{- if .Values.solace.redundancy }}
         - name: SOLACE_CLUSTER_SIZE
-          value: "{{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}"
+          value: '3'
+        - name: REDUNDANCY_ENABLE
+          value: 'yes'
+        - name: CONFIGSYNC_ENABLE
+          value: 'yes'
+        - name: REDUNDANCY_GROUP_PASSWORD
+          value: SOLOS_ADMIN_PASSWORD
+        - name: REDUNDANCY_GROUP_NODE_PRIMARY_NODETYPE
+          value: 'message_routing'
+        - name: REDUNDANCY_GROUP_NODE_PRIMARY_CONNECTVIA
+          value: {{ template "solace.fullname" . }}-0
+        - name: REDUNDANCY_GROUP_NODE_BACKUP_NODETYPE
+          value: 'message_routing'
+        - name: REDUNDANCY_GROUP_NODE_BACKUP_CONNECTVIA
+          value: {{ template "solace.fullname" . }}-1
+        - name: REDUNDANCY_GROUP_NODE_MONITOR_NODETYPE
+          value: 'monitoring'
+        - name: REDUNDANCY_GROUP_NODE_BACKUP_CONNECTVIA
+          value: {{ template "solace.fullname" . }}-2           
+{{- else }}
+        - name: SOLACE_CLUSTER_SIZE
+          value: '1'
+{{- end }}
         - name: USERNAME_ADMIN_PASSWORD
           value: SOLOS_ADMIN_PASSWORD
         - name: USERNAME_ADMIN_GLOBALACCESSLEVEL
