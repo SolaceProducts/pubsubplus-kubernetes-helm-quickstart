@@ -1,0 +1,57 @@
+# If there are configuration files load this part of the template
+{{ if .Values.configurationFiles }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ template "name" . }}
+data:
+  init.sh: |-
+      export username_admin_password=SOLOS_ADMIN_PASSWORD
+      export username_admin_globalaccesslevel=admin
+      export service_ssh_port='22'
+{{- if eq .Values.solace.size "small" }}
+      export system_scaling_maxconnectioncount="1000"
+{{- else if eq .Values.solace.size "medium" }}
+      export system_scaling_maxconnectioncount="10000"
+{{- else if eq .Values.solace.size "large" }}
+      export system_scaling_maxconnectioncount="100000"
+{{- end }}
+{{ if .Values.solace.redundancy }}
+      IFS='-' read -ra host_array <<< $(hostname)
+      node_ordinal=${host_array[-1]}
+      service={{ template "fullname" . }}
+      service_name=$(echo ${service} | sed 's/-//g')
+      export routername=$(echo $(hostname) | sed 's/-//g')
+      export redundancy_enable=yes
+      export configsync_enable=yes
+      export redundancy_group_password=solace
+      export redundancy_group_node_${service_name}0_nodetype=message_routing
+      export redundancy_group_node_${service_name}0_connectvia=${service_name}-0.${service_name}-discovery.default.svc
+      export redundancy_group_node_${service_name}1_nodetype=message_routing
+      export redundancy_group_node_${service_name}1_connectvia=${service_name}-1.${service_name}-discovery.default.svc
+      export redundancy_group_node_${service_name}2_nodetype=monitoring
+      export redundancy_group_node_${service_name}2_connectvia=${service_name}-2.${service_name}-discovery.default.svc
+
+      case ${node_ordinal} in
+      0 )
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service_name}-1.${service_name}-discovery.default.svc
+       export redundancy_activestandbyrole=primary
+        ;;
+      1)
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service_name}-0.${service_name}-discovery.default.svc
+       export redundancy_activestandbyrole=backup
+        ;;
+      2)
+       export nodetype=monitor
+       ;;
+      esac
+
+{{- end }}
