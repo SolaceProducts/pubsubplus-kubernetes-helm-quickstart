@@ -1,6 +1,4 @@
-# Default storage, exemplifies simplicity, will create a /mnt/stateful_partition dir on host 
-#  and use this for Solace message spool 
-configurationFiles: false
+# Create a PV of specified size and type, bind PVC to PV 
 solace:
   redundancy: false
   size: small
@@ -43,4 +41,6 @@ service:
     - port: 5405
       protocol: UDP
 storage:
-  persistent: false
+  type: fast
+  persistent: true
+  size: 500Gi

@@ -1,5 +1,5 @@
-# Create a PV of specified size and type, bind PVC to PV 
-configurationFiles: false
+# Need to first provision a directory /mnt/disks/vmr on host node
+#  use this for Solace message spool.  Used to test various fs and mount options
 solace:
   redundancy: false
   size: small
@@ -42,6 +42,5 @@ service:
     - port: 5405
       protocol: UDP
 storage:
-  type: fast
-  persistent: true
-  size: 500Gi
+  persistent: false
+  hostPath: /mnt/disks/vmr
