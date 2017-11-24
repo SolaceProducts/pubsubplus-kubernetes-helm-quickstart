@@ -1,5 +1,4 @@
 # Create a PV of specified size and type, bind PVC to PV 
-configurationFiles: false
 solace:
   redundancy: false
   size: small

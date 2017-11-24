@@ -1,6 +1,5 @@
-
-# same as values-examples/small-direct-noha.yaml
-configurationFiles: false
+# Need to first provision a directory /mnt/disks/vmr on host node 
+#  use this for Solace message spool.  Used to test various fs and mount options 
 solace:
   redundancy: false
   size: small
@@ -44,3 +43,4 @@ service:
       protocol: UDP
 storage:
   persistent: false
+  hostPath: /mnt/disks/vmr
