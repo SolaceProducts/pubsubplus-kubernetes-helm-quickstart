@@ -16,6 +16,8 @@ This is a 5 step process:
 
 1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install miniKube, etc.
 
+   * The Solace VMR deployment's minimum requirements are 2 CPUs and 4 GB RAM available to the Kubernetes node.
+
 2. Go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Do a right click "Copy Hyperlink" on the "Download the VMR Community Edition for Docker" hyperlink.  This link is of the form "http<nolink>://em.solace.com ?" will be needed in the following section.
 
 <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
@@ -28,18 +30,20 @@ This is a 5 step process:
 
 5. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
 
-- Download and execute the cluster create and deployment script on command line.  Replace ??? with the release tag of the image in the container registry.
+  - Download and execute the cluster create and deployment script on command line.  Replace ??? with the release tag of the image in the container registry.
 
-```Shell
-PASSWORD=<YourAdminPassword>
-SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
+  ```Shell
+  export PASSWORD=<YourAdminPassword>
+  export SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
+  
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+  chmod 755 start_vmr.sh
+  ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
+  ```
 
-wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
-chmod 755 start_vmr.sh
-./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
-```
+### Validate deployment
 
-- Now you can validate you deployment on command line:
+Now you can validate you deployment on command line:
 
 ```sh
 prompt:~$kubectl get statefulset,services,pods,pvc
