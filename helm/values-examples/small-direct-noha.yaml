@@ -1,4 +1,4 @@
-# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
+# Default storage, exemplifies simplicity, will create a /mnt/stateful_partition dir on host 
 #  and use this for Solace message spool 
 configurationFiles: false
 solace:

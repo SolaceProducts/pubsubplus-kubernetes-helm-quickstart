@@ -2,7 +2,7 @@
 
 ## Purpose of this repository
 
-This repository explaines, in general terms, how to install a Solace VMR onto a Kubernetes cluster.  To view examples of specific enviroments see:
+This repository explains, in general terms, how to install a Solace VMR in standalone non-HA configuration onto a Kubernetes cluster.  To view examples of specific enviroments see:
 
 - [Installing Solace VMR on Google Compute Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
@@ -14,11 +14,11 @@ The Solace Virtual Message Router (VMR) provides enterprise-grade messaging capa
 
 This is a 5 step process:
 
-1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install miniKube, etc.
+1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install Minikube, etc.
 
-  Note: the minimum requirements for deploying the Solace VMR are 2 CPUs and 4 GB RAM available to the Kubernetes node.
+    * The minimum requirements for the Solace VMR small size deployment are 2 CPUs and 8 GB RAM available to the Kubernetes node.
 
-2. Go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Do a right click "Copy Hyperlink" on the "Download the VMR Community Edition for Docker" hyperlink.  This link is of the form "http<nolink>://em.solace.com ?" will be needed in the following section.
+2. Use the button below to go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Download the Solace VMR image.
 
 <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
     <img src="https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/register.png"/>
@@ -28,22 +28,34 @@ This is a 5 step process:
 
 4. Create a Kubernetes Cluster
 
-5. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
+5. Deploy a Solace Deployment, (Service and Pod), onto the cluster:
 
-  * Create the following environment variables. Substitute `<YourAdminPassword>` to the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to the image in the container registry.
+    * For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
-  ```Shell
-  export PASSWORD=<YourAdminPassword>
-  export SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
-  ```
+```Shell
+  PASSWORD=<YourAdminPassword>
+  SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
+```
 
-  * Download and execute the cluster create and deployment script on command line.
+    * Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
 
-  ```Shell
+```Shell
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
   ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
-  ```
+```
+
+The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/helm` directory which has been created as a result of running the script.
+
+The `solace-kubernetes-quickstart/helm/values-examples` directory provides examples for `values.yaml` for several storage options:
+
+* `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
+* `small-direct-noha-localDirectory`: to bind the PVC to a local directory on the host node.
+* `small-direct-noha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `small-direct-noha`: the simple local non-persistent storage used by default
+
+
+
 
 ### Validate the Deployment
 
@@ -83,6 +95,8 @@ Endpoints:                10.16.0.12:22
 ```
 
 Note here serveral IPs and port.  In this example 104.154.54.154 is the external IP to use.
+
+
 
 ## Gaining admin access to the VMR
 
