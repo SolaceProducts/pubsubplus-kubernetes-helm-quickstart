@@ -36,18 +36,18 @@ This is a 5 step process:
   PASSWORD=<YourAdminPassword>
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
- 
- 
+
+                         
+
     * Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
  
-	
 ```sh
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
   ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
 ```
 
-#### Changing VMR deployment options
+#### Other VMR deployment options
 
 The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/helm` directory which has been created as a result of running the script.
 
