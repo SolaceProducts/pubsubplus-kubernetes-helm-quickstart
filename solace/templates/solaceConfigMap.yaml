@@ -1,5 +1,3 @@
-# If there are configuration files load this part of the template
-{{ if .Values.configurationFiles }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -23,13 +21,18 @@ data:
       export system_scaling_maxconnectioncount="100000"
 {{- end }}
 {{- if .Values.solace.redundancy }}
-      # This is a hack to get ordinal
+      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
       # https://github.com/kubernetes/kubernetes/issues/40651
       # node_ordinal=$(STATEFULSET_ORDINAL)
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
-      namespace=$(STATEFULSET_NAMESPACE)
+      if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
+        namespace=`echo $STATEFULSET_NAMESPACE`
+      else
+        namespace=default
+      fi
       service={{ template "solace.fullname" . }}
+      # Deal with the fact we cannot accept "-" in routre names
       service_name=$(echo ${service} | sed 's/-//g')
       export routername=$(echo $(hostname) | sed 's/-//g')
       export redundancy_enable=yes
@@ -58,4 +61,3 @@ data:
        ;;
       esac
 {{- end }}
-{{ end }}
