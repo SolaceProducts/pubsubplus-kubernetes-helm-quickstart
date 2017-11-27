@@ -1,6 +1,6 @@
 # Create a PV of specified size and type, bind PVC to PV 
 solace:
-  redundancy: false
+  redundancy: true
   size: small
 image:
   repository: SOLOS_IMAGE_REPO

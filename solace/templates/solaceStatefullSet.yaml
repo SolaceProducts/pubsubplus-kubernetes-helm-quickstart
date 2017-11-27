@@ -54,8 +54,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-          tcpSocket:
-            port: 55555
+          httpGet:
+            port: 5550
+            path: /health-check/guaranteed-active
         securityContext:
           privileged: true
           capabilities:
@@ -64,11 +65,12 @@ spec:
               - SYS_NICE
         env:
         - name: STATEFULSET_NAME
-          value: {{ template "fullname" . }}
+          value: {{ template "solace.fullname" . }}
         - name: STATEFULSET_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+# [TODO] not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
  #       - name: STATEFULSET_ORDINAL
  #         valueFrom:
  #           fieldRef:
