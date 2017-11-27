@@ -37,9 +37,7 @@ This is a 5 step process:
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
 
-                         
-
-    * Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
+Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
  
 ```sh
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
