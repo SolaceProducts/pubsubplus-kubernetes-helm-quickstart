@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "solace.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ template "solace.name" . }}
+data:
+  init.sh: |-
+      export username_admin_password=SOLOS_ADMIN_PASSWORD
+      export username_admin_globalaccesslevel=admin
+      export service_ssh_port='22'
+{{- if eq .Values.solace.size "small" }}
+      export system_scaling_maxconnectioncount="1000"
+{{- else if eq .Values.solace.size "medium" }}
+      export system_scaling_maxconnectioncount="10000"
+{{- else if eq .Values.solace.size "large" }}
+      export system_scaling_maxconnectioncount="100000"
+{{- end }}
+{{- if .Values.solace.redundancy }}
+      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
+      # https://github.com/kubernetes/kubernetes/issues/40651
+      # node_ordinal=$(STATEFULSET_ORDINAL)
+      IFS='-' read -ra host_array <<< $(hostname)
+      node_ordinal=${host_array[-1]}
+      if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
+        namespace=`echo $STATEFULSET_NAMESPACE`
+      else
+        namespace=default
+      fi
+      service={{ template "solace.fullname" . }}
+      # Deal with the fact we cannot accept "-" in routre names
+      service_name=$(echo ${service} | sed 's/-//g')
+      export routername=$(echo $(hostname) | sed 's/-//g')
+      export redundancy_enable=yes
+      export configsync_enable=yes
+      export redundancy_group_password=SOLOS_ADMIN_PASSWORD
+      export redundancy_group_node_${service_name}0_nodetype=message_routing
+      export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+      export redundancy_group_node_${service_name}1_nodetype=message_routing
+      export redundancy_group_node_${service_name}1_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+      export redundancy_group_node_${service_name}2_nodetype=monitoring
+      export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc
+
+      case ${node_ordinal} in
+      0 )
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+       export redundancy_activestandbyrole=primary
+        ;;
+      1)
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+       export redundancy_activestandbyrole=backup
+        ;;
+      2)
+       export nodetype=monitoring
+       ;;
+      esac
+{{- end }}
