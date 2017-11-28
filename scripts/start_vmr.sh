@@ -92,6 +92,6 @@ helm install . -f  values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
-echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc,pv'"
+echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc'"
 
 

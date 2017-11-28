@@ -2,7 +2,7 @@
 
 ## Purpose of this repository
 
-This repository explaines, in general terms, how to install a Solace VMR onto a Kubernetes cluster.  To view examples of specific enviroments see:
+This repository explains, in general terms, how to install a Solace VMR in standalone non-HA configuration onto a Kubernetes cluster.  To view examples of specific enviroments see:
 
 - [Installing Solace VMR on Google Compute Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
@@ -14,32 +14,61 @@ The Solace Virtual Message Router (VMR) provides enterprise-grade messaging capa
 
 This is a 5 step process:
 
-1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install miniKube, etc.
+1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install Minikube, etc.
 
-2. Go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Do a right click "Copy Hyperlink" on the "Download the VMR Community Edition for Docker" hyperlink.  This link is of the form "http<nolink>://em.solace.com ?" will be needed in the following section.
+    * The minimum requirements for the Solace VMR small size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
+
+2. Use the button below to go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Download the Solace VMR image.
 
 <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
     <img src="https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/register.png"/>
 </a>
 
-3. Load the Solace VMR image into a Docker registry.
+3. Load the Solace VMR image into a Docker container registry.
 
 4. Create a Kubernetes Cluster
 
-5. Deploy a Solace Deployment, (Service and Pod), onto the cluster.
+5. Deploy a Solace Deployment, (Service and Pod), onto the cluster:
 
-- Download and execute the cluster create and deployment script on command line.  Replace ??? with the release tag of the image in the container registry.
+    * For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
-```Shell
-PASSWORD=<YourAdminPassword>
-SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
-
-wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
-chmod 755 start_vmr.sh
-./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
+```sh
+  PASSWORD=<YourAdminPassword>
+  SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
 
-- Now you can validate you deployment on command line:
+Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
+ 
+```sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+  chmod 755 start_vmr.sh
+  ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
+```
+
+#### Using other VMR deployment configurations
+
+The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/helm` directory which has been created as a result of running the script.
+
+The `solace-kubernetes-quickstart/helm/values-examples` directory provides examples for `values.yaml` for several storage options:
+
+* `small-direct-noha` (default): the simple local non-persistent storage
+* `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
+* `small-direct-noha-localDirectory`: to bind the PVC to a local directory on the host node.
+* `small-direct-noha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+
+To open up more service ports for external access, add now ports to the `externalPort` list in `values.yaml`. For a list of available services and default ports refer to [VMR Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
+
+It is also possible to configure the VMR deployment with more CPU and memory resources by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
+
+* `small` (default): 1.2 CPU, 6 GB memory
+* `medium`: 3.5 CPU, 15 GB memory
+* `large`: 7.5 CPU, 30 GB memory
+
+Note: the deployment script installs and uses the Kubernetes `helm` tool for the deployment, which can be used to redeploy the VMR if changing deployment options. Setting permissions on the Kubernetes cluster may also be required so helm can setup and use its tiller service on the nodes. See the [Helm documentation](https://github.com/kubernetes/helm) for more details.
+
+### Validate the Deployment
+
+Now you can validate your deployment on command line:
 
 ```sh
 prompt:~$kubectl get statefulset,services,pods,pvc
@@ -74,23 +103,35 @@ Endpoints:                10.16.0.12:22
 :
 ```
 
-Note here serveral IPs and port.  In this example 104.154.54.154 is the external IP to use.
+Note here serveral IPs and port.  In this example 104.154.136.44 is the external IP to use.
+
+Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace-kubernetes` to expose the service.
 
 ## Gaining admin access to the VMR
 
-For persons used to working with Solace message router console access, this is still available with standard ssh session from any internet:
+For persons used to working with Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
 
-![alt text](https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/68545/images/solace_console.png "SolOS CLI")
+```sh
+$ssh -p 22 admin@104.154.136.44
+Solace - Virtual Message Router (VMR)
+Password:
 
-For persons who are unfamiliar with the Solace mesage router or would prefer an administration application the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
+System Software. SolOS-TR Version 8.6.0.1010
 
-![alt text](https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/gce_soladmin.png "soladmin connection to gce")
+Virtual Message Router (Message Routing Node)
+
+Copyright 2004-2017 Solace Corporation. All rights reserved.
+
+This is the Community Edition of the Solace VMR.
+
+XXX-XXX-solace-kubernetes-0>
+```
+
+For persons who are unfamiliar with the Solace mesage router or would prefer an administration application, the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
 
 ## Testing data access to the VMR
 
 To test data traffic though the newly created VMR instance, visit the Solace developer portal and and select your preferred programming langauge to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
-
-![alt text](https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/solace_tutorial.png "getting started publish/subscribe")
 
 ## Contributing
 
