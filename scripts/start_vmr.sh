@@ -28,6 +28,7 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 # Initialize our own variables:
 solace_password=""
 solace_image=""
+values_file="values-examples/small-direct-noha.yaml"
 verbose=0
 
 while getopts "i:p:" opt; do
@@ -36,6 +37,7 @@ while getopts "i:p:" opt; do
         ;;
     p)  solace_password=$OPTARG
         ;;
+    v)  values_file=$OPTARGS
     esac
 done
 
@@ -77,7 +79,9 @@ echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
 git checkout 68545
-cd helm
+cd solace
+
+cp ${values_file} ./values.yaml
 
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
