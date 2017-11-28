@@ -75,7 +75,7 @@ spec:
         - name: SOLACE_CLUSTER_SIZE
           value: "{{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}"
         - name: USERNAME_ADMIN_PASSWORD
-          value: SOLOS_ADMIN_PASSWORD
+          value: 'SOLOS_ADMIN_PASSWORD'
         - name: USERNAME_ADMIN_GLOBALACCESSLEVEL
           value: 'admin'
         - name: SERVICE_SSH_PORT
