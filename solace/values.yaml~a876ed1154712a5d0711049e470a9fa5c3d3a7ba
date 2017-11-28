@@ -1,0 +1,45 @@
+# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
+#  and use this for Solace message spool 
+solace:
+  redundancy: false
+  size: small
+image:
+  repository: SOLOS_IMAGE_REPO
+  tag: SOLOS_IMAGE_TAG
+  pullPolicy: IfNotPresent
+service:
+  internal: false
+  type: LoadBalancer
+  externalPort:
+    - port: 22
+      protocol: TCP
+      name: ssh
+    - port: 8080
+      protocol: TCP
+      name: semp
+    - port: 55555
+      protocol: TCP
+      name: smf
+  internalPort:
+    - port: 80
+      protocol: TCP
+    - port: 8080
+      protocol: TCP
+    - port: 443
+      protocol: TCP
+    - port: 8443
+      protocol: TCP
+    - port: 55555
+      protocol: TCP
+    - port: 22
+      protocol: TCP
+    - port: 8741
+      protocol: TCP
+    - port: 5001
+      protocol: TCP
+    - port: 5404
+      protocol: UDP
+    - port: 5405
+      protocol: UDP
+storage:
+  persistent: false
