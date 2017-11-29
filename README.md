@@ -21,7 +21,7 @@ This is a 5 step process:
 2. Use the button below to go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Download the Solace VMR image.
 
 <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-    <img src="https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/register.png"/>
+    <img src="/images/register.png"/>
 </a>
 
 3. Load the Solace VMR image into a Docker container registry.
@@ -40,7 +40,7 @@ This is a 5 step process:
 Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
  
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
   ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
 ```
