@@ -76,7 +76,7 @@ echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
-cd helm
+cd solace
 
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
