@@ -179,6 +179,23 @@ kubectl port-forward XXX-XXX-solace-2 8081:8080 &
 
 ```
 
+## Viewing logs
+Logs from the currently running container:
+
+```sh
+
+kubectl logs XXX-XXX-solace-0 -c solace
+
+```
+
+Logs from the previously terminated container:
+
+```sh
+
+kubectl logs XXX-XXX-solace-0 -c solace -p
+
+```
+
 ## Testing data access to the VMR
 
 To test data traffic though the newly created VMR instance, visit the Solace developer portal and and select your preferred programming langauge to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
