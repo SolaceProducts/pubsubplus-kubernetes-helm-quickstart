@@ -1,0 +1,141 @@
+# Create the StatefullSet, (petset), needed for redundancy
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ template "solace.fullname" . }}
+  labels:
+    app: {{ template "solace.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "solace.fullname" . }}-discovery
+  replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        app: {{ template "solace.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+{{- if .Values.service.nodeSelector }}
+      nodeSelector:
+{{- range $item := .Values.service.nodeSelector }}
+{{- range $key,$val := $item }}
+        {{ $key }}: {{ $val | quote}}
+{{- end }}
+{{- end }}
+{{- end }}
+      # hostNetwork: true
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+          requests:
+{{- if eq .Values.solace.size "small" }}
+            cpu: "1.2"
+            memory: 6.0Gi
+{{- else if eq .Values.solace.size "medium" }}
+            cpu: "3.5"
+            memory: 15Gi
+{{- else if eq .Values.solace.size "large" }}
+            cpu: "7.5"
+            memory: 30Gi
+{{- end }}
+          limits:
+{{- if eq .Values.solace.size "small" }}
+            cpu: "2"
+            memory: 7.5Gi
+{{- else if eq .Values.solace.size "medium" }}
+            cpu: "4"
+            memory: 15Gi
+{{- else if eq .Values.solace.size "large" }}
+            cpu: "8"
+            memory: 30Gi
+{{- end }}
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 300
+          timeoutSeconds: 5
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          tcpSocket:
+            port: 55555
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - IPC_LOCK
+              - SYS_NICE
+        env:
+        - name: SOLACE_CLUSTER_SIZE
+          value: "{{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}"
+        - name: USERNAME_ADMIN_PASSWORD
+          value: 'SOLOS_ADMIN_PASSWORD'
+        - name: USERNAME_ADMIN_GLOBALACCESSLEVEL
+          value: 'admin'
+        - name: SERVICE_SSH_PORT
+          value: '22'
+        - name: STATEFULSET_NAME
+          value: {{ template "solace.fullname" . }}
+        - name: STATEFULSET_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: system_scaling_maxconnectioncount
+{{- if eq .Values.solace.size "small" }}
+          value: "1000"
+{{- else if eq .Values.solace.size "medium" }}
+          value: "10000"
+{{- else if eq .Values.solace.size "large" }}
+          value: "100000"
+{{- end }}
+        volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
+        - name: data
+          mountPath: /usr/sw/jail
+          subPath: jail
+        - name: data
+          mountPath: /usr/sw/internalSpool
+          subPath: internalSpool
+        - name: data
+          mountPath: /usr/sw/adb
+          subPath: adb
+        - name: data
+          mountPath: /usr/sw/internalSpool/softAdb
+          subPath: softAdb
+        ports:{{ range $item := .Values.service.internalPort }}
+        - containerPort: {{ $item.port }}
+          protocol: {{ $item.protocol }}{{end}}
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+{{- if .Values.storage }}{{- if not .Values.storage.persistent }}
+        - name: data
+{{- if .Values.storage.hostPath }}
+          hostPath:
+            path: {{ .Values.storage.hostPath }}
+{{- else if .Values.storage.existingVolume }}
+          gcePersistentDisk:
+            pdName: {{ .Values.storage.existingVolume }}
+            fsType: ext4
+{{ else }}             
+          emptyDir: {}
+{{- end }}
+{{ else }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage.size}}
+{{- end }}{{- end}}
