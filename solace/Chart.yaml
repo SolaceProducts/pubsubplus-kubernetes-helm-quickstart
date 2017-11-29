@@ -1,6 +1,6 @@
 apiVersion: v1
 description: A Helm chart for Kubernetes
-name: solace-kubernetes
+name: solace
 version: 0.1.0
 icon: https://dev.solace.com/wp-content/uploads/2016/10/solace-logo-white.png
 maintainers:

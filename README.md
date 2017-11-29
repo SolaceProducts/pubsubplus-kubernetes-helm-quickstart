@@ -21,7 +21,7 @@ This is a 5 step process:
 2. Use the button below to go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Download the Solace VMR image.
 
 <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-    <img src="https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/images/register.png"/>
+    <img src="/images/register.png"/>
 </a>
 
 3. Load the Solace VMR image into a Docker container registry.
@@ -40,16 +40,16 @@ This is a 5 step process:
 Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
  
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
   ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
 ```
 
 #### Using other VMR deployment configurations
 
-The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/helm` directory which has been created as a result of running the script.
+The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/solace` directory which has been created as a result of running the script.
 
-The `solace-kubernetes-quickstart/helm/values-examples` directory provides examples for `values.yaml` for several storage options:
+The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several storage options:
 
 * `small-direct-noha` (default): the simple local non-persistent storage
 * `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
@@ -72,26 +72,26 @@ Now you can validate your deployment on command line:
 
 ```sh
 prompt:~$kubectl get statefulset,services,pods,pvc
-NAME                                          DESIRED   CURRENT   AGE
-statefulsets/XXX-XXX-solace-kubernetes   1         1         2m
-NAME                                 TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
-svc/kubernetes                       ClusterIP      10.19.240.1     <none>           443/TCP                                       26m
-svc/XXX-XXX-solace-kubernetes   LoadBalancer   10.19.245.131   104.154.136.44   22:31061/TCP,8080:30037/TCP,55555:31723/TCP   2m
-NAME                                  READY     STATUS    RESTARTS   AGE
-po/XXX-XXX-solace-kubernetes-0   1/1       Running   0          2m
-NAME                                        STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            AGE
-pvc/data-XXX-XXX-solace-kubernetes-0   Bound     pvc-63ce3ad3-cae1-11e7-ae62-42010a800120   30Gi       RWO            XXX-XXX-standard   2
+NAME                                  DESIRED   CURRENT   AGE
+statefulsets/XXX-XXX-solace           1         1         2m
+NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
+svc/kubernetes               ClusterIP      10.19.240.1     <none>           443/TCP                                       26m
+svc/XXX-XXX-solace           LoadBalancer   10.19.245.131   104.154.136.44   22:31061/TCP,8080:30037/TCP,55555:31723/TCP   2m
+NAME                          READY     STATUS    RESTARTS   AGE
+po/XXX-XXX-solace-0           1/1       Running   0          2m
+NAME                         STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            AGE
+pvc/data-XXX-XXX-solace-0    Bound     pvc-63ce3ad3-cae1-11e7-ae62-42010a800120   30Gi       RWO            XXX-XXX-standard        2
 
 
-prompt:~$ kubectl describe service XXX-XXX-solace-kubernetes
-Name:                     XXX-XXX-solace-kubernetes
+prompt:~$ kubectl describe service XXX-XXX-solace
+Name:                     XXX-XXX-solace
 Namespace:                default
-Labels:                   app=solace-kubernetes
-                          chart=solace-kubernetes-0.1.0
+Labels:                   app=solace
+                          chart=solace-0.1.0
                           heritage=Tiller
                           release=XXX-XXX
 Annotations:              <none>
-Selector:                 app=solace-kubernetes,release=XXX-XXX
+Selector:                 app=solace,release=XXX-XXX
 Type:                     LoadBalancer
 IP:                       10.19.245.131
 LoadBalancer Ingress:     104.154.136.44
@@ -105,7 +105,7 @@ Endpoints:                10.16.0.12:22
 
 Note here serveral IPs and port.  In this example 104.154.136.44 is the external IP to use.
 
-Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace-kubernetes` to expose the service.
+Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
 
 ## Gaining admin access to the VMR
 
@@ -124,7 +124,7 @@ Copyright 2004-2017 Solace Corporation. All rights reserved.
 
 This is the Community Edition of the Solace VMR.
 
-XXX-XXX-solace-kubernetes-0>
+XXX-XXX-solace-0>
 ```
 
 For persons who are unfamiliar with the Solace mesage router or would prefer an administration application, the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
