@@ -40,16 +40,16 @@ This is a 5 step process:
 Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
  
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/68545/scripts/start_vmr.sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
   ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
 ```
 
 #### Using other VMR deployment configurations
 
-The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/helm` directory which has been created as a result of running the script.
+The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/solace` directory which has been created as a result of running the script.
 
-The `solace-kubernetes-quickstart/helm/values-examples` directory provides examples for `values.yaml` for several storage options:
+The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several storage options:
 
 * `small-direct-noha` (default): the simple local non-persistent storage
 * `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
@@ -100,7 +100,7 @@ Labels:                   app=solace
                           heritage=Tiller
                           release=XXX-XX
 Annotations:              <none>
-Selector:                 app=solace,release=XXX-XX
+Selector:                 app=solace,release=XXX-XXX
 Type:                     LoadBalancer
 IP:                       10.15.249.186
 LoadBalancer Ingress:     35.202.131.158
@@ -125,7 +125,7 @@ External Traffic Policy:  Cluster
 
 Note here serveral IPs and port.  In this example 104.154.136.44 is the external IP to use.
 
-Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace-kubernetes` to expose the service.
+Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
 
 ## Gaining admin access to the VMR
 
