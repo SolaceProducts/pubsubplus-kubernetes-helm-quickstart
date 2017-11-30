@@ -44,3 +44,4 @@ storage:
   type: fast
   persistent: true
   size: 500Gi
+  fsType: xfs

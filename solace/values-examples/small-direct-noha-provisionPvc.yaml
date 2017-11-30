@@ -42,6 +42,7 @@ service:
     - port: 5405
       protocol: UDP
 storage:
-  type: fast
+  type: standard
   persistent: true
-  size: 500Gi
+  size: 300Gi
+  fsType: ext4

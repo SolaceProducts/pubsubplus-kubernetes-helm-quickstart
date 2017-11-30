@@ -11,4 +11,6 @@ parameters:
   zone: {{ .Values.storage.zone }}
 {{- end }}
   type: {{- if eq .Values.storage.type "fast" }} pd-ssd {{ else }} pd-standard {{ end -}}
+{{- if .Values.storage.fsType }}
+  fsType: {{ .Values.storage.fsType }}
 {{ end  }}{{end}}
