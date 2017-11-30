@@ -31,7 +31,7 @@ solace_image=""
 values_file="values-examples/small-direct-noha.yaml"
 verbose=0
 
-while getopts "i:p:" opt; do
+while getopts "i:p:v:" opt; do
     case "$opt" in
     i)  solace_image=$OPTARG
         ;;
@@ -45,7 +45,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 verbose=1
-echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
+echo "`date` INFO: solace_image=${solace_image} ,values_file=${values_file} Leftovers: $@"
 
 # [TODO] Need proper way to set service account for tiller
 #kubectl create serviceaccount --namespace kube-system tiller
@@ -78,14 +78,9 @@ echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
-<<<<<<< HEAD
-git checkout 68545
 cd solace
 
 cp ${values_file} ./values.yaml
-=======
-cd solace
->>>>>>> master
 
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
