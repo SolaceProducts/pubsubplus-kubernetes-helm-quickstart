@@ -44,5 +44,4 @@ service:
 storage:
   type: standard
   persistent: true
-  size: 300Gi
-  fsType: ext4
+  size: 30Gi

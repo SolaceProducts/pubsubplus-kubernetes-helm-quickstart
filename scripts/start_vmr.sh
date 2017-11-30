@@ -78,6 +78,8 @@ echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
+#[TODO] Remove this line once HA is promoted to master
+git checkout SOL-1244
 cd solace
 
 cp ${values_file} ./values.yaml
