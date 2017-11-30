@@ -68,39 +68,59 @@ Note: the deployment script installs and uses the Kubernetes `helm` tool for the
 
 ### Validate the Deployment
 
-Now you can validate your deployment on command line:
+Now you can validate your deployment on command line, in this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active VMR/pod:
 
 ```sh
-prompt:~$kubectl get statefulset,services,pods,pvc
-NAME                                  DESIRED   CURRENT   AGE
-statefulsets/XXX-XXX-solace           1         1         2m
-NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
-svc/kubernetes               ClusterIP      10.19.240.1     <none>           443/TCP                                       26m
-svc/XXX-XXX-solace           LoadBalancer   10.19.245.131   104.154.136.44   22:31061/TCP,8080:30037/TCP,55555:31723/TCP   2m
-NAME                          READY     STATUS    RESTARTS   AGE
-po/XXX-XXX-solace-0           1/1       Running   0          2m
-NAME                         STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS            AGE
-pvc/data-XXX-XXX-solace-0    Bound     pvc-63ce3ad3-cae1-11e7-ae62-42010a800120   30Gi       RWO            XXX-XXX-standard        2
+prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
+NAME                                 DESIRED   CURRENT   AGE
+statefulsets/XXX-XXX-solace   3         3         3m
+NAME                                  TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
+svc/XXX-XXX-solace             LoadBalancer   10.15.249.186   35.202.131.158   22:32656/TCP,8080:32394/TCP,55555:31766/TCP   3m
+svc/XXX-XXX-solace-discovery   ClusterIP      None            <none>           8080/TCP                                      3m
+svc/kubernetes                        ClusterIP      10.15.240.1     <none>           443/TCP                                       6d
+NAME                         READY     STATUS    RESTARTS   AGE
+po/XXX-XXX-solace-0   1/1       Running   0          3m
+po/XXX-XXX-solace-1   0/1       Running   0          3m
+po/XXX-XXX-solace-2   0/1       Running   0          3m
+NAME                               STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS              AGE
+pvc/data-XXX-XXX-solace-0   Bound     pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
+pvc/data-XXX-XXX-solace-1   Bound     pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
+pvc/data-XXX-XXX-solace-2   Bound     pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
+NAME                                          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                                  STORAGECLASS              REASON    AGE
+pv/pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-0   XXX-XXX-standard             3m
+pv/pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-1   XXX-XXX-standard             3m
+pv/pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-2   XXX-XXX-standard             3m
 
 
-prompt:~$ kubectl describe service XXX-XXX-solace
-Name:                     XXX-XXX-solace
+prompt:~$ kubectl describe service XXX-XX-solace
+Name:                     XXX-XX-solace
 Namespace:                default
 Labels:                   app=solace
                           chart=solace-0.1.0
                           heritage=Tiller
-                          release=XXX-XXX
+                          release=XXX-XX
 Annotations:              <none>
 Selector:                 app=solace,release=XXX-XXX
 Type:                     LoadBalancer
-IP:                       10.19.245.131
-LoadBalancer Ingress:     104.154.136.44
+IP:                       10.15.249.186
+LoadBalancer Ingress:     35.202.131.158
 Port:                     ssh  22/TCP
 TargetPort:               22/TCP
-NodePort:                 ssh  31061/TCP
-Endpoints:                10.16.0.12:22
+NodePort:                 ssh  32656/TCP
+Endpoints:                10.12.7.6:22
+Port:                     semp  8080/TCP
+TargetPort:               8080/TCP
+NodePort:                 semp  32394/TCP
+Endpoints:                10.12.7.6:8080
+Port:                     smf  55555/TCP
+TargetPort:               55555/TCP
+NodePort:                 smf  31766/TCP
+Endpoints:                10.12.7.6:55555
+Session Affinity:         None
+External Traffic Policy:  Cluster
 :
 :
+
 ```
 
 Note here serveral IPs and port.  In this example 104.154.136.44 is the external IP to use.
@@ -109,9 +129,10 @@ Note: when using Minikube, there is no integrated LoadBalancer. For a workaround
 
 ## Gaining admin access to the VMR
 
-For persons used to working with Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
+If you are using a single VMR and used to working with Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
 
 ```sh
+
 $ssh -p 22 admin@104.154.136.44
 Solace - Virtual Message Router (VMR)
 Password:
@@ -124,10 +145,56 @@ Copyright 2004-2017 Solace Corporation. All rights reserved.
 
 This is the Community Edition of the Solace VMR.
 
-XXX-XXX-solace-0>
+XXX-XXX-solace-kubernetes-0>
+
+```
+
+If you are using an HA cluster, it is better to access through the Kubernets pod and not directly via TCP:
+Loopback to ssh directly on the pod
+
+```sh
+
+kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh admin@localhost"
+
+```
+
+Loopback to ssh on your host with a port-forward map
+
+```sh
+
+kubectl port-forward XXX-XXX-solace-0 2222:22
+ssh -p 2222 admin@localhost
+
 ```
 
 For persons who are unfamiliar with the Solace mesage router or would prefer an administration application, the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
+
+This can also be mapped to individual VMRs in cluster via port-forward:
+
+```sh
+
+kubectl port-forward XXX-XXX-solace-0 8081:8080 &
+kubectl port-forward XXX-XXX-solace-1 8081:8080 &
+kubectl port-forward XXX-XXX-solace-2 8081:8080 &
+
+```
+
+## Viewing logs
+Logs from the currently running container:
+
+```sh
+
+kubectl logs XXX-XXX-solace-0 -c solace
+
+```
+
+Logs from the previously terminated container:
+
+```sh
+
+kubectl logs XXX-XXX-solace-0 -c solace -p
+
+```
 
 ## Testing data access to the VMR
 

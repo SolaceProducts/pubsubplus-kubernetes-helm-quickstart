@@ -1,13 +1,14 @@
 apiVersion: v1
-description: A Helm chart for Kubernetes
+description: Deploy Solace VMR Singleton or HA Cluster onto a Kubernetes Cluster
 name: solace
 version: 0.1.0
 icon: https://dev.solace.com/wp-content/uploads/2016/10/solace-logo-white.png
 maintainers:
   - name: kenbarr
     email: ken.barr@solace.com
+home: http://dev.solace.com
 sources:
-   - http://dev.solace.com
+   - https://github.com/SolaceProducts/solace-kubernetes-quickstart
 keywords:
 - solace
 - vmr

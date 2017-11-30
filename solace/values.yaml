@@ -1,6 +1,5 @@
-
-# same as values-examples/small-direct-noha.yaml
-configurationFiles: false
+# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
+#  and use this for Solace message spool 
 solace:
   redundancy: false
   size: small
