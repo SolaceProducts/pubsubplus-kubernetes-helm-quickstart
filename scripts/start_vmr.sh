@@ -76,8 +76,7 @@ echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
-git checkout 68545
-cd helm
+cd solace
 
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
@@ -92,6 +91,6 @@ helm install . -f  values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
-echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc'"
+echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc,pv'"
 
 
