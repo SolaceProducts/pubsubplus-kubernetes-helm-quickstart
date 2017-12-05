@@ -75,12 +75,17 @@ spec:
  #         valueFrom:
  #           fieldRef:
  #             fieldPath: metadata.annotations['annotationKey']
+
         command:
          - bash
          - "-ec"
          - |
            source /mnt/disks/solace/init.sh
+           # not using postinstall hooks because of order dependencies
+           # launch config check then Solace so VCMR can provide return code
+           nohup /mnt/disks/solace/config-sync-check.sh &
            /usr/sbin/boot.sh
+
         volumeMounts:
         - name: config-map
           mountPath: /mnt/disks/solace
@@ -105,6 +110,7 @@ spec:
         - name: config-map
           configMap:
             name: {{ template "solace.fullname" . }}
+            defaultMode: 0755
         - name: dshm
           emptyDir:
             medium: Memory
