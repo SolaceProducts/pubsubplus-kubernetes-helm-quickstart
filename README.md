@@ -200,6 +200,30 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 To test data traffic though the newly created VMR instance, visit the Solace developer portal and and select your preferred programming langauge to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
 
+## Upgrading the VMR HA cluster
+
+To upgrade the version of SolOS VMR software running within a Kubernetes cluster.
+
+- Add new version of SolOS to your cantainer registry.
+- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory:
+
+```sh
+image:
+  repository: <repo>/<project>/solos-vmr
+  tag: 8.7.0.XXXXX-evaluation
+  pullPolicy: IfNotPresent
+```
+- Upgrade the kubernetes release, this will not effect running instances
+
+```sh
+helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
+```
+
+- Delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod.
+```sh
+kubectl delete XXX-XXX-solace-3
+```
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.

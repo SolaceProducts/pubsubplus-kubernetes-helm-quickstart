@@ -31,15 +31,6 @@ service:
     - port: 55555
       protocol: TCP
     - port: 22
-      protocol: TCP
-    - port: 8741
-      protocol: TCP
-    - port: 5001
-      protocol: TCP
-    - port: 5404
-      protocol: UDP
-    - port: 5405
-      protocol: UDP
 storage:
   persistent: true
 # For best performance set type:fast size:500Gi and fsType:xfs
