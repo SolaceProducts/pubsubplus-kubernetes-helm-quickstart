@@ -93,6 +93,7 @@ sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solac
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
 # Ensure helm tiller is up and ready to accept a release then proceed
+#  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 helm install . -f  values.yaml --wait
 
