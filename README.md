@@ -10,6 +10,9 @@ This repository explains, in general terms, how to install a Solace VMR in stand
 
 The Solace Virtual Message Router (VMR) provides enterprise-grade messaging capabilities deployable in any computing environment. The VMR provides the same rich feature set as Solace’s proven hardware appliances, with the same open protocol support, APIs and common management. The VMR can be deployed in the datacenter or natively within all popular private and public clouds.
 
+VMRs can either be deployed as a 3 node HA cluster or a single node. For simple test environments that need to validate application functionality, a single instance will suffice.
+Note that in production or any environment where message loss can not be tolerated, an HA cluster is required.
+
 ## How to Deploy a VMR onto Kubernetes
 
 This is a 5 step process:
@@ -18,9 +21,17 @@ This is a 5 step process:
 
     * The minimum requirements for the Solace VMR small size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
 
-2. Use the button below to go to the Solace Developer portal and request a Solace Community edition VMR. This process will return an email with a Download link. Download the Solace VMR image.
+2. Use the buttons below to go to the Solace Developer portal and request a Solace Community edition VMR or Evaluation edition VMR. Note that the Community edition supports single node deployment only.
 
-<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker" target="_blank">
+This process will return an email with a Download link. Download the Solace VMR image.
+
+| COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
+| --- | --- |
+<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
+    <img src="/images/register.png"/>
+</a> 
+
+<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
     <img src="/images/register.png"/>
 </a>
 
