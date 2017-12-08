@@ -23,17 +23,16 @@ This is a 5 step process:
 
 2. Use the buttons below to go to the Solace Developer portal and request a Solace Community edition VMR or Evaluation edition VMR. Note that the Community edition supports single node deployment only.
 
-This process will return an email with a Download link. Download the Solace VMR image.
+     This process will return an email with a Download link. Download the Solace VMR image.
 
-| COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
-| --- | --- |
-<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-    <img src="/images/register.png"/>
-</a> 
-
-<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
-    <img src="/images/register.png"/>
-</a>
+     | COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
+     | --- | --- |
+     <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
+         <img src="/images/register.png"/>
+     </a> 
+     <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
+         <img src="/images/register.png"/>
+     </a>
 
 3. Load the Solace VMR image into a Docker container registry.
 
