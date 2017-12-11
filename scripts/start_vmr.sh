@@ -37,7 +37,8 @@ while getopts "i:p:v:" opt; do
         ;;
     p)  solace_password=$OPTARG
         ;;
-    v)  values_file=$OPTARGS
+    v)  values_file=$OPTARG
+        ;;
     esac
 done
 
@@ -45,7 +46,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 verbose=1
-echo "`date` INFO: solace_image=${solace_image} ,values_file=${values_file} Leftovers: $@"
+echo "`date` INFO: solace_image=${solace_image}, values_file=${values_file} Leftovers: $@"
 
 # [TODO] Need proper way to set service account for tiller
 #kubectl create serviceaccount --namespace kube-system tiller
@@ -91,9 +92,10 @@ sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solac
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
-# [TODO] Need to figure out how to tell helm tiller is up and ready to accept a release
-sleep 60
-helm install . -f  values.yaml
+# Ensure helm tiller is up and ready to accept a release then proceed
+#  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
+kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+helm install . -f  values.yaml --wait
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
