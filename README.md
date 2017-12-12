@@ -57,13 +57,13 @@ Download and execute the following cluster create and deployment script on comma
 This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
 
 ```sh
-  ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
+  ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
 This will create and start a small size HA VMR deployment with dynamically provisioned disks.
 
 ```sh
-  ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
+  ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
 #### Using other VMR deployment configurations
