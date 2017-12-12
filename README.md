@@ -52,7 +52,7 @@ Download and execute the following cluster create and deployment script on comma
 ```sh
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
-  ./start_vmr.sh -p ${PASSWORD } -i ${SOLACE_IMAGE_URL}
+  ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
 #### Using other VMR deployment configurations
