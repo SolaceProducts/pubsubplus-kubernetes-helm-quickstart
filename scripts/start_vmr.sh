@@ -88,14 +88,14 @@ cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
-sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceConfigMap.yaml 
+sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceConfigMap.yaml
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
 # Ensure helm tiller is up and ready to accept a release then proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
-helm install . -f  values.yaml --wait
+helm install . -f values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
