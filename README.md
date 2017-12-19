@@ -45,7 +45,7 @@ The following step will download and build a Helm chart of the following templat
 ![alt text](/images/template_relationship.png "Template Relationship")
 
 
-    * For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
+For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
 ```sh
   PASSWORD=<YourAdminPassword>
