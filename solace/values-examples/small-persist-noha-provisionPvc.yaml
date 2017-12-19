@@ -6,6 +6,9 @@ image:
   repository: SOLOS_IMAGE_REPO
   tag: SOLOS_IMAGE_TAG
   pullPolicy: IfNotPresent
+filepaths:
+  configmap: "/mnt/disks/solace"
+  secrets: "/mnt/disks/secrets"
 service:
   internal: false
   type: LoadBalancer

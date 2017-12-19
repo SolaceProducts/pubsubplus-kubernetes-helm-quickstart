@@ -80,20 +80,26 @@ spec:
          - bash
          - "-ec"
          - |
-           source /mnt/disks/solace/init.sh
+           source {{ .Values.filepaths.configmap }}/init.sh
            # not using postinstall hooks because of order dependencies
            # launch config check then Solace so VCMR can provide return code
-           nohup /mnt/disks/solace/config-sync-check.sh &
+           nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
            /usr/sbin/boot.sh
 
         volumeMounts:
         - name: config-map
-          mountPath: /mnt/disks/solace
+          mountPath: {{ .Values.filepaths.configmap }}
+        - name: secrets
+          mountPath: {{ .Values.filepaths.secrets }}
+          readOnly: true
         - name: dshm
           mountPath: /dev/shm
         - name: data
           mountPath: /usr/sw/jail
           subPath: jail
+        - name: data
+          mountPath: /usr/sw/var
+          subPath: var
         - name: data
           mountPath: /usr/sw/internalSpool
           subPath: internalSpool
@@ -111,6 +117,10 @@ spec:
           configMap:
             name: {{ template "solace.fullname" . }}
             defaultMode: 0755
+        - name: secrets
+          secret:
+            secretName: {{ template "solace.fullname" . }}-secrets
+            defaultMode: 0400
         - name: dshm
           emptyDir:
             medium: Memory

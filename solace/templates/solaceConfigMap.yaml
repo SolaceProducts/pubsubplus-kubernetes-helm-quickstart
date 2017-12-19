@@ -10,7 +10,8 @@ metadata:
     app: {{ template "solace.name" . }}
 data:
   init.sh: |-
-      export username_admin_password=SOLOS_ADMIN_PASSWORD
+    # export username_admin_passwordfilepath={{ .Values.filepaths.secrets }}/username_admin_password
+      export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
       export username_admin_globalaccesslevel=admin
       export service_ssh_port='22'
       export logging_debug_output=stdout
@@ -38,7 +39,7 @@ data:
       export routername=$(echo $(hostname) | sed 's/-//g')
       export redundancy_enable=yes
       export configsync_enable=yes
-      export redundancy_group_password=SOLOS_ADMIN_PASSWORD
+      export redundancy_group_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
       export redundancy_group_node_${service_name}0_nodetype=message_routing
       export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
       export redundancy_group_node_${service_name}1_nodetype=message_routing
@@ -73,29 +74,60 @@ data:
       # node_ordinal=$(STATEFULSET_ORDINAL)
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
-      password=SOLOS_ADMIN_PASSWORD
+      password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
       loop_guard=30
       pause=10
       count=0
-      mate_active_check=""
-      if [ "${node_ordinal}" = "0" ]; then
-        echo "`date` INFO: ${APP}-Wait for Primary to be 'Local Active' or 'Mate Active'"
+      resync_step=""
+      role=""
+      #exclude monitor node from config-sync check
+      if [ "${node_ordinal}" != "2" ]; then
+        echo "`date` INFO: ${APP}-Deturmine if Active or Backup role to know which Virtual router to check"
+        while [ ${count} -lt ${loop_guard} ]; do 
+          role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+          case "`echo ${role_results} | jq '.valueSearchResult' -`" in
+            "\"Primary\"")
+            role="primary"
+            break
+            ;;
+            "\"Backup\"")
+            role="backup"
+            break
+            ;;
+          esac
+          ((count++))
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
+          sleep ${pause}
+        done
+        if [ ${count} -eq ${loop_guard} ]; then
+          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+          exit 1 
+        fi
+
+        count=0
+        echo "`date` INFO: ${APP}-Active or Backup role is ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
           online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
-              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/primary/status/activity[text()]"`
+              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
           local_activity=`echo ${online_results} | jq '.valueSearchResult' -`
           echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
           run_time=$((${count} * ${pause}))
           case "${local_activity}" in
             "\"Local Active\"")
-              echo "`date` INFO: ${APP}-Redundancy is up locally, Primary Active, after ${run_time} seconds"
-              mate_active_check="Standby"
+              echo "`date` INFO: ${APP}-Redundancy is up locally Active, after ${run_time} seconds"
+              echo "`date` INFO: "We should only be here on new cluster create, if not likely a bug"
+              echo "`date` INFO: "   will issue a assert master to get back into sync"                              
+              resync_step="assert-master"
               break
               ;;
             "\"Mate Active\"")
-              echo "`date` INFO: ${APP}-Redundancy is up locally, Backup Active, after ${run_time} seconds"
-              mate_active_check="Active"
+              echo "`date` INFO: ${APP}-Redundancy is up mate Active, after ${run_time} seconds" 
+              echo "`date` INFO: "This is normal state if we are backup or recreated later on"
+              echo "`date` INFO: "   will issue a resync master to get back into sync"            
+              resync_step="resync-master"
               break
               ;;
           esac
@@ -107,51 +139,50 @@ data:
           echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
           exit 1 
         fi
-        loop_guard=30
-        pause=10
-        count=0
-        echo "`date` INFO: ${APP}-Wait for Backup to be 'Active' or 'Standby'"
-        while [ ${count} -lt ${loop_guard} ]; do 
-          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
-              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/primary/status/detail/priority-reported-by-mate/summary[text()]"`
-          mate_activity=`echo ${online_results} | jq '.valueSearchResult' -`
-          echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
-          run_time=$((${count} * ${pause}))
-          case "${mate_activity}" in
-            "\"Active\"")
-              echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Backup Active, after ${run_time} seconds"
-              mate_active_check="Standby"
-              break
-              ;;
-            "\"Standby\"")
-              echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Primary Active, after ${run_time} seconds"
-              mate_active_check="Active"
-              break
-              ;;
-          esac
-          ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
-          sleep ${pause}
-        done
-        if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
-          exit 1 
-        fi
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><assert-master><router/></assert-master></config-sync></admin></rpc>"
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><assert-master><vpn-name>default</vpn-name></assert-master></config-sync></admin></rpc>"
-      fi
-      echo "`date` INFO: ${APP}-Solace VMR bringup complete"
+
+        # If we need to assert master, then we need to wait for mate to reconsile
+        
+        if [ "${resync_step}" = "assert-master" ]; then
+          count=0
+          echo "`date` INFO: ${APP}-Wait for mate to be 'Standby'"
+          while [ ${count} -lt ${loop_guard} ]; do 
+            online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
+            mate_activity=`echo ${online_results} | jq '.valueSearchResult' -`
+            echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
+            run_time=$((${count} * ${pause}))
+            case "${mate_activity}" in
+              "\"Standby\"")
+                echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Local Active Mate Standby, after ${run_time} seconds"
+                break
+                ;;
+            esac
+            ((count++))
+            echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate not yet in sync"
+            sleep ${pause}
+          done
+          if [ ${count} -eq ${loop_guard} ]; then
+            echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+            exit 1 
+          fi
+        fi # if assert-master
+        # If only needs to do is resync master, can issue cammand and exit.
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+        echo "`date` INFO: ${APP}-Solace VMR bringup complete"
+      fi # if not monitor
 {{- end }}
+      exit 0
 
   readiness_check.sh: |-
       #!/bin/bash
       APP=`basename "$0"`
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
-      password=SOLOS_ADMIN_PASSWORD
+      password=`cat /mnt/disks/secrets/username_admin_password`
       return_code=0
       echo "`date` INFO: ${APP}-Getting POD name"
       echo "`date` INFO: ${APP}-Performing readiness check"
