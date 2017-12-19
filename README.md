@@ -47,12 +47,23 @@ This is a 5 step process:
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
 
-Download and execute the following cluster create and deployment script on command line. This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
- 
+Download and execute the following cluster create and deployment script on command line. 
+
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/SOL-1244/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
+```
+
+This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
+
+```sh
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
+```
+
+This will create and start a small size HA VMR deployment with dynamically provisioned disks.
+
+```sh
+  ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
 #### Using other VMR deployment configurations
@@ -65,6 +76,8 @@ The `solace-kubernetes-quickstart/solace/values-examples` directory provides exa
 * `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
 * `small-direct-noha-localDirectory`: to bind the PVC to a local directory on the host node.
 * `small-direct-noha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `small-persist-ha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+
 
 To open up more service ports for external access, add now ports to the `externalPort` list in `values.yaml`. For a list of available services and default ports refer to [VMR Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
 
