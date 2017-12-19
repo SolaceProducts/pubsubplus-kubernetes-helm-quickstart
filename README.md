@@ -8,7 +8,7 @@ This repository explains, in general terms, how to install a Solace VMR in stand
 
 ## Description of Solace VMR
 
-The Solace Virtual Message Router (VMR) provides enterprise-grade messaging capabilities deployable in any computing environment. The VMR provides the same rich feature set as Solace’s proven hardware appliances, with the same open protocol support, APIs and common management. The VMR can be deployed in the datacenter or natively within all popular private and public clouds.
+Solace Virtual Message Router (VMR) software provides enterprise-grade messaging capabilities so you can easily enable event-driven communications between applications, IoT devices, microservices and mobile devices across hybrid cloud and multi cloud environments. The Solace VMR supports open APIs and standard protocols including AMQP 1.0, JMS, MQTT, REST and WebSocket, along with all message exchange patterns including publish/subscribe, request/reply, fan-in/fan-out, queueing, streaming and more. The Solace VMR can be deployed in all popular public cloud, private cloud and on-prem environments, and offers both feature parity and interoperability with Solace’s proven hardware appliances and Messaging as a Service offering called Solace Cloud.
 
 VMRs can either be deployed as a 3 node HA cluster or a single node. For simple test environments that need to validate application functionality, a single instance will suffice.
 Note that in production or any environment where message loss can not be tolerated, an HA cluster is required.
@@ -39,6 +39,11 @@ This is a 5 step process:
 4. Create a Kubernetes Cluster
 
 5. Deploy a Solace Deployment, (Service and Pod), onto the cluster:
+
+The following step will download and build a Helm chart of the following templates and their relationships.  Note that the bare minimum is shown in this diagram just to give you feel to the relationsships and major functions.
+
+![alt text](/images/template_relationship.png "Template Relationship")
+
 
     * For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
