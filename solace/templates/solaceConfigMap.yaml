@@ -82,7 +82,7 @@ data:
       role=""
       #exclude monitor node from config-sync check
       if [ "${node_ordinal}" != "2" ]; then
-        echo "`date` INFO: ${APP}-Deturmine if Active or Backup role to know which Virtual router to check"
+        echo "`date` INFO: ${APP}-Determine if Active or Backup role to know which Virtual router to check"
         while [ ${count} -lt ${loop_guard} ]; do 
           role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
@@ -186,10 +186,10 @@ data:
       return_code=0
       echo "`date` INFO: ${APP}-Getting POD name"
       echo "`date` INFO: ${APP}-Performing readiness check"
-      echo "`date` INFO: ${APP}-Deturmining redundancy role"
+      echo "`date` INFO: ${APP}-Determining redundancy role"
       echo "`date` INFO: ${APP}-Redundancy role is ${local_role}"
       echo "`date` INFO: ${APP}-Redundancy state based on role should be ${role_state}"
-      echo "`date` INFO: ${APP}-Deturmining redundancy state"
+      echo "`date` INFO: ${APP}-Determining redundancy state"
       echo "`date` INFO: ${APP}-Redundancy state is ${local_state}" 
       if [ ${role_state} -eq ${local_state} ]; then
         if [ ${local_state} -eq "local_active" ]; then
