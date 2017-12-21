@@ -19,20 +19,20 @@ This is a 5 step process:
 
 **Step 1**: Perform any pre-requisites to run Kubernetes in your target environment.  This can be things like create GCP project, install Minikube, etc.
 
-    * The minimum requirements for the Solace VMR small-size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
+* The minimum requirements for the Solace VMR small-size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
 
 **Step 2**: Use the buttons below to go to the Solace Developer portal and request a Solace Community edition VMR or Evaluation edition VMR. Note that the Community edition supports single-node deployment only.
 
-     This process will return an email with a Download link. Download the Solace VMR image.
+This process will return an email with a Download link. Download the Solace VMR image.
 
-     | COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
-     | --- | --- |
-     <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-         <img src="/images/register.png"/>
-     </a> 
-     <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
-         <img src="/images/register.png"/>
-     </a>
+| COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
+| --- | --- |
+<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
+    <img src="/images/register.png"/>
+</a> 
+<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
+    <img src="/images/register.png"/>
+</a>
 
 **Step 3**: Load the Solace VMR image into a Docker container registry.
 
@@ -40,16 +40,16 @@ This is a 5 step process:
 
 **Step 5**: Deploy a Solace Deployment, (Service and Pod), onto the cluster.
 
-The [Kubernetes Helm tool](https://github.com/kubernetes/helm/blob/master/README.mdhttps://github.com/kubernetes/helm/blob/master/README.md ) will be used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
+The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool will be used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
 
-The following diagram illustrates the template structure used for the Solace Deployment. Note that the bare minimum is shown in this diagram just to give you feel to the relationships and major functions.
+The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the bare minimum is shown in this diagram just to give you feel to the relationships and major functions.
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
-First download the following cluster create and deployment script on command line:
+First, download the following cluster create and deployment script on command line:
 
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/SOL-1244/scripts/start_vmr.sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
 ```
 
@@ -60,9 +60,9 @@ For the following variables, substitute `<YourAdminPassword>` with the desired p
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
 
-Next execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
+Next, execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
 
-Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script has been executed.
+Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script will be executed.
 
 * This will create and start a small-size non-HA VMR deployment with simple local non-persistent storage:
 
@@ -76,11 +76,11 @@ Note: the script will place the Solace Deployment chart in the `solace-kubernete
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
-Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment refer to the section [Upgrading/modifying the VMR cluster](#upgrading-the-vmr-cluster).
+Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster).
 
 #### Other VMR deployment configurations
 
-When building the chart, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory is used by Helm for values. The `start_vmr.sh` script replaces this file with a <value-file> specified in the argument `-v <value-file>`. 
+When building the chart, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory is used by Helm for values. The `start_vmr.sh` script replaces this file with what is specified in the argument `-v <value-file>`. 
 
 The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several deployment configurations:
 
@@ -96,9 +96,9 @@ Similar value-files can be defined extending above examples:
 
 - It is also possible to configure the VMR deployment with more CPU and memory resources e.g.: to support more connections per VMR, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
-* `small` (default): 1.2 CPU, 6 GB memory
-* `medium`: 3.5 CPU, 15 GB memory
-* `large`: 7.5 CPU, 30 GB memory
+    * `small` (default): 1.2 CPU, 6 GB memory
+    * `medium`: 3.5 CPU, 15 GB memory
+    * `large`: 7.5 CPU, 30 GB memory
 
 ### Validate the Deployment
 
@@ -311,14 +311,14 @@ Next, delete the pod(s) to force them recreated with the new release as describe
 
 ## Deleting a deployment
 
-Use helm to delete a release:
+Use Helm to delete a release:
 
 ```
 # in this case relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm delete XXXX-XXXX
 ```
 
-Note: in some releases helm may return an error even delete was successful.
+Note: in some releases Helm may return an error even delete was successful.
 
 Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
 
@@ -326,7 +326,7 @@ Check what has remained from the deployment, which should only return a single l
 kubectl get statefulsets,services,pods,pvc,pv
 ```
 
-Note: in some releases helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
+Note: in some releases Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
 
 ## Contributing
 
