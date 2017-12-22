@@ -1,0 +1,266 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "solace.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ template "solace.name" . }}
+data:
+  init.sh: |-
+    # export username_admin_passwordfilepath={{ .Values.filepaths.secrets }}/username_admin_password
+      export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      export username_admin_globalaccesslevel=admin
+      export service_ssh_port='22'
+      export logging_debug_output=stdout
+{{- if eq .Values.solace.size "small" }}
+      export system_scaling_maxconnectioncount="1000"
+{{- else if eq .Values.solace.size "medium" }}
+      export system_scaling_maxconnectioncount="10000"
+{{- else if eq .Values.solace.size "large" }}
+      export system_scaling_maxconnectioncount="100000"
+{{- end }}
+{{- if .Values.solace.redundancy }}
+      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
+      # https://github.com/kubernetes/kubernetes/issues/40651
+      # node_ordinal=$(STATEFULSET_ORDINAL)
+      IFS='-' read -ra host_array <<< $(hostname)
+      node_ordinal=${host_array[-1]}
+      if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
+        namespace=`echo $STATEFULSET_NAMESPACE`
+      else
+        namespace=default
+      fi
+      service={{ template "solace.fullname" . }}
+      # Deal with the fact we cannot accept "-" in routre names
+      service_name=$(echo ${service} | sed 's/-//g')
+      export routername=$(echo $(hostname) | sed 's/-//g')
+      export redundancy_enable=yes
+      export configsync_enable=yes
+      export redundancy_group_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      export redundancy_group_node_${service_name}0_nodetype=message_routing
+      export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+      export redundancy_group_node_${service_name}1_nodetype=message_routing
+      export redundancy_group_node_${service_name}1_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+      export redundancy_group_node_${service_name}2_nodetype=monitoring
+      export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc
+
+      case ${node_ordinal} in
+      0 )
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+       export redundancy_activestandbyrole=primary
+        ;;
+      1)
+       export nodetype=message_routing
+       export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+       export redundancy_activestandbyrole=backup
+        ;;
+      2)
+       export nodetype=monitoring
+       ;;
+      esac
+{{- end }}
+
+  config-sync-check.sh: |-
+      #!/bin/bash
+  {{- if .Values.solace.redundancy }}
+      APP=`basename "$0"`
+      yum install -y jq
+      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
+      # https://github.com/kubernetes/kubernetes/issues/40651
+      # node_ordinal=$(STATEFULSET_ORDINAL)
+      IFS='-' read -ra host_array <<< $(hostname)
+      node_ordinal=${host_array[-1]}
+      password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      loop_guard=30
+      pause=10
+      count=0
+      resync_step=""
+      role=""
+      #exclude monitor node from config-sync check
+      if [ "${node_ordinal}" != "2" ]; then
+        echo "`date` INFO: ${APP}-Determine if Active or Backup role to know which Virtual router to check"
+        while [ ${count} -lt ${loop_guard} ]; do 
+          role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+          case "`echo ${role_results} | jq '.valueSearchResult' -`" in
+            "\"Primary\"")
+            role="primary"
+            break
+            ;;
+            "\"Backup\"")
+            role="backup"
+            break
+            ;;
+          esac
+          ((count++))
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
+          sleep ${pause}
+        done
+        if [ ${count} -eq ${loop_guard} ]; then
+          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+          exit 1 
+        fi
+
+        count=0
+        echo "`date` INFO: ${APP}-Active or Backup role is ${role}"
+        while [ ${count} -lt ${loop_guard} ]; do 
+          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
+          local_activity=`echo ${online_results} | jq '.valueSearchResult' -`
+          echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
+          run_time=$((${count} * ${pause}))
+          case "${local_activity}" in
+            "\"Local Active\"")
+              echo "`date` INFO: ${APP}-Redundancy is up locally Active, after ${run_time} seconds"
+              echo "`date` INFO: "We should only be here on new cluster create, if not likely a bug"
+              echo "`date` INFO: "   will issue a assert master to get back into sync"                              
+              resync_step="assert-master"
+              break
+              ;;
+            "\"Mate Active\"")
+              echo "`date` INFO: ${APP}-Redundancy is up mate Active, after ${run_time} seconds" 
+              echo "`date` INFO: "This is normal state if we are backup or recreated later on"
+              echo "`date` INFO: "   will issue a resync master to get back into sync"            
+              resync_step="resync-master"
+              break
+              ;;
+          esac
+          ((count++))
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
+          sleep ${pause}
+        done
+        if [ ${count} -eq ${loop_guard} ]; then
+          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+          exit 1 
+        fi
+
+        # If we need to assert master, then we need to wait for mate to reconsile
+        
+        if [ "${resync_step}" = "assert-master" ]; then
+          count=0
+          echo "`date` INFO: ${APP}-Wait for mate to be 'Standby'"
+          while [ ${count} -lt ${loop_guard} ]; do 
+            online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
+            mate_activity=`echo ${online_results} | jq '.valueSearchResult' -`
+            echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
+            run_time=$((${count} * ${pause}))
+            case "${mate_activity}" in
+              "\"Standby\"")
+                echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Local Active Mate Standby, after ${run_time} seconds"
+                break
+                ;;
+            esac
+            ((count++))
+            echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate not yet in sync"
+            sleep ${pause}
+          done
+          if [ ${count} -eq ${loop_guard} ]; then
+            echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+            exit 1 
+          fi
+        fi # if assert-master
+        # If only needs to do is resync master, can issue cammand and exit.
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+        echo "`date` INFO: ${APP}-Solace VMR bringup complete"
+      fi # if not monitor
+{{- end }}
+      exit 0
+
+  readiness_check.sh: |-
+      #!/bin/bash
+      APP=`basename "$0"`
+      IFS='-' read -ra host_array <<< $(hostname)
+      node_ordinal=${host_array[-1]}
+      password=`cat /mnt/disks/secrets/username_admin_password`
+      return_code=0
+      echo "`date` INFO: ${APP}-Getting POD name"
+      echo "`date` INFO: ${APP}-Performing readiness check"
+      echo "`date` INFO: ${APP}-Determining redundancy role"
+      echo "`date` INFO: ${APP}-Redundancy role is ${local_role}"
+      echo "`date` INFO: ${APP}-Redundancy state based on role should be ${role_state}"
+      echo "`date` INFO: ${APP}-Determining redundancy state"
+      echo "`date` INFO: ${APP}-Redundancy state is ${local_state}" 
+      if [ ${role_state} -eq ${local_state} ]; then
+        if [ ${local_state} -eq "local_active" ]; then
+          echo "`date` INFO: ${APP}-Setting redundancy_active label" 
+        fi
+        echo "`date` INFO: ${APP}-Setting return code READY for ${pod_name}"
+      else
+        echo "`date` WARN: ${APP}-Setting return code NOT_READY for ${pod_name}"
+      fi
+      return ${return_code}
+
+
+  semp_query.sh: |-
+      #!/bin/bash
+      APP=`basename "$0"`
+      OPTIND=1         # Reset in case getopts has been used previously in the shell.
+      # Initialize our own variables:
+      count_search=""
+      name=""
+      password=""
+      query=""
+      url=""
+      value_search=""
+      script_name=$0
+      verbose=0
+      while getopts "c:n:p:q:u:v:" opt; do
+          case "$opt" in
+          c)  count_search=$OPTARG
+              ;;
+          n)  name=$OPTARG
+              ;;
+          p)  password=$OPTARG
+              ;;
+          q)  query=$OPTARG
+              ;;
+          u)  url=$OPTARG
+              ;;
+          v)  value_search=$OPTARG
+              ;;        
+          esac
+      done
+      shift $((OPTIND-1))
+      [ "$1" = "--" ] && shift
+      verbose=1
+      echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
+                  ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
+      if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
+          echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
+          echo  '{"errorInfo":"missing parameter"}'
+          exit 1
+        fi
+      query_response=`curl -u ${name}:${password} ${url} -d "${query}"`
+      query_response_code=`echo $query_response | xmllint -xpath 'string(/rpc-reply/execute-result/@code)' -`
+
+      if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
+          echo "`date` ERROR: ${APP}-${script_name}: Query failed -${query_response}-" >&2
+          echo  "{\"errorInfo\":\"query failed -${query_response_code}-\"}"
+          exit 1
+      fi
+      echo "`date` INFO: ${APP}-${script_name}: Query passed ${query_response_code}" >&2
+      if [[ ! -z $value_search ]]; then
+          value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
+          echo "`date` INFO: ${APP}-${script_name}: Value search $value_search returned ${value_result}" >&2
+          echo  "{\"errorInfo\":\"\",\"valueSearchResult\":\"${value_result}\"}"
+          exit 0
+      fi
+      if [[ ! -z $count_search ]]; then
+          count_line=`echo $query_response | xmllint -xpath "$count_search" -`
+          count_string=`echo $count_search | cut -d '"' -f 2`
+          count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
+          echo -e "`date` INFO: ${APP}-${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
+          echo  "{\"errorInfo\":\"\",\"countSearchResult\":${count_result}}"
+          exit 0
+      fi

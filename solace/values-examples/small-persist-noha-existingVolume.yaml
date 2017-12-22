@@ -1,5 +1,5 @@
-# Need to first provision a directory /mnt/disks/vmr on host node
-#  use this for Solace message spool.  Used to test various fs and mount options
+# Bind PVC to existing voluem.  
+#  First create volume for example "gcloud compute disks create --size 30GB solace-disk"
 solace:
   redundancy: false
   size: small
@@ -37,4 +37,4 @@ service:
     - port: 22
 storage:
   persistent: false
-  hostPath: /mnt/disks/vmr
+  existingVolume: solace-disk

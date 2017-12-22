@@ -28,13 +28,16 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 # Initialize our own variables:
 solace_password=""
 solace_image=""
+values_file="values-examples/small-direct-noha.yaml"
 verbose=0
 
-while getopts "i:p:" opt; do
+while getopts "i:p:v:" opt; do
     case "$opt" in
     i)  solace_image=$OPTARG
         ;;
     p)  solace_password=$OPTARG
+        ;;
+    v)  values_file=$OPTARG
         ;;
     esac
 done
@@ -43,7 +46,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 verbose=1
-echo "`date` INFO: solace_image=$solace_image ,Leftovers: $@"
+echo "`date` INFO: solace_image=${solace_image}, values_file=${values_file} Leftovers: $@"
 
 # [TODO] Need proper way to set service account for tiller
 #kubectl create serviceaccount --namespace kube-system tiller
@@ -78,16 +81,19 @@ git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
 cd solace-kubernetes-quickstart
 cd solace
 
+cp ${values_file} ./values.yaml
+
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
-sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/solaceStatefullSet.yaml 
+sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/pre-install-secret.yaml
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
-# [TODO] Need to figure out how to tell helm tiller is up and ready to accept a release
-sleep 60
-helm install . -f  values.yaml
+# Ensure helm tiller is up and ready to accept a release then proceed
+#  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
+kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+helm install . -f values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"

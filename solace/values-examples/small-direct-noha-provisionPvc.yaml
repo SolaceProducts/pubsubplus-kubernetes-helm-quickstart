@@ -7,6 +7,9 @@ image:
   repository: SOLOS_IMAGE_REPO
   tag: SOLOS_IMAGE_TAG
   pullPolicy: IfNotPresent
+filepaths:
+  configmap: "/mnt/disks/solace"
+  secrets: "/mnt/disks/secrets"
 service:
   internal: false
   type: LoadBalancer
@@ -32,16 +35,7 @@ service:
     - port: 55555
       protocol: TCP
     - port: 22
-      protocol: TCP
-    - port: 8741
-      protocol: TCP
-    - port: 5001
-      protocol: TCP
-    - port: 5404
-      protocol: UDP
-    - port: 5405
-      protocol: UDP
 storage:
-  type: fast
+  type: standard
   persistent: true
-  size: 500Gi
+  size: 30Gi
