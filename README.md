@@ -49,19 +49,15 @@ The following diagram illustrates the template structure used for the Solace Dep
 First, download the following cluster create and deployment script on command line:
 
 ```sh
-
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
-  
 ```
 
 For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
 ```sh
-
   PASSWORD=<YourAdminPassword>
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
-  
 ```
 
 Next, execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
@@ -71,17 +67,13 @@ Note: the script will place the Solace Deployment chart in the `solace-kubernete
 * This will create and start a small-size non-HA VMR deployment with simple local non-persistent storage:
 
 ```sh
-
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
-  
 ```
 
 * This will create and start a small-size HA VMR deployment with dynamically provisioned volumes:
 
 ```sh
-
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
-  
 ```
 
 Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
@@ -188,7 +180,6 @@ Copyright 2004-2017 Solace Corporation. All rights reserved.
 This is the Community Edition of the Solace VMR.
 
 XXX-XXX-solace-0>
-
 ```
 
 If you are using an HA cluster, it is better to access CLI through the Kubernets pod and not directly via TCP:
@@ -211,36 +202,28 @@ For persons who are unfamiliar with the Solace mesage router or would prefer an 
 This can also be mapped to individual VMRs in cluster via port-forward:
 
 ```sh
-
 kubectl port-forward XXX-XXX-solace-0 8081:8080 &
 kubectl port-forward XXX-XXX-solace-1 8081:8080 &
 kubectl port-forward XXX-XXX-solace-2 8081:8080 &
-
 ```
 
 For ssh access to the individual VMRs use:
 
 ```sh
-
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
-
 ```
 
 ## Viewing logs
 Logs from the currently running container:
 
 ```sh
-
 kubectl logs XXX-XXX-solace-0 -c solace
-
 ```
 
 Logs from the previously terminated container:
 
 ```sh
-
 kubectl logs XXX-XXX-solace-0 -c solace -p
-
 ```
 
 ## Testing data access to the VMR
@@ -257,19 +240,15 @@ To **upgrade** the version of SolOS VMR software running within a Kubernetes clu
 - Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory:
 
 ```sh
-
 image:
   repository: <repo>/<project>/solos-vmr
   tag: 8.7.0.XXXXX-evaluation
   pullPolicy: IfNotPresent
-  
 ```
 - Upgrade the Kubernetes release, this will not effect running instances
 
 ```sh
-
 ../../helm/helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
-
 ```
 
 - Delete the pod(s) to force them recreated with the new release. 
@@ -277,9 +256,7 @@ image:
     Important: in an HA deployment delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
 
 ```sh
-
 kubectl delete po/XXX-XXX-solace-<pod-ordinal>
-
 ```
 
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports.  In this example we will add the MQTT 1883 tcp port to the loadbalancer.
