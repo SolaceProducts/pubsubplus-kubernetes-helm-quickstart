@@ -19,15 +19,6 @@ spec:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
     spec:
-{{- if .Values.service.nodeSelector }}
-      nodeSelector:
-{{- range $item := .Values.service.nodeSelector }}
-{{- range $key,$val := $item }}
-        {{ $key }}: {{ $val | quote}}
-{{- end }}
-{{- end }}
-{{- end }}
-      # hostNetwork: true
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -63,8 +54,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-          tcpSocket:
-            port: 55555
+          httpGet:
+            port: 5550
+            path: /health-check/guaranteed-active
         securityContext:
           privileged: true
           capabilities:
@@ -72,34 +64,42 @@ spec:
               - IPC_LOCK
               - SYS_NICE
         env:
-        - name: SOLACE_CLUSTER_SIZE
-          value: "{{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}"
-        - name: USERNAME_ADMIN_PASSWORD
-          value: 'SOLOS_ADMIN_PASSWORD'
-        - name: USERNAME_ADMIN_GLOBALACCESSLEVEL
-          value: 'admin'
-        - name: SERVICE_SSH_PORT
-          value: '22'
         - name: STATEFULSET_NAME
           value: {{ template "solace.fullname" . }}
         - name: STATEFULSET_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: system_scaling_maxconnectioncount
-{{- if eq .Values.solace.size "small" }}
-          value: "1000"
-{{- else if eq .Values.solace.size "medium" }}
-          value: "10000"
-{{- else if eq .Values.solace.size "large" }}
-          value: "100000"
-{{- end }}
+# [TODO] not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
+ #       - name: STATEFULSET_ORDINAL
+ #         valueFrom:
+ #           fieldRef:
+ #             fieldPath: metadata.annotations['annotationKey']
+
+        command:
+         - bash
+         - "-ec"
+         - |
+           source {{ .Values.filepaths.configmap }}/init.sh
+           # not using postinstall hooks because of order dependencies
+           # launch config check then Solace so VCMR can provide return code
+           nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
+           /usr/sbin/boot.sh
+
         volumeMounts:
+        - name: config-map
+          mountPath: {{ .Values.filepaths.configmap }}
+        - name: secrets
+          mountPath: {{ .Values.filepaths.secrets }}
+          readOnly: true
         - name: dshm
           mountPath: /dev/shm
         - name: data
           mountPath: /usr/sw/jail
           subPath: jail
+        - name: data
+          mountPath: /usr/sw/var
+          subPath: var
         - name: data
           mountPath: /usr/sw/internalSpool
           subPath: internalSpool
@@ -113,6 +113,14 @@ spec:
         - containerPort: {{ $item.port }}
           protocol: {{ $item.protocol }}{{end}}
       volumes:
+        - name: config-map
+          configMap:
+            name: {{ template "solace.fullname" . }}
+            defaultMode: 0755
+        - name: secrets
+          secret:
+            secretName: {{ template "solace.fullname" . }}-secrets
+            defaultMode: 0400
         - name: dshm
           emptyDir:
             medium: Memory

@@ -1,7 +1,6 @@
-# Need to first provision a directory /mnt/disks/vmr on host node
-#  use this for Solace message spool.  Used to test various fs and mount options
+# Create a PV of specified size and type, bind PVC to PV 
 solace:
-  redundancy: false
+  redundancy: true
   size: small
 image:
   repository: SOLOS_IMAGE_REPO
@@ -36,5 +35,11 @@ service:
       protocol: TCP
     - port: 22
 storage:
-  persistent: false
-  hostPath: /mnt/disks/vmr
+  persistent: true
+# For best performance set type:fast size:500Gi and fsType:xfs
+#  type: fast
+#  size: 500Gi
+#  fsType: xfs
+# For best compatability set type:standard size:30Gi and leave fsType default ext4
+  type: standard
+  size: 30Gi

@@ -1,6 +1,5 @@
-
-# same as values-examples/small-direct-noha.yaml
-configurationFiles: false
+# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
+#  and use this for Solace message spool 
 solace:
   redundancy: false
   size: small
@@ -8,6 +7,9 @@ image:
   repository: SOLOS_IMAGE_REPO
   tag: SOLOS_IMAGE_TAG
   pullPolicy: IfNotPresent
+filepaths:
+  configmap: "/mnt/disks/solace"
+  secrets: "/mnt/disks/secrets"
 service:
   internal: false
   type: LoadBalancer
@@ -34,13 +36,5 @@ service:
       protocol: TCP
     - port: 22
       protocol: TCP
-    - port: 8741
-      protocol: TCP
-    - port: 5001
-      protocol: TCP
-    - port: 5404
-      protocol: UDP
-    - port: 5405
-      protocol: UDP
 storage:
   persistent: false
