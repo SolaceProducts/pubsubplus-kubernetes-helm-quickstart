@@ -49,34 +49,42 @@ The following diagram illustrates the template structure used for the Solace Dep
 First, download the following cluster create and deployment script on command line:
 
 ```sh
+
   wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
   chmod 755 start_vmr.sh
+  
 ```
 
 For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
 ```sh
+
   PASSWORD=<YourAdminPassword>
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
+  
 ```
 
 Next, execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
 
-Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script will be executed.
+Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script is executed.
 
 * This will create and start a small-size non-HA VMR deployment with simple local non-persistent storage:
 
 ```sh
+
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
+  
 ```
 
 * This will create and start a small-size HA VMR deployment with dynamically provisioned volumes:
 
 ```sh
+
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
+  
 ```
 
-Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster).
+Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
 
 #### Other VMR deployment configurations
 
@@ -157,19 +165,17 @@ External Traffic Policy:  Cluster
 
 ```
 
-Note here several IPs and port.  In this example 104.154.136.44 is the external IP to use.
+Note here several IPs and port.  In this example 35.202.131.158 is the external Public IP to use.
 
 Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
 
 ## Gaining admin access to the VMR
 
-<<admin access>>
-
-If you are using a single VMR and used to working with Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
+If you are using a single VMR and used to working with CLI Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
 
 ```sh
 
-$ssh -p 22 admin@104.154.136.44
+$ssh -p 22 admin@35.202.131.158
 Solace - Virtual Message Router (VMR)
 Password:
 
@@ -181,26 +187,23 @@ Copyright 2004-2017 Solace Corporation. All rights reserved.
 
 This is the Community Edition of the Solace VMR.
 
-XXX-XXX-solace-kubernetes-0>
+XXX-XXX-solace-0>
 
 ```
 
-If you are using an HA cluster, it is better to access through the Kubernets pod and not directly via TCP:
-Loopback to ssh directly on the pod
+If you are using an HA cluster, it is better to access CLI through the Kubernets pod and not directly via TCP:
+
+* Loopback to ssh directly on the pod
 
 ```sh
-
 kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh admin@localhost"
-
 ```
 
-Loopback to ssh on your host with a port-forward map
+* Loopback to ssh on your host with a port-forward map
 
 ```sh
-
 kubectl port-forward XXX-XXX-solace-0 2222:22 &
 ssh -p 2222 admin@localhost
-
 ```
 
 For persons who are unfamiliar with the Solace mesage router or would prefer an administration application, the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
@@ -215,8 +218,13 @@ kubectl port-forward XXX-XXX-solace-2 8081:8080 &
 
 ```
 
-<<ssh access>>
+For ssh access to the individual VMRs use:
 
+```sh
+
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
+
+```
 
 ## Viewing logs
 Logs from the currently running container:
@@ -241,7 +249,7 @@ To test data traffic though the newly created VMR instance, visit the Solace dev
 
 ## Upgrading/modifying the VMR cluster
 
-To upgrade/modify the VMR cluster make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
+To upgrade/modify the VMR cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
 
 To **upgrade** the version of SolOS VMR software running within a Kubernetes cluster:
 
@@ -249,22 +257,29 @@ To **upgrade** the version of SolOS VMR software running within a Kubernetes clu
 - Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory:
 
 ```sh
+
 image:
   repository: <repo>/<project>/solos-vmr
   tag: 8.7.0.XXXXX-evaluation
   pullPolicy: IfNotPresent
+  
 ```
 - Upgrade the Kubernetes release, this will not effect running instances
 
 ```sh
+
 ../../helm/helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
+
 ```
 
 - Delete the pod(s) to force them recreated with the new release. 
-Important: in an HA deployment delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
+
+    Important: in an HA deployment delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
 
 ```sh
+
 kubectl delete po/XXX-XXX-solace-<pod-ordinal>
+
 ```
 
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports.  In this example we will add the MQTT 1883 tcp port to the loadbalancer.
@@ -311,14 +326,14 @@ Next, delete the pod(s) to force them recreated with the new release as describe
 
 ## Deleting a deployment
 
-Use Helm to delete a release:
+Use Helm to delete a deployment, also called a release:
 
 ```
 # in this case relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm delete XXXX-XXXX
 ```
 
-Note: in some releases Helm may return an error even delete was successful.
+Note: in some versions Helm may return an error even delete was successful.
 
 Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
 
@@ -326,7 +341,7 @@ Check what has remained from the deployment, which should only return a single l
 kubectl get statefulsets,services,pods,pvc,pv
 ```
 
-Note: in some releases Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
+Note: in some versions Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
 
 ## Contributing
 
