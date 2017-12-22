@@ -64,6 +64,24 @@ spec:
               - IPC_LOCK
               - SYS_NICE
         env:
+        - name: username_admin_passwordfilepath
+          value: {{ .Values.filepaths.secrets }}/username_admin_password
+        - name: username_admin_globalaccesslevel
+          value: "admin"
+        - name: service_ssh_port
+          value: "22"
+        - name: logging_debug_output
+          value: "stdout"
+{{- if eq .Values.solace.size "small" }}
+        - name: system_scaling_maxconnectioncount
+          value: "1000"
+{{- else if eq .Values.solace.size "medium" }}
+        - name: system_scaling_maxconnectioncount
+          value: "10000"
+{{- else if eq .Values.solace.size "large" }}
+        - name: system_scaling_maxconnectioncount
+          value: "100000"
+{{- end }}
         - name: STATEFULSET_NAME
           value: {{ template "solace.fullname" . }}
         - name: STATEFULSET_NAMESPACE
@@ -75,7 +93,7 @@ spec:
  #         valueFrom:
  #           fieldRef:
  #             fieldPath: metadata.annotations['annotationKey']
-
+ 
         command:
          - bash
          - "-ec"
@@ -133,7 +151,7 @@ spec:
           gcePersistentDisk:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
-{{ else }}             
+{{ else }}
           emptyDir: {}
 {{- end }}
 {{ else }}
