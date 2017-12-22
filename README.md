@@ -2,9 +2,9 @@
 
 ## Purpose of this repository
 
-This repository explains, in general terms, how to install a Solace VMR in standalone non-HA configuration onto a Kubernetes cluster.  To view examples of specific enviroments see:
+This repository explains, in general terms, how to install a Solace VMR in various configurations onto a Kubernetes cluster. To view examples of specific environments see:
 
-- [Installing Solace VMR on Google Compute Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
+- [Installing Solace VMR on Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
 ## Description of Solace VMR
 
@@ -17,33 +17,41 @@ Note that in production or any environment where message loss can not be tolerat
 
 This is a 5 step process:
 
-1. Perform any pre-requisites to run Kubernetes in your target enviroment.  This can be things like create GCP project, install Minikube, etc.
+**Step 1**: Perform any pre-requisites to run Kubernetes in your target environment.  This can be things like create GCP project, install Minikube, etc.
 
-    * The minimum requirements for the Solace VMR small size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
+* The minimum requirements for the Solace VMR small-size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
 
-2. Use the buttons below to go to the Solace Developer portal and request a Solace Community edition VMR or Evaluation edition VMR. Note that the Community edition supports single node deployment only.
+**Step 2**: Use the buttons below to go to the Solace Developer portal and request a Solace Community edition VMR or Evaluation edition VMR. Note that the Community edition supports single-node deployment only.
 
-     This process will return an email with a Download link. Download the Solace VMR image.
+This process will return an email with a Download link. Download the Solace VMR image.
 
-     | COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
-     | --- | --- |
-     <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-         <img src="/images/register.png"/>
-     </a> 
-     <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
-         <img src="/images/register.png"/>
-     </a>
+| COMMUNITY EDITION FOR SINGLE NODE | EVALUATION EDITION FOR HA CLUSTER |
+| --- | --- |
+<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
+    <img src="/images/register.png"/>
+</a> 
+<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
+    <img src="/images/register.png"/>
+</a>
 
-3. Load the Solace VMR image into a Docker container registry.
+**Step 3**: Load the Solace VMR image into a Docker container registry.
 
-4. Create a Kubernetes Cluster
+**Step 4**: Create a Kubernetes Cluster
 
-5. Deploy a Solace Deployment, (Service and Pod), onto the cluster:
+**Step 5**: Deploy a Solace Deployment, (Service and Pod), onto the cluster.
 
-The following step will download and build a Helm chart of the following templates and their relationships.  Note that the bare minimum is shown in this diagram just to give you feel to the relationsships and major functions.
+The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool will be used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
+
+The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the bare minimum is shown in this diagram just to give you feel to the relationships and major functions.
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
+First, download the following cluster create and deployment script on command line:
+
+```sh
+  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
+  chmod 755 start_vmr.sh
+```
 
 For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
 
@@ -52,47 +60,45 @@ For the following variables, substitute `<YourAdminPassword>` with the desired p
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
 ```
 
-Download and execute the following cluster create and deployment script on command line. 
+Next, execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
 
-```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/SOL-1244/scripts/start_vmr.sh
-  chmod 755 start_vmr.sh
-```
+Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script is executed.
 
-This will create and start a small size non-HA VMR deployment with simple local non-persistent storage.
+* This will create and start a small-size non-HA VMR deployment with simple local non-persistent storage:
 
 ```sh
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
-This will create and start a small size HA VMR deployment with dynamically provisioned disks.
+* This will create and start a small-size HA VMR deployment with dynamically provisioned volumes:
 
 ```sh
   ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
-#### Using other VMR deployment configurations
+Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
 
-The properties of the VMR deployment are defined in the `values.yaml` file located at the `solace-kubernetes-quickstart/solace` directory which has been created as a result of running the script.
+#### Other VMR deployment configurations
 
-The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several storage options:
+When building the chart, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory is used by Helm for values. The `start_vmr.sh` script replaces this file with what is specified in the argument `-v <value-file>`. 
 
-* `small-direct-noha` (default): the simple local non-persistent storage
-* `small-direct-noha-existingVolume`: to bind the PVC to an existing external volume in the network.
-* `small-direct-noha-localDirectory`: to bind the PVC to a local directory on the host node.
-* `small-direct-noha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
-* `small-persist-ha-provisionPvc`: to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several deployment configurations:
 
+* `small-direct-noha` (default if no argument provided): small-size, non-HA, simple local non-persistent storage
+* `small-direct-noha-existingVolume`: small-size, non-HA, bind the PVC to an existing external volume in the network
+* `small-direct-noha-localDirectory`: small-size, non-HA, bind the PVC to a local directory on the host node
+* `small-direct-noha-provisionPvc`: small-size, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `small-persist-ha-provisionPvc`: small-size, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 
-To open up more service ports for external access, add now ports to the `externalPort` list in `values.yaml`. For a list of available services and default ports refer to [VMR Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
+Similar value-files can be defined extending above examples:
 
-It is also possible to configure the VMR deployment with more CPU and memory resources by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
+- To open up more service ports for external access, add now ports to the `externalPort` list. For a list of available services and default ports refer to [VMR Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
 
-* `small` (default): 1.2 CPU, 6 GB memory
-* `medium`: 3.5 CPU, 15 GB memory
-* `large`: 7.5 CPU, 30 GB memory
+- It is also possible to configure the VMR deployment with more CPU and memory resources e.g.: to support more connections per VMR, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
-Note: the deployment script installs and uses the Kubernetes `helm` tool for the deployment, which can be used to redeploy the VMR if changing deployment options. Setting permissions on the Kubernetes cluster may also be required so helm can setup and use its tiller service on the nodes. See the [Helm documentation](https://github.com/kubernetes/helm) for more details.
+    * `small` (default): 1.2 CPU, 6 GB memory
+    * `medium`: 3.5 CPU, 15 GB memory
+    * `large`: 7.5 CPU, 30 GB memory
 
 ### Validate the Deployment
 
@@ -151,17 +157,17 @@ External Traffic Policy:  Cluster
 
 ```
 
-Note here serveral IPs and port.  In this example 104.154.136.44 is the external IP to use.
+Note here several IPs and port.  In this example 35.202.131.158 is the external Public IP to use.
 
 Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
 
 ## Gaining admin access to the VMR
 
-If you are using a single VMR and used to working with Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
+If you are using a single VMR and used to working with CLI Solace message router console access, this is still available with standard ssh session from any internet at port 22 by default:
 
 ```sh
 
-$ssh -p 22 admin@104.154.136.44
+$ssh -p 22 admin@35.202.131.158
 Solace - Virtual Message Router (VMR)
 Password:
 
@@ -173,26 +179,22 @@ Copyright 2004-2017 Solace Corporation. All rights reserved.
 
 This is the Community Edition of the Solace VMR.
 
-XXX-XXX-solace-kubernetes-0>
-
+XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access through the Kubernets pod and not directly via TCP:
-Loopback to ssh directly on the pod
+If you are using an HA cluster, it is better to access CLI through the Kubernets pod and not directly via TCP:
+
+* Loopback to ssh directly on the pod
 
 ```sh
-
 kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh admin@localhost"
-
 ```
 
-Loopback to ssh on your host with a port-forward map
+* Loopback to ssh on your host with a port-forward map
 
 ```sh
-
-kubectl port-forward XXX-XXX-solace-0 2222:22
+kubectl port-forward XXX-XXX-solace-0 2222:22 &
 ssh -p 2222 admin@localhost
-
 ```
 
 For persons who are unfamiliar with the Solace mesage router or would prefer an administration application, the SolAdmin management application is available.  For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
@@ -200,37 +202,39 @@ For persons who are unfamiliar with the Solace mesage router or would prefer an 
 This can also be mapped to individual VMRs in cluster via port-forward:
 
 ```sh
-
 kubectl port-forward XXX-XXX-solace-0 8081:8080 &
 kubectl port-forward XXX-XXX-solace-1 8081:8080 &
 kubectl port-forward XXX-XXX-solace-2 8081:8080 &
+```
 
+For ssh access to the individual VMRs use:
+
+```sh
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
 ```
 
 ## Viewing logs
 Logs from the currently running container:
 
 ```sh
-
 kubectl logs XXX-XXX-solace-0 -c solace
-
 ```
 
 Logs from the previously terminated container:
 
 ```sh
-
 kubectl logs XXX-XXX-solace-0 -c solace -p
-
 ```
 
 ## Testing data access to the VMR
 
-To test data traffic though the newly created VMR instance, visit the Solace developer portal and and select your preferred programming langauge to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
+To test data traffic though the newly created VMR instance, visit the Solace developer portal and and select your preferred programming language to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
 
-## Upgrading the VMR HA cluster
+## Upgrading/modifying the VMR cluster
 
-To upgrade the version of SolOS VMR software running within a Kubernetes cluster.
+To upgrade/modify the VMR cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
+
+To **upgrade** the version of SolOS VMR software running within a Kubernetes cluster:
 
 - Add new version of SolOS to your cantainer registry.
 - Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory:
@@ -241,16 +245,80 @@ image:
   tag: 8.7.0.XXXXX-evaluation
   pullPolicy: IfNotPresent
 ```
-- Upgrade the kubernetes release, this will not effect running instances
+- Upgrade the Kubernetes release, this will not effect running instances
 
 ```sh
-helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
+../../helm/helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
 ```
 
-- Delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod.
+- Delete the pod(s) to force them recreated with the new release. 
+
+    Important: in an HA deployment delete the pods in order 2,1,0.  Validate Solace redundancy is up and reconsiled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
+
 ```sh
-kubectl delete XXX-XXX-solace-3
+kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
+
+Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports.  In this example we will add the MQTT 1883 tcp port to the loadbalancer.
+
+```
+tee ./port-update.yaml <<-EOF
+service:
+  internal: false
+  type: LoadBalancer
+  externalPort:
+    - port: 22
+      protocol: TCP
+      name: ssh
+    - port: 8080
+      protocol: TCP
+      name: semp
+    - port: 55555
+      protocol: TCP
+      name: smf
+   - port: 1883
+      protocol: TCP
+      name: mqtt    
+  internalPort:
+    - port: 80
+      protocol: TCP
+    - port: 8080
+      protocol: TCP
+    - port: 443
+      protocol: TCP
+    - port: 8443
+      protocol: TCP
+    - port: 55555
+      protocol: TCP
+    - port: 22
+      protocol: TCP
+   - port: 1883
+      protocol: TCP
+EOF
+
+../../helm/helm upgrade  XXXX-XXXX . –f values.yaml –f port_update.yaml
+```
+
+Next, delete the pod(s) to force them recreated with the new release as described above in the upgrade case. 
+
+## Deleting a deployment
+
+Use Helm to delete a deployment, also called a release:
+
+```
+# in this case relative to the solace-kubernetes-quickstart/solace directory
+../../helm/helm delete XXXX-XXXX
+```
+
+Note: in some versions Helm may return an error even delete was successful.
+
+Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
+
+```
+kubectl get statefulsets,services,pods,pvc,pv
+```
+
+Note: in some versions Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
 
 ## Contributing
 
