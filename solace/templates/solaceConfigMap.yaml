@@ -10,18 +10,8 @@ metadata:
     app: {{ template "solace.name" . }}
 data:
   init.sh: |-
-    # export username_admin_passwordfilepath={{ .Values.filepaths.secrets }}/username_admin_password
+      #[TODO] Move to solaceStatefullSet once RT27210 resolved 
       export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
-      export username_admin_globalaccesslevel=admin
-      export service_ssh_port='22'
-      export logging_debug_output=stdout
-{{- if eq .Values.solace.size "small" }}
-      export system_scaling_maxconnectioncount="1000"
-{{- else if eq .Values.solace.size "medium" }}
-      export system_scaling_maxconnectioncount="10000"
-{{- else if eq .Values.solace.size "large" }}
-      export system_scaling_maxconnectioncount="100000"
-{{- end }}
 {{- if .Values.solace.redundancy }}
       # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
       # https://github.com/kubernetes/kubernetes/issues/40651
@@ -33,6 +23,7 @@ data:
       else
         namespace=default
       fi
+      #[TODO] Move all redundancy env to solaceStatefullSet once RT27310 resolved 
       service={{ template "solace.fullname" . }}
       # Deal with the fact we cannot accept "-" in routre names
       service_name=$(echo ${service} | sed 's/-//g')
@@ -178,89 +169,160 @@ data:
       exit 0
 
   readiness_check.sh: |-
-      #!/bin/bash
-      APP=`basename "$0"`
-      IFS='-' read -ra host_array <<< $(hostname)
-      node_ordinal=${host_array[-1]}
-      password=`cat /mnt/disks/secrets/username_admin_password`
-      return_code=0
-      echo "`date` INFO: ${APP}-Getting POD name"
-      echo "`date` INFO: ${APP}-Performing readiness check"
-      echo "`date` INFO: ${APP}-Determining redundancy role"
-      echo "`date` INFO: ${APP}-Redundancy role is ${local_role}"
-      echo "`date` INFO: ${APP}-Redundancy state based on role should be ${role_state}"
-      echo "`date` INFO: ${APP}-Determining redundancy state"
-      echo "`date` INFO: ${APP}-Redundancy state is ${local_state}" 
-      if [ ${role_state} -eq ${local_state} ]; then
-        if [ ${local_state} -eq "local_active" ]; then
-          echo "`date` INFO: ${APP}-Setting redundancy_active label" 
-        fi
-        echo "`date` INFO: ${APP}-Setting return code READY for ${pod_name}"
+    #!/bin/bash
+    #[TODO] This script sets Kubernetes metadata activity label every time, though robust, might be overkill and 
+    # a strain on the system.  Need to deturmine is we should cache activity state and only set on transitions, 
+    # or better yet transitions and periodic refresh 
+
+    # Function to set Kubernetes metadata labels
+    set_label () {
+      cat > /temp/patch_label.json <<EOF
+      [ 
+        { 
+          "op": "add", "path": "/metadata/labels/${1}", "value": ${2} 
+        } 
+      ]
+      EOF
+      POD_NAMESPACE=default
+      KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
+      curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
+           -H "Content-Type:application/json-patch+json" \
+           https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$POD_NAMESPACE/pods/$HOSTNAME
+    }
+
+    # note that there are no re-tries here, if check fails the return not ready.
+    APP=`basename "$0"`
+    password=`cat /mnt/disks/secrets/username_admin_password`
+    return_code=0
+    echo "`date` INFO: ${APP}-node oridinal"
+    IFS='-' read -ra host_array <<< $(hostname)
+    node_ordinal=${host_array[-1]}
+    echo "`date` INFO: ${APP}-Determining redundancy config role"
+    if [ "${node_ordinal}" = "2" ]; then
+      config_role="monitor"
+    else
+      role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+              -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+      case "`echo ${role_results} | jq '.valueSearchResult' -`" in
+        "\"Primary\"")
+          config_role="primary"
+          ;;
+        "\"Backup\"")
+          config_role="backup"
+          ;;
+        "")
+          echo "`date` WARN: ${APP}-Unable to deturmine config role, failing readiness check"
+          set_label "active" "false"
+          exit 1
+      esac
+    fi
+    echo "`date` INFO: ${APP}-Redundancy config role is ${config_role}"
+    if [ ${config_role} = "monitor" ]; then
+      # Note that when dealing with Monitor, only need to be concerned and readiness response.
+      # active label will always be "false"
+      echo "`date` INFO: ${APP}-For monitor node just check for 3 online nodes in group"
+      role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><group/></redundancy></show></rpc>" \
+              -c "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+      if [ `echo ${role_results} | jq '.countSearchResult' -` -eq 3 ]; then
+        echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
+        exit 0
       else
-        echo "`date` WARN: ${APP}-Setting return code NOT_READY for ${pod_name}"
+        echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, result: ${role_results}"
+        exit 1
       fi
-      return ${return_code}
+    fi # End Monitor Node
+    echo "`date` INFO: ${APP}-Redundancy role is ${local_role}"
+    online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+            -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
+    local_activity=`echo ${online_results} | jq '.valueSearchResult' -`
+    echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
+    case "${local_activity}" in
+      "\"Local Active\"")
+        echo "`date` INFO: ${APP}-Redundancy is up locally Active"
+        # Set active label to "true"
+        set_label "active" "true"
+        # Pass readiness check
+        exit 0
+        ;;
+      "\"Mate Active\"")
+        echo "`date` INFO: ${APP}-Redundancy is up mate Active"
+        # Set active label to "false"
+        set_label "active" "false"
+        # Pass readiness check
+        exit 0
+        ;;
+      *)
+        echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check"
+        # Set active label to "false"
+        set_label "active" "false"
+        # Fail readiness check
+        exit 1
+        ;;
+    esac
 
 
   semp_query.sh: |-
-      #!/bin/bash
-      APP=`basename "$0"`
-      OPTIND=1         # Reset in case getopts has been used previously in the shell.
-      # Initialize our own variables:
-      count_search=""
-      name=""
-      password=""
-      query=""
-      url=""
-      value_search=""
-      script_name=$0
-      verbose=0
-      while getopts "c:n:p:q:u:v:" opt; do
-          case "$opt" in
-          c)  count_search=$OPTARG
-              ;;
-          n)  name=$OPTARG
-              ;;
-          p)  password=$OPTARG
-              ;;
-          q)  query=$OPTARG
-              ;;
-          u)  url=$OPTARG
-              ;;
-          v)  value_search=$OPTARG
-              ;;        
-          esac
-      done
-      shift $((OPTIND-1))
-      [ "$1" = "--" ] && shift
-      verbose=1
-      echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
-                  ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
-      if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
-          echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
-          echo  '{"errorInfo":"missing parameter"}'
-          exit 1
-        fi
-      query_response=`curl -u ${name}:${password} ${url} -d "${query}"`
-      query_response_code=`echo $query_response | xmllint -xpath 'string(/rpc-reply/execute-result/@code)' -`
+    #!/bin/bash
+    APP=`basename "$0"`
+    OPTIND=1         # Reset in case getopts has been used previously in the shell.
+    # Initialize our own variables:
+    count_search=""
+    name=""
+    password=""
+    query=""
+    url=""
+    value_search=""
+    script_name=$0
+    verbose=0
+    while getopts "c:n:p:q:u:v:" opt; do
+        case "$opt" in
+        c)  count_search=$OPTARG
+            ;;
+        n)  name=$OPTARG
+            ;;
+        p)  password=$OPTARG
+            ;;
+        q)  query=$OPTARG
+            ;;
+        u)  url=$OPTARG
+            ;;
+        v)  value_search=$OPTARG
+            ;;        
+        esac
+    done
+    shift $((OPTIND-1))
+    [ "$1" = "--" ] && shift
+    verbose=1
+    echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
+                ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
+    if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
+        echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
+        echo  '{"errorInfo":"missing parameter"}'
+        exit 1
+      fi
+    query_response=`curl -u ${name}:${password} ${url} -d "${query}"`
+    query_response_code=`echo $query_response | xmllint -xpath 'string(/rpc-reply/execute-result/@code)' -`
 
-      if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
-          echo "`date` ERROR: ${APP}-${script_name}: Query failed -${query_response}-" >&2
-          echo  "{\"errorInfo\":\"query failed -${query_response_code}-\"}"
-          exit 1
-      fi
-      echo "`date` INFO: ${APP}-${script_name}: Query passed ${query_response_code}" >&2
-      if [[ ! -z $value_search ]]; then
-          value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
-          echo "`date` INFO: ${APP}-${script_name}: Value search $value_search returned ${value_result}" >&2
-          echo  "{\"errorInfo\":\"\",\"valueSearchResult\":\"${value_result}\"}"
-          exit 0
-      fi
-      if [[ ! -z $count_search ]]; then
-          count_line=`echo $query_response | xmllint -xpath "$count_search" -`
-          count_string=`echo $count_search | cut -d '"' -f 2`
-          count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
-          echo -e "`date` INFO: ${APP}-${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
-          echo  "{\"errorInfo\":\"\",\"countSearchResult\":${count_result}}"
-          exit 0
-      fi
+    if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
+        echo "`date` ERROR: ${APP}-${script_name}: Query failed -${query_response}-" >&2
+        echo  "{\"errorInfo\":\"query failed -${query_response_code}-\"}"
+        exit 1
+    fi
+    echo "`date` INFO: ${APP}-${script_name}: Query passed ${query_response_code}" >&2
+    if [[ ! -z $value_search ]]; then
+        value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
+        echo "`date` INFO: ${APP}-${script_name}: Value search $value_search returned ${value_result}" >&2
+        echo  "{\"errorInfo\":\"\",\"valueSearchResult\":\"${value_result}\"}"
+        exit 0
+    fi
+    if [[ ! -z $count_search ]]; then
+        count_line=`echo $query_response | xmllint -xpath "$count_search" -`
+        count_string=`echo $count_search | cut -d '"' -f 2`
+        count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
+        echo -e "`date` INFO: ${APP}-${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
+        echo  "{\"errorInfo\":\"\",\"countSearchResult\":${count_result}}"
+        exit 0
+    fi
