@@ -12,15 +12,16 @@ data:
   init.sh: |-
       #[TODO] Move to solaceStatefullSet once RT27210 resolved 
       export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      export username_admin_globalaccesslevel=admin
       export service_ssh_port='22'
       export logging_debug_output=stdout
- -{{- if eq .Values.solace.size "small" }}
+ {{- if eq .Values.solace.size "small" }}
       export system_scaling_maxconnectioncount="1000"
- -{{- else if eq .Values.solace.size "medium" }}
+ {{- else if eq .Values.solace.size "medium" }}
       export system_scaling_maxconnectioncount="10000"
- -{{- else if eq .Values.solace.size "large" }}
+ {{- else if eq .Values.solace.size "large" }}
       export system_scaling_maxconnectioncount="100000"
- -{{- end }}
+ {{- end }}
 
 {{- if .Values.solace.redundancy }}
       # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
@@ -186,13 +187,7 @@ data:
 
     # Function to set Kubernetes metadata labels
     set_label () {
-      cat > /temp/patch_label.json <<EOF
-      [ 
-        { 
-          "op": "add", "path": "/metadata/labels/${1}", "value": ${2} 
-        } 
-      ]
-      EOF
+      echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
       POD_NAMESPACE=default
       KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
       curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
