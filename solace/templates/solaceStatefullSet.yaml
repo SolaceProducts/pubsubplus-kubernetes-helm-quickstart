@@ -9,7 +9,6 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-    active: "false"
 spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
@@ -55,9 +54,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-        exec:
-          command:
-          - {{ .Values.filepaths.configmap }}/readiness_check.sh
+          httpGet:
+            port: 5550
+            path: /health-check/guaranteed-active
         securityContext:
           privileged: true
           capabilities:

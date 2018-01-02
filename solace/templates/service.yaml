@@ -22,4 +22,3 @@ spec:
   selector:
     app: {{ template "solace.name" . }}
     release: {{ .Release.Name }}
-    active: "true"
