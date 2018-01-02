@@ -12,6 +12,16 @@ data:
   init.sh: |-
       #[TODO] Move to solaceStatefullSet once RT27210 resolved 
       export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      export service_ssh_port='22'
+      export logging_debug_output=stdout
+ -{{- if eq .Values.solace.size "small" }}
+      export system_scaling_maxconnectioncount="1000"
+ -{{- else if eq .Values.solace.size "medium" }}
+      export system_scaling_maxconnectioncount="10000"
+ -{{- else if eq .Values.solace.size "large" }}
+      export system_scaling_maxconnectioncount="100000"
+ -{{- end }}
+
 {{- if .Values.solace.redundancy }}
       # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
       # https://github.com/kubernetes/kubernetes/issues/40651
