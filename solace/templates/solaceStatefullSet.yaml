@@ -12,6 +12,8 @@ metadata:
 spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
+  updateStrategy:
+    type: RollingUpdate
   podManagementPolicy: Parallel
   template:
     metadata:

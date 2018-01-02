@@ -187,18 +187,30 @@ data:
 
     # Function to set Kubernetes metadata labels
     set_label () {
-      echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
-      POD_NAMESPACE=default
-      KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
-      curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
-           -H "Content-Type:application/json-patch+json" \
-           https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$POD_NAMESPACE/pods/$HOSTNAME
+      #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
+      previous_state=`cat $3`
+      if [ "${2}" = "${previous_state}" ]; then
+        echo "`date` INFO: ${APP}-Current and Previous state match, not updating label"
+      else
+        echo ${2} > ${3}
+        echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
+        POD_NAMESPACE=default
+        KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
+        curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
+            -H "Content-Type:application/json-patch+json" \
+            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$POD_NAMESPACE/pods/$HOSTNAME
+      fi
     }
 
     # note that there are no re-tries here, if check fails the return not ready.
     APP=`basename "$0"`
     password=`cat /mnt/disks/secrets/username_admin_password`
     return_code=0
+    state_file=/tmp/activity_state
+    if [ ! -f ${state_file} ]; then
+      echo "State file not found, creating!"
+      echo "false" > ${state_file}
+    fi
     echo "`date` INFO: ${APP}-node oridinal"
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
@@ -218,7 +230,7 @@ data:
           ;;
         "")
           echo "`date` WARN: ${APP}-Unable to deturmine config role, failing readiness check"
-          set_label "active" "false"
+          set_label "active" "false" $state_file
           exit 1
       esac
     fi
@@ -248,21 +260,21 @@ data:
       "\"Local Active\"")
         echo "`date` INFO: ${APP}-Redundancy is up locally Active"
         # Set active label to "true"
-        set_label "active" "true"
+        set_label "active" "true" $state_file
         # Pass readiness check
         exit 0
         ;;
       "\"Mate Active\"")
         echo "`date` INFO: ${APP}-Redundancy is up mate Active"
         # Set active label to "false"
-        set_label "active" "false"
+        set_label "active" "false" $state_file
         # Pass readiness check
         exit 0
         ;;
       *)
         echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check"
         # Set active label to "false"
-        set_label "active" "false"
+        set_label "active" "false" $state_file
         # Fail readiness check
         exit 1
         ;;
