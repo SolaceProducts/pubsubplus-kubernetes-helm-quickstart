@@ -229,7 +229,7 @@ data:
       echo "`date` INFO: ${APP}-For monitor node just check for 3 online nodes in group"
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><group/></redundancy></show></rpc>" \
-              -c "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+              -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
       if [ `echo ${role_results} | jq '.countSearchResult' -` -eq 3 ]; then
         echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
         exit 0

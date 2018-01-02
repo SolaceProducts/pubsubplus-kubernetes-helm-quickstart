@@ -9,7 +9,6 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-    active: "false"
 spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
@@ -19,6 +18,7 @@ spec:
       labels:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
+        active: "false"
     spec:
       containers:
       - name: {{ .Chart.Name }}
