@@ -55,9 +55,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-        exec:
-          command:
-          - {{ .Values.filepaths.configmap }}/readiness_check.sh
+          exec:
+            command:
+            - {{ .Values.filepaths.configmap }}/readiness_check.sh
         securityContext:
           privileged: true
           capabilities:
