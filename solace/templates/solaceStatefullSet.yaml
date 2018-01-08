@@ -12,15 +12,14 @@ metadata:
 spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
-  updateStrategy:
-    type: RollingUpdate
+{{- if and (eq .Capabilities.KubeVersion.Major "1") (gt .Capabilities.KubeVersion.Minor "6") }}  
   podManagementPolicy: Parallel
+{{- end }}
   template:
     metadata:
       labels:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
-        active: "false"
     spec:
       containers:
       - name: {{ .Chart.Name }}
@@ -57,9 +56,14 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-          exec:
-            command:
-            - {{ .Values.filepaths.configmap }}/readiness_check.sh
+{{- if and (eq .Capabilities.KubeVersion.Major "1") (gt .Capabilities.KubeVersion.Minor "6") }}  
+          httpGet:
+            port: 5550
+            path: /health-check/guaranteed-active
+{{- else}}
+          tcpSocket:
+            port: 8080
+{{- end }}
         securityContext:
           privileged: true
           capabilities:
@@ -133,12 +137,18 @@ spec:
           hostPath:
             path: {{ .Values.storage.hostPath }}
 {{- else if .Values.storage.existingVolume }}
+  {{- if eq .Values.cloudProvider  "aws" }}
+          awsElasticBlockStore:
+            volumeID: {{ .Values.storage.existingVolume }}
+            fsType: xfs
+  {{- else if eq .Values.cloudProvider "gcp" }}
           gcePersistentDisk:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
-{{ else }}             
+  {{- end}}
+{{ else }} #end existingVolume            
           emptyDir: {}
-{{- end }}
+{{- end }} #end !persistent
 {{ else }}
   volumeClaimTemplates:
   - metadata:
@@ -149,4 +159,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.storage.size}}
-{{- end }}{{- end}}
+{{- end }}{{- end}} #end storage

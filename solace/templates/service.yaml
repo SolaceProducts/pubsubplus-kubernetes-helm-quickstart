@@ -9,10 +9,14 @@ metadata:
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     app: {{ template "solace.name" . }}
-{{- if .Values.service.internal }}
+
+{{- if eq .Values.cloudProvider  "aws" }}
+{{- else if eq .Values.cloudProvider "gcp" }}
+ {{- if .Values.service.internal }}
   annotations:
     cloud.google.com/load-balancer-type: "internal"
-{{- end }}
+ {{- end }} #end internal
+{{- end }} #end gcp
 spec:
   type: {{.Values.service.type}}
   ports:{{ range $item := .Values.service.externalPort }}
@@ -22,4 +26,3 @@ spec:
   selector:
     app: {{ template "solace.name" . }}
     release: {{ .Release.Name }}
-    active: "true"
