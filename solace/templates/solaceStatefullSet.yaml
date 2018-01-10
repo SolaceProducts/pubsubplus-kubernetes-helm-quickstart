@@ -14,6 +14,8 @@ spec:
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
 {{- if and (eq .Capabilities.KubeVersion.Major "1") (gt .Capabilities.KubeVersion.Minor "6") }}  
   podManagementPolicy: Parallel
+  updateStrategy: 
+    type: RollingUpdate
 {{- end }}
   template:
     metadata:
@@ -64,7 +66,8 @@ spec:
   {{- if .Values.solace.redundancy }}
           exec:
             command:
-            - {{ .Values.filepaths.configmap }}/readiness_check_1.6.sh
+            - {{ .Values.filepaths.configmap }}/readiness_check.sh
+            - 6
   {{- else }}
           tcpSocket:
             port: 8080
