@@ -59,15 +59,22 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 5
 {{- if and (eq .Capabilities.KubeVersion.Major "1") (gt .Capabilities.KubeVersion.Minor "6") }}
+  {{- if .Values.solace.redundancy }}
+          exec:
+            command:
+            - {{ .Values.filepaths.configmap }}/readiness_check.sh
+            - "7"
+  {{- else }}
           httpGet:
             port: 5550
             path: /health-check/guaranteed-active
+  {{- end }}
 {{- else }}
   {{- if .Values.solace.redundancy }}
           exec:
             command:
             - {{ .Values.filepaths.configmap }}/readiness_check.sh
-            - 6
+            - "6"
   {{- else }}
           tcpSocket:
             port: 8080
