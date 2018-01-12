@@ -190,11 +190,10 @@ data:
       else
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
-        POD_NAMESPACE=default
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
         curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Content-Type:application/json-patch+json" \
-            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$POD_NAMESPACE/pods/$HOSTNAME
+            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME
       fi
     }
 
