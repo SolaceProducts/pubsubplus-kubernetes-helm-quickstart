@@ -53,11 +53,12 @@ First, download the following cluster create and deployment script on command li
   chmod 755 start_vmr.sh
 ```
 
-For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry.
+For the following variables, substitute `<YourAdminPassword>` with the desired password for the management `admin` user. Substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry. Substitute `<YourCloudProvider>` with the cloud enviroment you will be running in, current options are [aws|gcp]; if you are not using dynamic provisioned persistent disks, this can be left out.
 
 ```sh
   PASSWORD=<YourAdminPassword>
   SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
+  CLOUD_PROVIDER=<YourCloudProvider>
 ```
 
 Next, execute the `start_vmr.sh` script with the required arguments. It will install Helm, initialize it on the current Kubernetes Cluster, download the Solace Deployment chart, then use Helm to build and install the chart on the cluster.
@@ -73,7 +74,7 @@ Note: the script will place the Solace Deployment chart in the `solace-kubernete
 * This will create and start a small-size HA VMR deployment with dynamically provisioned volumes:
 
 ```sh
-  ./start_vmr.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
+  ./start_vmr.sh -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
 Note: the `start_vmr.sh` script can only be used to create an initial deployment. To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
