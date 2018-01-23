@@ -84,7 +84,7 @@ data:
       if [ "${node_ordinal}" != "2" ]; then
         echo "`date` INFO: ${APP}-Determine if Active or Backup role to know which Virtual router to check"
         while [ ${count} -lt ${loop_guard} ]; do 
-          role_results=`{{ .Values.filepaths.solace }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
           case "`echo ${role_results} | jq '.valueSearchResult' -`" in
@@ -109,7 +109,7 @@ data:
         count=0
         echo "`date` INFO: ${APP}-Active or Backup role is ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
-          online_results=`{{ .Values.filepaths.solace }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
           local_activity=`echo ${online_results} | jq '.valueSearchResult' -`
@@ -146,7 +146,7 @@ data:
           count=0
           echo "`date` INFO: ${APP}-Wait for mate to be 'Standby'"
           while [ ${count} -lt ${loop_guard} ]; do 
-            online_results=`{{ .Values.filepaths.solace }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
             mate_activity=`echo ${online_results} | jq '.valueSearchResult' -`
@@ -168,9 +168,9 @@ data:
           fi
         fi # if assert-master
         # If only needs to do is resync master, can issue cammand and exit.
-        {{ .Values.filepaths.solace }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
-        {{ .Values.filepaths.solace }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
         echo "`date` INFO: ${APP}-Solace VMR bringup complete"
       fi # if not monitor
