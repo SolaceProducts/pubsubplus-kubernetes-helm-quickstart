@@ -72,7 +72,7 @@ echo "#############################################################"
 wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
 tar zxf helm-${helm_version}-${helm_type}.tar.gz
 mv ${helm_type} helm
-export PATH=$PATH:~/helm
+export PATH=$PATH:`pwd`/helm
 helm init
 
 echo "`date` INFO: BUILD HELM CHARTS"
