@@ -71,11 +71,11 @@ os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
-    sed_options="-iE"
+    sed_options="-E -i.bak"
     ;;
   "Linux" )
     helm_type="linux-amd64"
-    sed_options="-i"
+    sed_options="-i.bak"
     ;;
 esac
 
@@ -99,6 +99,7 @@ IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/pre-install-secret.yaml
+rm templates/pre-install-secret.yaml.bak
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
