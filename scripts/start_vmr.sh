@@ -84,8 +84,8 @@ echo "#############################################################"
 wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
 tar zxf helm-${helm_version}-${helm_type}.tar.gz
 mv ${helm_type} helm
-export PATH=$PATH:`pwd`/helm
-helm init
+HELM="`pwd`/helm/helm"
+"$HELM" init
 
 echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
@@ -106,7 +106,7 @@ echo "#############################################################"
 # Ensure helm tiller is up and ready to accept a release then proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
-helm install . -f values.yaml
+"$HELM" install . -f values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
