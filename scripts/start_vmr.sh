@@ -22,7 +22,19 @@
 #  - upload the instance into google container registery
 #  - clean up load docker
 
-
+exists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+if exists kubectl; then
+  echo 'kubectl exists!'
+else
+  echo 'kubectl not found on the PATH'
+  echo '	Please install kubectl (see https://kubernetes.io/docs/tasks/tools/install-kubectl/)'
+  echo '	Or if you have already installed it, add it to the PATH shell variable'
+  echo "	Current PATH: ${PATH}"
+  exit -1
+fi
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
 # Initialize our own variables:
