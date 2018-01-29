@@ -5,12 +5,21 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-{{ .Values.storage.type }}
-provisioner: kubernetes.io/gce-pd
+{{- if eq .Values.cloudProvider  "aws" }}
+provisioner: kubernetes.io/aws-ebs
+{{- else if eq .Values.cloudProvider "gcp" }}
+provisioner: kubernetes.io/gcp-pd
+{{- end}}
 parameters:
+#Default don't set zone or zones, allow k8s to strip across active zones
 {{- if .Values.storage.zone }}
   zone: {{ .Values.storage.zone }}
 {{- end }}
+{{- if eq .Values.cloudProvider  "aws" }}
+  type: {{- if eq .Values.storage.type "fast" }} io1 {{ else }} gp2 {{ end -}}
+{{- else if eq .Values.cloudProvider "gcp" }}
   type: {{- if eq .Values.storage.type "fast" }} pd-ssd {{ else }} pd-standard {{ end -}}
+{{- end}}
 {{- if .Values.storage.fsType }}
   fsType: {{ .Values.storage.fsType }}
 {{- end }}

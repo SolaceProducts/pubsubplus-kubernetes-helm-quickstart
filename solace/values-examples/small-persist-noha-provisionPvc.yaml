@@ -2,6 +2,8 @@
 solace:
   redundancy: false
   size: small
+# Current options are [gcp|aws]
+cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
   repository: SOLOS_IMAGE_REPO
   tag: SOLOS_IMAGE_TAG

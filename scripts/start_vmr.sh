@@ -38,13 +38,16 @@ fi
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
 # Initialize our own variables:
+cloud_provider="gcp"
 solace_password=""
 solace_image=""
 values_file="values-examples/small-direct-noha.yaml"
 verbose=0
 
-while getopts "i:p:v:" opt; do
+while getopts "c:i:p:v:" opt; do
     case "$opt" in
+    c)  cloud_provider=$OPTARG
+        ;;
     i)  solace_image=$OPTARG
         ;;
     p)  solace_password=$OPTARG
@@ -58,7 +61,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 verbose=1
-echo "`date` INFO: solace_image=${solace_image}, values_file=${values_file} Leftovers: $@"
+echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
 
 # [TODO] Need proper way to set service account for tiller
 #kubectl create serviceaccount --namespace kube-system tiller
@@ -98,6 +101,7 @@ cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
+sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/pre-install-secret.yaml
 rm templates/pre-install-secret.yaml.bak
 
