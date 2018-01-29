@@ -22,7 +22,19 @@
 #  - upload the instance into google container registery
 #  - clean up load docker
 
-
+exists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+if exists kubectl; then
+  echo 'kubectl exists!'
+else
+  echo 'kubectl not found on the PATH'
+  echo '	Please install kubectl (see https://kubernetes.io/docs/tasks/tools/install-kubectl/)'
+  echo '	Or if you have already installed it, add it to the PATH shell variable'
+  echo "	Current PATH: ${PATH}"
+  exit -1
+fi
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
 # Initialize our own variables:
@@ -59,11 +71,11 @@ os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
-    sed_options="-iE"
+    sed_options="-E -i.bak"
     ;;
   "Linux" )
     helm_type="linux-amd64"
-    sed_options="-i"
+    sed_options="-i.bak"
     ;;
 esac
 
@@ -72,8 +84,8 @@ echo "#############################################################"
 wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
 tar zxf helm-${helm_version}-${helm_type}.tar.gz
 mv ${helm_type} helm
-export PATH=$PATH:~/helm
-helm init
+HELM="`pwd`/helm/helm"
+"$HELM" init
 
 echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
@@ -87,13 +99,14 @@ IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/pre-install-secret.yaml
+rm templates/pre-install-secret.yaml.bak
 
 echo "`date` INFO: DEPLOY VMR TO CLUSTER"
 echo "#############################################################"
 # Ensure helm tiller is up and ready to accept a release then proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
-helm install . -f values.yaml
+"$HELM" install . -f values.yaml
 
 echo "`date` INFO: DEPLOY VMR COMPLETE"
 echo "#############################################################"
