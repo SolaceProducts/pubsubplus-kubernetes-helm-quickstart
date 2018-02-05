@@ -150,6 +150,11 @@ spec:
           gcePersistentDisk:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
+  {{- else if eq .Values.cloudProvider "gcp" }}
+          azureDisk:
+            diskName: {{ .Values.storage.existingVolumeName }}
+            diskURI: {{ .Values.storage.existingVolume }}
+            fsType: xfs
   {{- end}}
 {{ else }} #end existingVolume            
           emptyDir: {}
