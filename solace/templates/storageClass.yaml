@@ -22,7 +22,7 @@ parameters:
 {{- else if eq .Values.cloudProvider "gcp" }}
   type: {{- if eq .Values.storage.type "fast" }} pd-ssd {{ else }} pd-standard {{ end -}}
 {{- else if eq .Values.cloudProvider "azure" }}
-  storageaccounttype: Standard_LRS
+  storageaccounttype: {{- if eq .Values.storage.type "fast" }} Premium_LRS {{ else }} Standard_LRS {{ end -}}
   kind: Shared
 {{- end}}
 {{- if .Values.storage.fsType }}
