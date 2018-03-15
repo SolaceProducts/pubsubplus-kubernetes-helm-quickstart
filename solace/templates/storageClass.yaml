@@ -8,7 +8,7 @@ metadata:
 {{- if eq .Values.cloudProvider  "aws" }}
 provisioner: kubernetes.io/aws-ebs
 {{- else if eq .Values.cloudProvider "gcp" }}
-provisioner: kubernetes.io/gcp-pd
+provisioner: kubernetes.io/gce-pd
 {{- end}}
 parameters:
 #Default don't set zone or zones, allow k8s to strip across active zones
