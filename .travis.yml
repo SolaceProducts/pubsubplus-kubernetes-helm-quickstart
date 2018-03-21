@@ -1,0 +1,58 @@
+language: ruby
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - echo "Installing test gems"
+  - gem install yaml-lint
+  - export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)"
+  - echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+  - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+  - sudo apt-get update && sudo apt-get install google-cloud-sdk
+  - sudo apt-get install kubectl
+  - sudo apt-get install jq
+  - echo $GCP_KEY_FILE | base64 -d > ./keyfile
+  - gcloud auth activate-service-account -q $(jq -r .client_email keyfile) --key-file=./keyfile --project  $(jq -r .project_id keyfile)
+  - rm ./keyfile
+  
+install: true
+
+script:
+  - yaml-lint -n solace/values-examples/
+  - yaml-lint -n solace/*.yaml
+  - echo "Testing GKE deployment, cloud provider Google Cloud Platform (gcp) "
+  - mkdir gke_test; cd gke_test
+  - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
+  - wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
+  - chmod 755 create_cluster.sh
+  - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME
+  - kubectl get statefulset,svc,pods,pvc,pv
+  - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
+  - passw="$(gcloud container clusters describe $TESTCLUSTERNAME --zone us-central1-b | grep password | awk '{print $2}')"
+  - export SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS="--username=admin --password=$passw"
+  - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/start_vmr.sh
+  - chmod 755 start_vmr.sh
+  - ./start_vmr.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solos-vmr:8.8.0.1017-evaluation -v values-examples/small-persist-ha-provisionPvc.yaml
+  - kubectl get statefulset,svc,pods,pvc,pv --show-labels
+  - echo "Waiting for cluster to become active"
+  - "travis_wait 30 sleep 1800 &"
+  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep -m 1 -E '1/1'; do sleep 10; done
+  - kubectl get statefulset,svc,pods,pvc,pv --show-labels
+  - url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
+  - curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
+  - tar -xvf SDKPERF_C_LINUX64
+  - pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
+  
+
+after_success:
+  - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+  - echo "YAML linted"
+  - echo "GKE cluster deployment tested"
+  - echo "Messaging tested"
+
+after_script:
+  - gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-central1-b
+  - gcloud compute disks list | grep travis | sed 1d $rpt | while read -r a b c; do gcloud compute disks delete $a --zone $b --quiet; done
