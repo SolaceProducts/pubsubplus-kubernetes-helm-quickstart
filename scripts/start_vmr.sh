@@ -22,6 +22,14 @@
 #  - upload the instance into google container registery
 #  - clean up load docker
 
+# use external env variables if defined, otherwise fall back to defaults (defaults are after the - (dash))
+# Define if using different repo/branch
+repo=${SOLACE_KUBERNETES_QUICKSTART_REPO-SolaceProducts/solace-kubernetes-quickstart}
+branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
+# Define if using a service account, e.g. for automation
+kubectl_create_clusterrolebinding_credentials=$SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS
+echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=${kubectl_create_clusterrolebinding_credentials}"
+
 exists()
 {
   command -v "$1" >/dev/null 2>&1
@@ -63,11 +71,6 @@ shift $((OPTIND-1))
 verbose=1
 echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
 
-# [TODO] Need proper way to set service account for tiller
-#kubectl create serviceaccount --namespace kube-system tiller
-#kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-#kubectl edit deploy --namespace kube-system tiller-deploy #and add the line serviceAccount: tiller to spec/template/spec
-
 helm_version=v2.7.2
 os_type=`uname`
 
@@ -88,11 +91,20 @@ wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_
 tar zxf helm-${helm_version}-${helm_type}.tar.gz
 mv ${helm_type} helm
 HELM="`pwd`/helm/helm"
-"$HELM" init
+
+# [TODO] Need proper way to set service account for tiller
+if [ "$cloud_provider" == "gcp" ]
+then
+  kubectl create serviceaccount --namespace kube-system tiller
+  kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  "$HELM" init --service-account tiller
+else
+  "$HELM" init
+fi
 
 echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart
+git clone --branch $branch https://github.com/$repo
 cd solace-kubernetes-quickstart
 cd solace
 
