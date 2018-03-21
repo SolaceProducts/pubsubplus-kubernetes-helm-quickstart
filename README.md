@@ -1,4 +1,4 @@
-https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master
+[![Build Status](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
 
 # Install a Solace Message Router onto a Kubernetes cluster
 
