@@ -1,3 +1,5 @@
+https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master
+
 # Install a Solace Message Router onto a Kubernetes cluster
 
 ## Purpose of this repository
