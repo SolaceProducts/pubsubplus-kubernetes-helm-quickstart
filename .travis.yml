@@ -39,7 +39,7 @@ script:
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - echo "Waiting for cluster to become active"
   - "travis_wait 30 sleep 1800 &"
-  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep -m 1 -E '1/1'; do sleep 10; done
+  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep solace-0 | grep -m 1 -E '1/1'; do sleep 10; done
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
   - curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
