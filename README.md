@@ -337,7 +337,7 @@ The `solace-kubernetes-quickstart/solace/values-examples` directory provides exa
 
 Similar value-files can be defined extending above examples:
 
-- To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
+- To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/SW-Broker-Configuration-Defaults.htm) in the Solace customer documentation.
 
 - It is also possible to configure the message broker deployment with different CPU and memory resources to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
