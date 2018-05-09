@@ -168,16 +168,22 @@ If you are using a single message broker and used to working with CLI Solace Pub
 ```sh
 
 $ssh -p 22 admin@35.202.131.158
-Solace - Virtual Message Router (VMR)
+Solace PubSub+ Standard
 Password:
 
-System Software. SolOS-TR Version 8.6.0.1010
+Solace PubSub+ Standard Version 8.10.0.1057
 
-Virtual Message Router (Message Routing Node)
+The Solace PubSub+ Standard is proprietary software of
+Solace Corporation. By accessing the Solace PubSub+ Standard
+you are agreeing to the license terms and conditions located at
+http://www.solace.com/license-software
 
-Copyright 2004-2017 Solace Corporation. All rights reserved.
+Copyright 2004-2018 Solace Corporation. All rights reserved.
 
-This is the Community Edition of the Solace VMR.
+To purchase product support, please contact Solace at:
+http://dev.solace.com/contact-us/
+
+Operating Mode: Message Routing Node
 
 XXX-XXX-solace-0>
 ```
