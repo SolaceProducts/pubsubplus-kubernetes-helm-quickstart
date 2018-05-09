@@ -6,7 +6,7 @@
 
 This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool. To view examples of specific environments see:
 
-- [Installing Solace VMR on Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
+- [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
 ## Description of the Solace PubSub+ Software Message Broker
 
@@ -22,26 +22,24 @@ This is a 5 step process:
 
 ### Step 1: 
 
-Perform any prerequisites to run Kubernetes in your target environment. These can include tasks like creating a GCP project, installing Minikube, etc.
+Perform any prerequisites to run Kubernetes in your target environment. These can include tasks like creating a GCP project, installing MiniKube, etc.
 
-* The minimum requirements for the Solace VMR small-size deployment are 2 CPUs and 8 GB memory available to the Kubernetes node.
+* The minimum requirements for the Solace message broker small-size deployment are 2 CPU and 2 GB memory available to the Kubernetes node.
 
 ### Step 2: 
 
-Go to the Solace Developer Portal and request a Solace PubSub+ software message broker. You can use this quick start with either PubSub+ Standard or PubSub+ Enterprise Evaluation Edition. PubSub+ Standard is free and allows up to 1k simultaneous client connections and messaging rates up to 100k messages per second. PubSub+ Enterprise Evaluation Edition is a 90-day trial version of Solace PubSub+ Enterprise, which provides you with enterprise ready capabilities.
+Go to the Solace Developer Portal and request a Solace PubSub+ software message broker. This process will return an email with a Download link. To get going, right click "Copy Hyperlink" on the "Download the Solace PubSub+ Software Message Broker for Docker" hyperlink. This will be needed in the following section.
 
- To get going, right click "Copy Hyperlink" on the "Download the Solace PubSub+ Software Message Broker for Docker" hyperlink. You'll be sent an email with a download link that will be needed in the following section. 
+You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterprise Evaluation Edition`.
 
 | PubSub+ Standard | PubSub+ Enterprise Evaluation Edition
-| --- | --- |
-<a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank">
-    <img src="images/register.png"/>
-</a> 
-
-<a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank">
-    <img src="images/register.png"/>
-</a>
-
+| :---: | :---: |
+| Free, up to 1k simultaneous connections,<br/>up to 100k messages per second | 90-day trial version, unlimited |
+| <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank"><img src="images/register.png"/></a> | <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank"><img src="images/register.png"/></a> |
+ 
+<br>
+<br>
+ 
 ### Step 3: 
 
 Load the message broker image into a Docker container registry.
@@ -52,7 +50,7 @@ Create a Kubernetes Cluster.
 
 ### Step 5: 
 
-Deploy a Solace Deployment (Service and Pod) onto the cluster.
+Deploy Solace message broker Pods and Service to the cluster.
 
 The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
 
@@ -63,8 +61,8 @@ The following diagram illustrates the template structure used for the Solace Dep
 First, download the following cluster creation and deployment script on command line:
 
 ```sh
-  wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/start_vmr.sh
-  chmod 755 start_vmr.sh
+wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/configure.sh
+chmod 755 configure.sh
 ```
 
 Make the following substitutions: substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
@@ -79,26 +77,28 @@ Next, execute the configuration script, which will install the required version 
 
 Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script is executed.
 
-* This will prepare a `development` non-HA message broker deployment with up to 100 connections using simple local non-persistent storage:
+When preparing the `solace` chart by the script, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations).
+
+* When no `-v` argument is provided, by default a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
 
 ```sh
-  ./start_vmr.sh  -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
+  ./configure.sh  -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
-* This will prepare a `production` HA message broker deployment, with up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
+* This will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
 
 ```sh
-  ./start_vmr.sh -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
+  ./configure.sh -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
-Finally, use `helm` to install the deployment from the `solace` chart location. For more information about how `helm` is used, refer to the [Solace Kubernetes Quickstart README](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/master#step-5).
+Finally, use `helm` to install the deployment from the `solace` chart location, based on the contents of `values.yaml`:
 
 ```sh
 cd solace-kubernetes-quickstart/solace
 ../../helm/helm install . -f values.yaml
 ```
 
-To modify a deployment, refer to the section [Upgrading/modifying the VMR cluster](#upgradingmodifying-the-vmr-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
+To modify a deployment, refer to the section [Upgrading/modifying the message broker cluster](#upgradingmodifying-the-message-broker-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
 
 ### Validate the Deployment
 
@@ -159,7 +159,7 @@ External Traffic Policy:  Cluster
 
 Note here several IPs and port.  In this example 35.202.131.158 is the external Public IP to use.
 
-Note: when using Minikube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
+Note: when using MiniKube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
 
 ## Gaining admin access to the message broker
 
@@ -230,6 +230,8 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
 
+Use the external Public IP to access the cluster. If a port required for a protocol is not opened refer to the next section how to open it up by modifying the cluster.
+
 ## Upgrading/modifying the message broker cluster
 
 To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
@@ -237,17 +239,18 @@ To upgrade/modify the message broker cluster, make the required modifications to
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
 - Add new version of the message broker to your container registry.
-- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory:
+- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
 
 ```sh
 image:
-  repository: <repo>/<project>/solos-vmr
-  tag: 8.7.0.XXXXX-evaluation
+  repository: <repo>/<project>/solace-pubsub-standard
+  tag: 8.10.0.XXXXX
   pullPolicy: IfNotPresent
 ```
 - Upgrade the Kubernetes release, this will not effect running instances
 
 ```sh
+# Relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
 ```
 
@@ -296,6 +299,7 @@ service:
       protocol: TCP
 EOF
 
+# Relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm upgrade  XXXX-XXXX . –f values.yaml –f port_update.yaml
 ```
 
@@ -306,7 +310,7 @@ Next, delete the pod(s) to force them to be recreated with the new release as de
 Use Helm to delete a deployment, also called a release:
 
 ```
-# in this case relative to the solace-kubernetes-quickstart/solace directory
+# Relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm delete XXXX-XXXX
 ```
 
@@ -318,29 +322,31 @@ Check what has remained from the deployment, which should only return a single l
 kubectl get statefulsets,services,pods,pvc,pv
 ```
 
-Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `helm delete` to delete those.
+Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. Check their existence with `kubectl get all` and if necessary, use `kubectl delete` to delete those.
 
 ## Other Message Broker Deployment Configurations
 
-When building the chart, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory is used by Helm for values. The `start_vmr.sh` script replaces this file with what is specified in the argument `-v <value-file>`. 
-
 The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several deployment configurations:
 
-* `small-direct-noha` (default if no argument provided): small-size, non-HA, simple local non-persistent storage
-* `small-direct-noha-existingVolume`: small-size, non-HA, bind the PVC to an existing external volume in the network
-* `small-direct-noha-localDirectory`: small-size, non-HA, bind the PVC to a local directory on the host node
-* `small-direct-noha-provisionPvc`: small-size, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
-* `small-persist-ha-provisionPvc`: small-size, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `dev100-direct-noha` (default if no argument provided): for development purposes, supports up to 100 connections, non-HA, simple local non-persistent storage
+* `prod1k-direct-noha`: production, up to 1000 connections, non-HA, simple local non-persistent storage
+* `prod1k-direct-noha-existingVolume`: production, up to 1000 connections, non-HA, bind the PVC to an existing external volume in the network
+* `prod1k-direct-noha-localDirectory`: production, up to 1000 connections, non-HA, bind the PVC to a local directory on the host node
+* `prod1k-direct-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `prod1k-persist-ha-provisionPvc`: production, up to 1000 connections, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 
 Similar value-files can be defined extending above examples:
 
 - To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](https://docs.solace.com/Solace-VMR-Set-Up/VMR-Configuration-Defaults.htm) in the Solace customer documentation.
 
-- It is also possible to configure the message broker deployment with more CPU and memory resources e.g.: to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
+- It is also possible to configure the message broker deployment with different CPU and memory resources to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
-    * `small` (default): 1.2 CPU, 6 GB memory
-    * `medium`: 3.5 CPU, 15 GB memory
-    * `large`: 7.5 CPU, 30 GB memory
+    * `dev100` (default): up to 100 connections, requires 1 CPU, 1 GB memory
+    * `prod100`: up to 100 connections, requires 2 CPU, 2 GB memory
+    * `prod1k`: up to 1,000 connections, requires 2 CPU, 4 GB memory
+    * `prod10k`: up to 10,000 connections, requires 4 CPU, 12 GB memory
+    * `prod100k`: up to 100,000 connections, requires 8 CPU, 28 GB memory
+    * `prod200k`: up to 200,000 connections, requires 12 CPU, 56 GB memory
 
 ## Contributing
 
