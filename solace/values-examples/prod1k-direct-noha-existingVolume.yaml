@@ -1,8 +1,9 @@
 # Bind PVC to existing voluem.  
 #  First create volume for example "gcloud compute disks create --size 30GB solace-disk"
+configurationFiles: false
 solace:
   redundancy: false
-  size: small
+  size: prod1k
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:

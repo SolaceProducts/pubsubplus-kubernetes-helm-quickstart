@@ -1,8 +1,8 @@
-# Need to first provision a directory /mnt/disks/vmr on host node
-#  use this for Solace message spool.  Used to test various fs and mount options
+# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
+#  and use this for Solace message spool 
 solace:
   redundancy: false
-  size: small
+  size: dev100
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
@@ -39,4 +39,3 @@ service:
     - port: 22
 storage:
   persistent: false
-  hostPath: /mnt/disks/vmr

@@ -16,18 +16,16 @@
 # limitations under the License.
 
 # The purpose of this script is to:
-#  - take a URL to a Solace VMR docker container
-#  - validate the container against known MD5
-#  - load the container to create a local instance
-#  - upload the instance into google container registery
-#  - clean up load docker
+#  - take a URL to a Solace PubSub+ docker container, admin password and cloud provider parameters
+#  - install the required version of helm
+#  - clone locally and prepare the solace chart for deployment
 
-# use external env variables if defined, otherwise fall back to defaults (defaults are after the - (dash))
-# Define if using different repo/branch
+# use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
+# otherwise fall back to defaults (defaults are after the - (dash))
 repo=${SOLACE_KUBERNETES_QUICKSTART_REPO-SolaceProducts/solace-kubernetes-quickstart}
 branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
 # Define if using a service account, e.g. for automation
-kubectl_create_clusterrolebinding_credentials=$SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS
+kubectl_create_clusterrolebinding_credentials=${SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS}
 echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=${kubectl_create_clusterrolebinding_credentials}"
 
 exists()
@@ -46,10 +44,10 @@ fi
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
 # Initialize our own variables:
-cloud_provider="gcp"
+cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
 solace_password=""
 solace_image=""
-values_file="values-examples/small-direct-noha.yaml"
+values_file="values-examples/dev100-direct-noha.yaml"
 verbose=0
 
 while getopts "c:i:p:v:" opt; do
@@ -73,7 +71,6 @@ echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider
 
 helm_version=v2.7.2
 os_type=`uname`
-
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
@@ -84,13 +81,12 @@ case ${os_type} in
     sed_options="-i.bak"
     ;;
 esac
-
 echo "`date` INFO: DOWNLOAD HELM"
 echo "#############################################################"
 wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
 tar zxf helm-${helm_version}-${helm_type}.tar.gz
 mv ${helm_type} helm
-HELM="`pwd`/helm/helm"
+export HELM="`pwd`/helm/helm"
 
 # [TODO] Need proper way to set service account for tiller
 if [ "$cloud_provider" == "gcp" ]
@@ -102,6 +98,7 @@ else
   "$HELM" init
 fi
 
+# While helm is busy initializing prepare the solace helm chart
 echo "`date` INFO: BUILD HELM CHARTS"
 echo "#############################################################"
 git clone --branch $branch https://github.com/$repo
@@ -109,7 +106,6 @@ cd solace-kubernetes-quickstart
 cd solace
 
 cp ${values_file} ./values.yaml
-
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
@@ -117,15 +113,9 @@ sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
 rm templates/secret.yaml.bak
 
-echo "`date` INFO: DEPLOY VMR TO CLUSTER"
-echo "#############################################################"
-# Ensure helm tiller is up and ready to accept a release then proceed
+# Wait until helm tiller is up and ready to proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
 kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
-"$HELM" install . -f values.yaml
 
-echo "`date` INFO: DEPLOY VMR COMPLETE"
+echo "`date` INFO: READY TO DEPLOY Solace PubSub+ TO CLUSTER"
 echo "#############################################################"
-echo "`date` INFO: View status with 'kubectl get statefulset,svc,pods,pvc,pv'"
-
-

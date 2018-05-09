@@ -1,7 +1,7 @@
 # Create a PV of specified size and type, bind PVC to PV 
 solace:
   redundancy: true
-  size: small
+  size: prod1k
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
