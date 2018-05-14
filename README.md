@@ -34,7 +34,7 @@ You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterpri
 
 | PubSub+ Standard | PubSub+ Enterprise Evaluation Edition
 | :---: | :---: |
-| Free, up to 1k simultaneous connections,<br/>up to 100k messages per second | 90-day trial version, unlimited |
+| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank"><img src="images/register.png"/></a> | <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank"><img src="images/register.png"/></a> |
  
 <br>
