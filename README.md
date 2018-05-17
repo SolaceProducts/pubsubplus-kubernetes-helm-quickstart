@@ -22,13 +22,14 @@ This is a 5 step process:
 
 ### Step 1: 
 
-Perform any prerequisites to run Kubernetes in your target environment. These can include tasks like creating a GCP project, installing MiniKube, etc.
+Perform any prerequisites to run Kubernetes in your target environment. These can include tasks like creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc.
 
-* The minimum requirements for the Solace message broker small-size deployment are 2 CPU and 2 GB memory available to the Kubernetes node.
+* Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ).
+* Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required depending on your environment.
 
 ### Step 2: 
 
-Go to the Solace Developer Portal and request a Solace PubSub+ software message broker. This process will return an email with a Download link. To get going, right click "Copy Hyperlink" on the "Download the Solace PubSub+ Software Message Broker for Docker" hyperlink. This will be needed in the following section.
+Go to the Solace Developer Portal and download the Solace PubSub+ software message broker for Docker image.
 
 You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterprise Evaluation Edition`.
 
@@ -44,9 +45,17 @@ You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterpri
 
 Load the message broker image into a Docker container registry.
 
+> If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
+
 ### Step 4: 
 
-Create a Kubernetes Cluster.
+Create a Kubernetes platform. This may be a single node or a multi-node cluster.
+
+* The minimum recommended resources for the smallest Solace message broker deployment are 2 CPU and 2 GB memory available to the Kubernetes node. For requirements supporting larger deployments refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+
+> If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. Use `--cpus` and `--memory` for other options.
+
+Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
 ### Step 5: 
 
@@ -58,37 +67,37 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
-First, download the following cluster creation and deployment script on command line:
+First, download the following configuration script on command line:
 
 ```sh
 wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/configure.sh
 chmod 755 configure.sh
 ```
 
-Make the following substitutions: substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
+Next, execute the config script with passing parameters. For convenience the following variables can be defined. Substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
 
 ```sh
-  PASSWORD=<YourAdminPassword>
-  SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>
-  CLOUD_PROVIDER=<YourCloudProvider>
+PASSWORD=<YourAdminPassword>
+SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>  # <DockerRepo> is not required if using local repo e.g.: with MiniKube
+CLOUD_PROVIDER=<YourCloudProvider>                      # only use for aws|gcp, skip otherwise including when using MiniKube
 ```
 
-Next, execute the configuration script, which will install the required version of the `helm` tool then download and prepare the `solace` helm chart.
+Executing the configuration script will install the required version of the `helm` tool, clone this git repo then prepare the `solace` helm chart.
 
-Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script is executed.
+Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script has been executed.
 
-When preparing the `solace` chart by the script, the `values.yaml` located in the created `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations).
+When preparing the `solace` chart by the script, the `values.yaml` located in the cloned `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations).
 
-* When no `-v` argument is provided, by default a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
+* By default a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
 
 ```sh
-  ./configure.sh  -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
+./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
 * This will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
 
 ```sh
-  ./configure.sh -c ${CLOUD_PROVIDER} -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -v values-examples/small-persist-ha-provisionPvc.yaml
+./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -c ${CLOUD_PROVIDER} -v values-examples/small-persist-ha-provisionPvc.yaml
 ```
 
 Finally, use `helm` to install the deployment from the `solace` chart location, based on the contents of `values.yaml`:
@@ -102,7 +111,7 @@ To modify a deployment, refer to the section [Upgrading/modifying the message br
 
 ### Validate the Deployment
 
-Now you can validate your deployment on command line, in this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod:
+Now you can validate your deployment on command line, in this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notion XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -157,9 +166,9 @@ External Traffic Policy:  Cluster
 
 ```
 
-Note here several IPs and port.  In this example 35.202.131.158 is the external Public IP to use.
+Generally all services including management and messaging are accessible through a load balancer. In above example `35.202.131.158` is the Load Balancer's external Public IP to use.
 
-Note: when using MiniKube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the service.
+> when using MiniKube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
 
 ## Gaining admin access to the message broker
 
@@ -317,7 +326,7 @@ Use Helm to delete a deployment, also called a release:
 
 ```
 # Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm delete XXXX-XXXX
+../../helm/helm delete XXX-XXX
 ```
 
 Note: In some versions, Helm may return an error even if the deletion was successful.

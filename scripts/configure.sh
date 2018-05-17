@@ -69,22 +69,31 @@ shift $((OPTIND-1))
 verbose=1
 echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
 
-helm_version=v2.7.2
 os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
+    helm_version="v2.7.2"
+    archive_extension="tar.gz"
     sed_options="-E -i.bak"
     ;;
   "Linux" )
     helm_type="linux-amd64"
+    helm_version="v2.7.2"
+    archive_extension="tar.gz"
+    sed_options="-i.bak"
+    ;;
+  *_NT* ) # BASH emulation on windows
+    helm_type="windows-amd64"
+    helm_version=v2.9.1
+    archive_extension="zip"
     sed_options="-i.bak"
     ;;
 esac
-echo "`date` INFO: DOWNLOAD HELM"
+echo "`date` INFO: DOWNLOAD AND DEPLOY HELM"
 echo "#############################################################"
-wget https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.tar.gz
-tar zxf helm-${helm_version}-${helm_type}.tar.gz
+curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
+tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
 mv ${helm_type} helm
 export HELM="`pwd`/helm/helm"
 
@@ -99,12 +108,13 @@ else
 fi
 
 # While helm is busy initializing prepare the solace helm chart
-echo "`date` INFO: BUILD HELM CHARTS"
+echo "`date` INFO: CLONE THE solace-kubernetes-quickstart REPO"
 echo "#############################################################"
 git clone --branch $branch https://github.com/$repo
 cd solace-kubernetes-quickstart
 cd solace
 
+echo "`date` INFO: BUILD HELM CHARTS"
 cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
@@ -119,3 +129,8 @@ kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
 
 echo "`date` INFO: READY TO DEPLOY Solace PubSub+ TO CLUSTER"
 echo "#############################################################"
+echo "Next steps to complete the deployment:"
+echo "cd solace-kubernetes-quickstart/solace"
+echo "../../helm/helm install . -f values.yaml"
+echo "kubectl get statefulsets,services,pods,pvc,pv"
+
