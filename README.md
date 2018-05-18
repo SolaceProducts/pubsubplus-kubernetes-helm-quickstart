@@ -97,7 +97,7 @@ When preparing the `solace` chart by the script, the `values.yaml` located in th
 * This will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
 
 ```sh
-./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -c ${CLOUD_PROVIDER} -v values-examples/small-persist-ha-provisionPvc.yaml
+./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -c ${CLOUD_PROVIDER} -v values-examples/prod1k-persist-ha-provisionPvc.yaml
 ```
 
 Finally, use `helm` to install the deployment from the `solace` chart location, based on the contents of `values.yaml`:
