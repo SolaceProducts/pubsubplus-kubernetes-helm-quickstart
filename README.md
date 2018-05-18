@@ -4,7 +4,9 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool. To view examples of specific environments see:
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool.
+
+This document is applicable to any platform supporting Kubernetes, with specific hints how to set up a simple MiniKube based single node deployment for development purposes. To view examples of other platforms for production grade deployments see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
