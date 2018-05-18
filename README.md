@@ -6,7 +6,7 @@
 
 This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool.
 
-This document is applicable to any platform supporting Kubernetes, with specific hints how to set up a simple MiniKube based single node deployment for development purposes. To view examples of other platforms for production grade deployments see:
+This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube based single node deployment for development purposes. To view examples of other platforms for production grade deployments see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
@@ -14,7 +14,7 @@ This document is applicable to any platform supporting Kubernetes, with specific
 
 The Solace PubSub+ software message broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The message broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. As well, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
 
-Solace PubSub+ software message brokers can deployed in either 3 node HA clusters or as single nodes. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+Solace PubSub+ software message brokers can be deployed in either 3 node HA clusters or as single nodes. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
 
 ## How to deploy a message broker onto Kubernetes
 
@@ -40,9 +40,6 @@ You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterpri
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank"><img src="images/register.png"/></a> | <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank"><img src="images/register.png"/></a> |
  
-<br>
-<br>
- 
 ### Step 3: 
 
 Load the message broker image into a Docker container registry.
@@ -53,7 +50,7 @@ Load the message broker image into a Docker container registry.
 
 Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
-* The minimum recommended resources for the smallest Solace message broker deployment are 2 CPU and 2 GB memory available to the Kubernetes node. For requirements supporting larger deployments refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+* The minimum recommended resources for the smallest message broker deployment are 2 CPU and 2 GB memory available to the Kubernetes node. For requirements supporting larger deployments refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 > If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. Use `--cpus` and `--memory` for other options.
 
@@ -61,7 +58,7 @@ Before continuing ensure the `kubectl get svc` command returns the `kubernetes` 
 
 ### Step 5: 
 
-Deploy Solace message broker Pods and Service to the cluster.
+Deploy message broker Pods and Service to the cluster.
 
 The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
 
@@ -76,7 +73,7 @@ wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quicksta
 chmod 755 configure.sh
 ```
 
-Next, execute the config script with passing parameters. For convenience the following variables can be defined. Substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
+Next, execute the config script with passing parameters. For convenience, the following variables can be defined. Substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
 
 ```sh
 PASSWORD=<YourAdminPassword>
@@ -113,7 +110,7 @@ To modify a deployment, refer to the section [Upgrading/modifying the message br
 
 ### Validate the Deployment
 
-Now you can validate your deployment on command line, in this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notion XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notion XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -174,7 +171,7 @@ Generally all services including management and messaging are accessible through
 
 ## Gaining admin access to the message broker
 
-If you are using a single message broker and used to working with CLI Solace PubSub+ message broker console access, this is still available with standard ssh session from any internet at port 22 by default:
+If you are using a single message broker and are used to working with CLI message broker console access, this is still available with standard ssh session from any internet at port 22 by default:
 
 ```sh
 
@@ -214,7 +211,7 @@ kubectl port-forward XXX-XXX-solace-0 2222:22 &
 ssh -p 2222 admin@localhost
 ```
 
-For persons who are unfamiliar with the Solace PubSub+ message broker, or would prefer an administration application, the SolAdmin management application is available. For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select the OS version desired.  Management IP will be the Public IP associated with youe GCE instance and port will be 8080 by default.
+If you are unfamiliar with the Solace PubSub+ message broker, or would prefer an administration application, the SolAdmin management application is available. For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select the OS version desired.  The Management IP will be the Public IP associated with youe GCE instance and the port will be 8080 by default.
 
 This can also be mapped to individual message brokers in the cluster via port-forward:
 
@@ -224,7 +221,7 @@ kubectl port-forward XXX-XXX-solace-1 8081:8080 &
 kubectl port-forward XXX-XXX-solace-2 8081:8080 &
 ```
 
-For ssh access to the individual message brokers use:
+For ssh access to individual message brokers use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
@@ -245,9 +242,9 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language to [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
 
-Use the external Public IP to access the cluster. If a port required for a protocol is not opened refer to the next section how to open it up by modifying the cluster.
+Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
 ## Upgrading/modifying the message broker cluster
 
@@ -255,7 +252,7 @@ To upgrade/modify the message broker cluster, make the required modifications to
 
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
-- Add new version of the message broker to your container registry.
+- Add the new version of the message broker to your container registry.
 - Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
 
 ```sh
@@ -273,7 +270,7 @@ image:
 
 - Delete the pod(s) to force them to be recreated with the new release. 
 
-    Important: In an HA deployment, delete the pods in this order: 2,1,0.  Validate message broker redundancy is up and reconciled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
+    Important: In an HA deployment, delete the pods in this order: 2,1,0.  Confirm that message broker redundancy is up and reconciled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
 
 ```sh
 kubectl delete po/XXX-XXX-solace-<pod-ordinal>
