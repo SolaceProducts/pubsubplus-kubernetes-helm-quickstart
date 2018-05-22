@@ -46,7 +46,7 @@ Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
 * The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-> If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
+> Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
 
 Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
@@ -54,7 +54,7 @@ Before continuing ensure the `kubectl get svc` command returns the `kubernetes` 
 
 Load the message broker image into a Docker container registry.
 
-> If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
+> Note: If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
 
 
 ### Step 5: 
