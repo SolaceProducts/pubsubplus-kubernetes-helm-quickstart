@@ -31,15 +31,15 @@ Perform any prerequisites to run Kubernetes in your target environment. These ta
 
 ### Step 2: 
 
-Go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a Docker image.
+Go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **Docker** image.
 
 You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterprise Evaluation Edition`.
 
-| PubSub+ Standard | PubSub+ Enterprise Evaluation Edition
+| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
-| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, full enterprise functionality |
-| <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank"><img src="images/register.png"/></a> | <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank"><img src="images/register.png"/></a> |
- 
+| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
+| [Download Standard Docker Image](http://dev.solace.com/downloads/) | [Download Evaluation Docker Image](http://dev.solace.com/downloads#eval) |
+
 ### Step 3: 
 
 Create a Kubernetes platform. This may be a single node or a multi-node cluster.
