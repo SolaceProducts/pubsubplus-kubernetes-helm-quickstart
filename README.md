@@ -24,7 +24,7 @@ This is a 5 step process:
 
 ### Step 1: 
 
-Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc.
+Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc. You will also need following tools:
 
 * Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ).
 * Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required depending on your environment.
@@ -79,9 +79,9 @@ chmod 755 configure.sh
 | Parameter     | Description                                                                    |
 |---------------|--------------------------------------------------------------------------------|
 | `-p`          | REQUIRED: The desired password for the management `admin` user |
-| `-i`          | REQUIRED: The Solace image in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
+| `-i`          | REQUIRED: The Solace image url in the Docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
-| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use |
+| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default is values-examples/dev100-direct-noha.yaml |
 
 Executing the configuration script will install the required version of the `helm` tool, as well as clone this repo and prepare the `solace` helm chart.
 
@@ -112,7 +112,7 @@ To modify a deployment, refer to the section [Upgrading/modifying the message br
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that `helm` dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -167,11 +167,19 @@ External Traffic Policy:  Cluster
 
 ```
 
-Generally, all services including management and messaging are accessible through a load balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
+Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
 
-> Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
+> Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, execute `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports instead of direct port access, for which the mapping can be obtained from `kubectl describe service XXX-XX-solace`.
 
 ## Gaining admin access to the message broker
+
+Refer to the [Management Tools section] (http://192.168.1.192/home/public/RND/Docs/Cust_Doc_New_Feature_Branches/8.10.0_vmr/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+
+### WebUI, SolAdmin and SEMP access
+
+Use the Load Balacer at port 8080 to access these services.
+
+### Solace CLI access
 
 If you are using a single message broker and are used to working with a CLI message broker console access, you can SSH into the message broker as the `admin` user using the Load Balancer's external Public IP:
 
@@ -213,8 +221,6 @@ kubectl port-forward XXX-XXX-solace-0 2222:22 &
 ssh -p 2222 admin@localhost
 ```
 
-If you are unfamiliar with the Solace PubSub+ message broker, or would prefer an administration application, the SolAdmin management application is available. For more information on SolAdmin see the [SolAdmin page](http://dev.solace.com/tech/soladmin/).  To get SolAdmin, visit the Solace [download page](http://dev.solace.com/downloads/) and select the OS version desired.  The Management IP will be the Public IP associated with youe GCE instance and the port will be 8080 by default.
-
 This can also be mapped to individual message brokers in the cluster via port-forward:
 
 ```s
@@ -244,7 +250,7 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
