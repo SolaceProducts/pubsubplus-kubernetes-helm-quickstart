@@ -6,55 +6,56 @@
 
 This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool.
 
-This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube based single node deployment for development purposes. To view examples of other platforms for production grade deployments see:
+This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. The deployment is intended for development purposes only. To view examples of other platforms for production grade deployments see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
 
 ## Description of the Solace PubSub+ Software Message Broker
 
-The Solace PubSub+ software message broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The message broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. As well, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
+The Solace PubSub+ software message broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The message broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
 
-Solace PubSub+ software message brokers can be deployed in either 3 node HA clusters or as single nodes. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+Solace PubSub+ software message brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single node deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
 
 ## How to deploy a message broker onto Kubernetes
 
-In this quick start we go through the steps to set up a small-size message broker either as a single, stand-alone instance or in a 3-node, HA cluster. If you are interested in other message broker configurations or sizes, refer to the last section called Other Message Broker Deployment Configurations.
+In this quick start we go through the steps to set up a small-size message broker either as a single stand-alone instance, or in a 3-node HA cluster. If you are interested in other message broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 This is a 5 step process:
 
 ### Step 1: 
 
-Perform any prerequisites to run Kubernetes in your target environment. These can include tasks like creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc.
+Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc.
 
 * Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ).
 * Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required depending on your environment.
 
 ### Step 2: 
 
-Go to the Solace Developer Portal and download the Solace PubSub+ software message broker for Docker image.
+Go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a Docker image.
 
 You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterprise Evaluation Edition`.
 
 | PubSub+ Standard | PubSub+ Enterprise Evaluation Edition
 | :---: | :---: |
-| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
+| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, full enterprise functionality |
 | <a href="http://dev.solace.com/downloads/download_vmr-ce-docker" target="_blank"><img src="images/register.png"/></a> | <a href="http://dev.solace.com/downloads/download-vmr-evaluation-edition-docker/" target="_blank"><img src="images/register.png"/></a> |
  
 ### Step 3: 
 
-Load the message broker image into a Docker container registry.
+Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
-> If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
+* The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+
+> Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
+
+Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
 ### Step 4: 
 
-Create a Kubernetes platform. This may be a single node or a multi-node cluster.
+Load the message broker image into a Docker container registry.
 
-* The minimum recommended resources for the smallest message broker deployment are 2 CPU and 2 GB memory available to the Kubernetes node. For requirements supporting larger deployments refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+> Note: If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
 
-> If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. Use `--cpus` and `--memory` for other options.
-
-Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
 ### Step 5: 
 
@@ -66,40 +67,41 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
-First, download the following configuration script on command line:
+* First, download the following configuration script:
 
 ```sh
 wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/configure.sh
 chmod 755 configure.sh
 ```
 
-Next, execute the config script with passing parameters. For convenience, the following variables can be defined. Substitute `<YourAdminPassword>` with the desired password for the management `admin` user; substitute `<DockerRepo>`, `<ImageName>` and `<releaseTag>` according to your image in the container registry; substitute `<YourCloudProvider>` with the cloud environment you will be running in, current options are [aws|gcp] - if you are not using dynamic provisioned persistent disks, this can be left out.
+* Next, execute the config script and pass it the required parameters: 
 
-```sh
-PASSWORD=<YourAdminPassword>
-SOLACE_IMAGE_URL=<DockerRepo>.<ImageName>:<releaseTag>  # <DockerRepo> is not required if using local repo e.g.: with MiniKube
-CLOUD_PROVIDER=<YourCloudProvider>                      # only use for aws|gcp, skip otherwise including when using MiniKube
-```
+| Parameter     | Description                                                                    |
+|---------------|--------------------------------------------------------------------------------|
+| `-p`          | REQUIRED: The desired password for the management `admin` user |
+| `-i`          | REQUIRED: The Solace image in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
+| `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
+| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use |
 
-Executing the configuration script will install the required version of the `helm` tool, clone this git repo then prepare the `solace` helm chart.
+Executing the configuration script will install the required version of the `helm` tool, as well as clone this repo and prepare the `solace` helm chart.
 
-Note: the script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script has been executed.
+> The script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script has been executed.
 
-When preparing the `solace` chart by the script, the `values.yaml` located in the cloned `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations).
+When preparing the `solace` chart by the script, the `values.yaml` located in the cloned `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations). 
 
-* By default a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
+By default if no optional parameters are specified, a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
 
 ```sh
 ./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
 ```
 
-* This will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
+The following will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
 
 ```sh
 ./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -c ${CLOUD_PROVIDER} -v values-examples/prod1k-persist-ha-provisionPvc.yaml
 ```
 
-Finally, use `helm` to install the deployment from the `solace` chart location, based on the contents of `values.yaml`:
+* Finally, use `helm` to install the deployment from the `solace` chart location, using your generated `values.yaml` file:
 
 ```sh
 cd solace-kubernetes-quickstart/solace
@@ -110,7 +112,7 @@ To modify a deployment, refer to the section [Upgrading/modifying the message br
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this case an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notion XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the release name that `helm` dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -165,13 +167,13 @@ External Traffic Policy:  Cluster
 
 ```
 
-Generally all services including management and messaging are accessible through a load balancer. In above example `35.202.131.158` is the Load Balancer's external Public IP to use.
+Generally, all services including management and messaging are accessible through a load balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
 
-> when using MiniKube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
+> Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
 
 ## Gaining admin access to the message broker
 
-If you are using a single message broker and are used to working with CLI message broker console access, this is still available with standard ssh session from any internet at port 22 by default:
+If you are using a single message broker and are used to working with a CLI message broker console access, you can SSH into the message broker as the `admin` user using the Load Balancer's external Public IP:
 
 ```sh
 
@@ -196,15 +198,15 @@ Operating Mode: Message Routing Node
 XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access CLI through the Kubernets pod and not directly via TCP:
+If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH:
 
-* Loopback to ssh directly on the pod
+* Loopback to SSH directly on the pod
 
 ```sh
 kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh admin@localhost"
 ```
 
-* Loopback to ssh on your host with a port-forward map
+* Loopback to SSH on your host with a port-forward map
 
 ```sh
 kubectl port-forward XXX-XXX-solace-0 2222:22 &
@@ -221,7 +223,7 @@ kubectl port-forward XXX-XXX-solace-1 8081:8080 &
 kubectl port-forward XXX-XXX-solace-2 8081:8080 &
 ```
 
-For ssh access to individual message brokers use:
+For SSH access to individual message brokers use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
@@ -270,11 +272,10 @@ image:
 
 - Delete the pod(s) to force them to be recreated with the new release. 
 
-    Important: In an HA deployment, delete the pods in this order: 2,1,0.  Confirm that message broker redundancy is up and reconciled before deleting each pod - this can be checked e.g. using the CLI `show redundancy` and `show config-sync` commands or grepping the container logs for `config-sync-check`.
-
 ```sh
 kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
+> Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
@@ -327,16 +328,14 @@ Use Helm to delete a deployment, also called a release:
 # Relative to the solace-kubernetes-quickstart/solace directory
 ../../helm/helm delete XXX-XXX
 ```
-
-Note: In some versions, Helm may return an error even if the deletion was successful.
+> Note: In some versions, Helm may return an error even if the deletion was successful.
 
 Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
 
 ```
 kubectl get statefulsets,services,pods,pvc,pv
 ```
-
-Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. Check their existence with `kubectl get all` and if necessary, use `kubectl delete` to delete those.
+> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. Check their existence with `kubectl get all` and if necessary, use `kubectl delete` to delete those.
 
 ## Other Message Broker Deployment Configurations
 
@@ -355,12 +354,12 @@ Similar value-files can be defined extending above examples:
 
 - It is also possible to configure the message broker deployment with different CPU and memory resources to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
-    * `dev100` (default): up to 100 connections, requires 1 CPU, 1 GB memory
-    * `prod100`: up to 100 connections, requires 2 CPU, 2 GB memory
-    * `prod1k`: up to 1,000 connections, requires 2 CPU, 4 GB memory
-    * `prod10k`: up to 10,000 connections, requires 4 CPU, 12 GB memory
-    * `prod100k`: up to 100,000 connections, requires 8 CPU, 28 GB memory
-    * `prod200k`: up to 200,000 connections, requires 12 CPU, 56 GB memory
+    * `dev100` (default): up to 100 connections, minimum requirements: 1 CPU, 1 GB memory
+    * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
+    * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 4 GB memory
+    * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
+    * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
+    * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
 
 ## Contributing
 
