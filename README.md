@@ -46,7 +46,7 @@ Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
 * The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-> If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 1 CPU and 1 GB memory allocated. For more granular control, use `--cpus` and `--memory`.
+> If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
 
 Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
@@ -80,8 +80,8 @@ chmod 755 configure.sh
 |---------------|--------------------------------------------------------------------------------|
 | `-p`          | REQUIRED: The desired password for the management `admin` user |
 | `-i`          | REQUIRED: The Solace image in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
-| `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
-| `-v`          | OPTIONAL: The path to a `values.yaml` fail to use |
+| `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
+| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use |
 
 Executing the configuration script will install the required version of the `helm` tool, as well as clone this repo and prepare the `solace` helm chart.
 
@@ -169,7 +169,7 @@ External Traffic Policy:  Cluster
 
 Generally, all services including management and messaging are accessible through a load balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
 
-> when using MiniKube, there is no integrated LoadBalancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
+> Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, you can use `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports which can be obtained from `kubectl describe service XXX-XX-solace`.
 
 ## Gaining admin access to the message broker
 
