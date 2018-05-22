@@ -81,7 +81,7 @@ chmod 755 configure.sh
 | `-p`          | REQUIRED: The desired password for the management `admin` user |
 | `-i`          | REQUIRED: The Solace image url in the Docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
-| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default is values-examples/dev100-direct-noha.yaml |
+| `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
 
 Executing the configuration script will install the required version of the `helm` tool, as well as clone this repo and prepare the `solace` helm chart.
 
@@ -173,11 +173,11 @@ Generally, all services including management and messaging are accessible throug
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section] (http://192.168.1.192/home/public/RND/Docs/Cust_Doc_New_Feature_Branches/8.10.0_vmr/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+Refer to the [Management Tools section](http://192.168.1.192/home/public/RND/Docs/Cust_Doc_New_Feature_Branches/8.10.0_vmr/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
 
 ### WebUI, SolAdmin and SEMP access
 
-Use the Load Balacer at port 8080 to access these services.
+Use the Load Balacer's external Public IP at port 8080 to access these services.
 
 ### Solace CLI access
 
