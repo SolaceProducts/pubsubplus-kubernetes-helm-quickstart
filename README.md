@@ -44,11 +44,11 @@ You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterpri
 
 Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
-* The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+* The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Other Message Broker Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 > Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
 
-Before continuing ensure the `kubectl get svc` command returns the `kubernetes` service listed.
+Before continuing, ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
 ### Step 4: 
 
@@ -63,7 +63,7 @@ Deploy message broker Pods and Service to the cluster.
 
 The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
 
-The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the bare minimum is shown in this diagram just to give you some background regarding the relationships and major functions.
+The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
