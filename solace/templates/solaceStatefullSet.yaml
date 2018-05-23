@@ -29,26 +29,44 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources:
           requests:
-{{- if eq .Values.solace.size "small" }}
+{{- if eq .Values.solace.size "dev100" }}
+            cpu: "0.3"
+            memory: 0.8Gi
+{{- else if eq .Values.solace.size "prod100" }}
             cpu: "1.2"
-            memory: 6.0Gi
-{{- else if eq .Values.solace.size "medium" }}
+            memory: 2Gi
+{{- else if eq .Values.solace.size "prod1k" }}
+            cpu: "1.2"
+            memory: 4Gi
+{{- else if eq .Values.solace.size "prod10k" }}
             cpu: "3.5"
-            memory: 15Gi
-{{- else if eq .Values.solace.size "large" }}
+            memory: 12Gi
+{{- else if eq .Values.solace.size "prod100k" }}
             cpu: "7.5"
-            memory: 30Gi
+            memory: 28Gi
+{{- else if eq .Values.solace.size "prod200k" }}
+            cpu: "11.5"
+            memory: 56Gi
 {{- end }}
           limits:
-{{- if eq .Values.solace.size "small" }}
+{{- if eq .Values.solace.size "dev100" }}
+            cpu: "1"
+            memory: 2Gi
+{{- else if eq .Values.solace.size "prod100" }}
+            cpu: "2"
+            memory: 3Gi
+{{- else if eq .Values.solace.size "prod1k" }}
             cpu: "2"
             memory: 7.5Gi
-{{- else if eq .Values.solace.size "medium" }}
+{{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
             memory: 15Gi
-{{- else if eq .Values.solace.size "large" }}
+{{- else if eq .Values.solace.size "prod100k" }}
             cpu: "8"
             memory: 30Gi
+{{- else if eq .Values.solace.size "prod200k" }}
+            cpu: "12"
+            memory: 60Gi
 {{- end }}
         livenessProbe:
           tcpSocket:

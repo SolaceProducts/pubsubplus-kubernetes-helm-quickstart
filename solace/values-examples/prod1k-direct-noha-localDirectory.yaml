@@ -1,8 +1,8 @@
-# Default storage, exemplifies simplisity, will create a /mnt/stateful_partition dir on host 
-#  and use this for Solace message spool 
+# Need to first provision a directory /mnt/disks/vmr on host node
+#  use this for Solace message spool.  Used to test various fs and mount options
 solace:
   redundancy: false
-  size: dev100
+  size: prod1k
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
@@ -19,24 +19,9 @@ service:
     - port: 22
       protocol: TCP
       name: ssh
-    - port: 1883
-      protocol: TCP
-      name: mqtt
-    - port: 5672
-      protocol: TCP
-      name: amqp
-    - port: 8000
-      protocol: TCP
-      name: mqttws     
     - port: 8080
       protocol: TCP
       name: semp
-    - port: 9000
-      protocol: TCP
-      name: rest
-    - port: 55003
-      protocol: TCP
-      name: smfc
     - port: 55555
       protocol: TCP
       name: smf
@@ -52,6 +37,6 @@ service:
     - port: 55555
       protocol: TCP
     - port: 22
-      protocol: TCP
 storage:
   persistent: false
+  hostPath: /mnt/disks/vmr

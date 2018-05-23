@@ -1,7 +1,7 @@
 # Create a PV of specified size and type, bind PVC to PV 
 solace:
-  redundancy: false
-  size: small
+  redundancy: true
+  size: dev100
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
@@ -36,7 +36,6 @@ service:
     - port: 55555
       protocol: TCP
     - port: 22
-storage:
 storage:
   persistent: true
 # For best performance set type:fast size:500Gi and fsType:xfs
