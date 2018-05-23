@@ -8,7 +8,7 @@ This repository explains how to install a Solace PubSub+ Software Message Broker
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. The deployment is intended for development purposes only. To view examples of other platforms for production grade deployments see:
 
-- [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart)
+- [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart )
 
 ## Description of the Solace PubSub+ Software Message Broker
 
