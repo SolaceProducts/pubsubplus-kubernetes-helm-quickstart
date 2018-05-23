@@ -173,7 +173,7 @@ Generally, all services including management and messaging are accessible throug
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](http://192.168.1.192/home/public/RND/Docs/Cust_Doc_New_Feature_Branches/8.10.0_vmr/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+Refer to the [Management Tools section](https://docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
 
 ### WebUI, SolAdmin and SEMP access
 
