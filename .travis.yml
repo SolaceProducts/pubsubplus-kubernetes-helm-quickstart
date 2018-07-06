@@ -35,8 +35,8 @@ script:
   - export SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS="--username=admin --password=$passw"
   - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/configure.sh
   - chmod 755 configure.sh
-  - # ./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-persist-ha-provisionPvc.yaml
-  - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/prod1k-direct-noha.yaml
+  - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
+  - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/prod1k-persist-ha-provisionPvc.yaml
   - cd solace-kubernetes-quickstart/solace
   - ../../helm/helm install . -f values.yaml
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
