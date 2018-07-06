@@ -72,9 +72,14 @@ data:
 
   config-sync-check.sh: |-
       #!/bin/bash
-  {{- if .Values.solace.redundancy }}
+{{- if .Values.solace.redundancy }}
       APP=`basename "$0"`
-      yum install -y jq
+      # install jq if not installed yet
+      if ! [ -x "$(command -v jq)" ] ; then
+        wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+        chmod +x ./jq
+        sudo cp jq /usr/bin
+      fi
       # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
       # https://github.com/kubernetes/kubernetes/issues/40651
       # node_ordinal=$(STATEFULSET_ORDINAL)
@@ -205,19 +210,19 @@ data:
 
     # note that there are no re-tries here, if check fails the return not ready.
     APP=`basename "$0"`
-    version=${1}
-
-    password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
-    return_code=0
     state_file=/tmp/activity_state
     if [ ! -f ${state_file} ]; then
       echo "State file not found, creating!"
       echo "false" > ${state_file}
     fi
-    echo "`date` INFO: ${APP}-node oridinal"
+
+{{- if .Values.solace.redundancy }}
+    # HA config
+    version=${1}
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
-
+    echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
+    password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
     if [ "${node_ordinal}" = "2" ]; then
       echo "`date` INFO: ${APP}-Monitor node ready check"
       # Note that when dealing with Monitor, only need to be concerned and readiness response.
@@ -295,7 +300,27 @@ data:
         exit 1
         ;;
     esac
-
+{{- else }}
+    # nonHA config
+    health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
+    
+    case "${health_result}" in
+      "200")
+        echo "`date` INFO: ${APP}-nonHA Message Router is Active and Healthy"
+        set_label "active" "true" $state_file
+        exit 0
+        ;;
+      "503")
+        echo "`date` INFO: ${APP}-nonHA Message Router message spool is down"
+        set_label "active" "false" $state_file
+        exit 1
+        ;;
+      "")
+        echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
+        set_label "active" "false" $state_file
+        exit 1
+    esac
+{{- end }}
 
   semp_query.sh: |-
       #!/bin/bash
