@@ -325,7 +325,7 @@ service:
 EOF
 
 # Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm upgrade  XXXX-XXXX . –f values.yaml –f port-update.yaml
+../../helm/helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
 
 ## Deleting a deployment
