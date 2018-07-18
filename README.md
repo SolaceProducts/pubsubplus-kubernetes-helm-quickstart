@@ -258,6 +258,8 @@ Use the external Public IP to access the cluster. If a port required for a proto
 
 To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
 
+### Upgrading the cluster
+
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry.
@@ -283,6 +285,8 @@ kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
 > Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
+### Modifying the cluster
+
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
 ```
@@ -300,7 +304,7 @@ service:
     - port: 55555
       protocol: TCP
       name: smf
-   - port: 1883
+    - port: 1883
       protocol: TCP
       name: mqtt    
   internalPort:
@@ -316,15 +320,13 @@ service:
       protocol: TCP
     - port: 22
       protocol: TCP
-   - port: 1883
+    - port: 1883
       protocol: TCP
 EOF
 
 # Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm upgrade  XXXX-XXXX . –f values.yaml –f port_update.yaml
+../../helm/helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
-
-Next, delete the pod(s) to force them to be recreated with the new release as described above in the upgrade case. 
 
 ## Deleting a deployment
 
