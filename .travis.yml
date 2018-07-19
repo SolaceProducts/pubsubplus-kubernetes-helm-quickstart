@@ -38,7 +38,7 @@ script:
   - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
   - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/prod1k-persist-ha-provisionPvc.yaml
   - cd solace-kubernetes-quickstart/solace
-  - ../../helm/helm install . -f values.yaml
+  - helm install . -f values.yaml
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - echo "Waiting for cluster to become active"
   - "travis_wait 30 sleep 1800 &"
