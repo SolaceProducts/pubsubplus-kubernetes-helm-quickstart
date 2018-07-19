@@ -146,7 +146,7 @@ cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
 tag=${container_array[1]-latest}   # default to latest if no tag provided
-sed ${sed_options} "s:SOLOS_IMAGE_TAG:tag:g"  values.yaml
+sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
 sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
 rm templates/secret.yaml.bak
