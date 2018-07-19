@@ -110,9 +110,11 @@ fi
 # Deploy tiller
 ## possible other option but then need to deal with installed helm : if [[ `helm init | grep "Tiller is already installed"` ]] ; then
 if timeout 5s helm version --server --short >/dev/null 2>&1; then
+  tiller_already_deployed=true
   echo "`date` INFO: Found tiller on server, using $(helm version --server --short)"
 else
-  # Need to deploy helm
+  tiller_already_deployed=
+  # Need to init helm to deploy tiller
   if [[ $(kubectl version | grep Server | grep 'GitVersion:\"v1.6.') ]]; then
     # For kubernetes v6
     helm init
@@ -153,12 +155,16 @@ rm templates/secret.yaml.bak
 
 # Wait until helm tiller is up and ready to proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
-kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+if [[ -z "$tiller_already_deployed" ]] ; then
+  kubectl rollout status -w deployment/tiller-deploy --namespace=kube-system
+fi
 
 echo "`date` INFO: READY TO DEPLOY Solace PubSub+ TO CLUSTER"
 echo "#############################################################"
 echo "Next steps to complete the deployment:"
-echo "cd solace-kubernetes-quickstart/solace"
+if [[ "$(pwd)" != *solace-kubernetes-quickstart/solace ]]; then
+  echo "cd solace-kubernetes-quickstart/solace  # replace with the path to your chart"
+fi
 echo "helm install . -f values.yaml"
 echo "kubectl get statefulsets,services,pods,pvc,pv --show-labels"
 
