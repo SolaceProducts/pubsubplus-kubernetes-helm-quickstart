@@ -20,7 +20,7 @@
 #  - install the required version of helm
 #  - clone locally and prepare the solace chart for deployment
 
-# use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
+# Use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
 # otherwise fall back to defaults (defaults are after the - (dash))
 repo=${SOLACE_KUBERNETES_QUICKSTART_REPO-SolaceProducts/solace-kubernetes-quickstart}
 branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
@@ -28,6 +28,35 @@ branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
 kubectl_create_clusterrolebinding_credentials=${SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS}
 echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=${kubectl_create_clusterrolebinding_credentials}"
 
+# Initialize our own variables:
+cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
+solace_password=""
+solace_image="solace/solace-pubsub-standard:latest"
+values_file="values-examples/dev100-direct-noha.yaml"
+verbose=0
+
+# Read options
+OPTIND=1         # Reset in case getopts has been used previously in the shell.
+while getopts "c:i:p:v:" opt; do
+    case "$opt" in
+    c)  cloud_provider=$OPTARG   # optional but default will not work in all env
+        ;;
+    i)  solace_image=$OPTARG     # optional
+        ;;
+    p)  solace_password=$OPTARG
+        ;;
+    v)  values_file=$OPTARG      # optional
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+verbose=1
+echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
+
+# kubectl installed is a pre-requisite
 exists()
 {
   command -v "$1" >/dev/null 2>&1
@@ -41,84 +70,83 @@ else
   echo "	Current PATH: ${PATH}"
   exit -1
 fi
-OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
-# Initialize our own variables:
-cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
-solace_password=""
-solace_image=""
-values_file="values-examples/dev100-direct-noha.yaml"
-verbose=0
-
-while getopts "c:i:p:v:" opt; do
-    case "$opt" in
-    c)  cloud_provider=$OPTARG
-        ;;
-    i)  solace_image=$OPTARG
-        ;;
-    p)  solace_password=$OPTARG
-        ;;
-    v)  values_file=$OPTARG
-        ;;
-    esac
-done
-
-shift $((OPTIND-1))
-[ "$1" = "--" ] && shift
-
-verbose=1
-echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
-
+# Ensure helm is installed
 os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
-    helm_version="v2.7.2"
+    helm_version="v2.9.1"
     archive_extension="tar.gz"
     sed_options="-E -i.bak"
+    sudo_command="sudo"
     ;;
   "Linux" )
     helm_type="linux-amd64"
-    helm_version="v2.7.2"
+    helm_version="v2.9.1"
     archive_extension="tar.gz"
     sed_options="-i.bak"
+    sudo_command="sudo"
     ;;
   *_NT* ) # BASH emulation on windows
     helm_type="windows-amd64"
     helm_version=v2.9.1
     archive_extension="zip"
     sed_options="-i.bak"
+    sudo_command=""
     ;;
 esac
-echo "`date` INFO: DOWNLOAD AND DEPLOY HELM"
-echo "#############################################################"
-curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
-tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
-mv ${helm_type} helm
-export HELM="`pwd`/helm/helm"
-
-# [TODO] Need proper way to set service account for tiller
-if [ "$cloud_provider" == "gcp" ]
-then
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  "$HELM" init --service-account tiller
+if exists helm; then
+  echo "`date` INFO: Found helm $(helm version --client --short)"
 else
-  "$HELM" init
+  pushd /tmp
+  curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
+  tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
+  ${sudo_command} mv ${helm_type}/helm* /usr/bin
+  popd
+  echo "`date` INFO: Installed helm $(helm version --client --short)"
 fi
 
-# While helm is busy initializing prepare the solace helm chart
-echo "`date` INFO: CLONE THE solace-kubernetes-quickstart REPO"
-echo "#############################################################"
-git clone --branch $branch https://github.com/$repo
-cd solace-kubernetes-quickstart
-cd solace
+# Deploy tiller
+## possible other option but then need to deal with installed helm : if [[ `helm init | grep "Tiller is already installed"` ]] ; then
+if timeout 5s helm version --server --short >/dev/null 2>&1; then
+  echo "`date` INFO: Found tiller on server, using $(helm version --server --short)"
+else
+  # Need to deploy helm
+  if [[ kubectl version | grep Server | grep 'GitVersion:"v1.6.' ]]; then
+    # For kubernetes v6
+    helm init
+  else
+    # For kubernetes >=v7
+    kubectl create serviceaccount --namespace kube-system tiller
+    ## use of credentioals on GCE is currently broken in kubernetes v11 client, for workaround use <=v10
+    kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    helm init --service-account tiller
+  fi
+fi
 
-echo "`date` INFO: BUILD HELM CHARTS"
+# Clone the solace-kubernetes-quickstart project if needed
+scriptpath="$( cd "$(dirname "$0")" ; pwd -P )"
+if echo "${scriptpath}" | grep "solace-kubernetes-quickstart/scripts"; then
+  echo "`date` INFO: Found solace-kubernetes-quickstart project already cloned"
+else
+  echo "`date` INFO: Cloning the solace-kubernetes-quickstart repo"
+  git clone --branch $branch https://github.com/$repo
+  cd solace-kubernetes-quickstart
+  cd solace
+fi
+
+# Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
+if [ ! -d "templates" ]; then
+  echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
+  exit -1
+fi
+echo "`date` INFO: Build helm charts"
 cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
-sed ${sed_options} "s:SOLOS_IMAGE_TAG:${container_array[1]}:g"  values.yaml
+tag=${container_array[1]-latest}   # default to latest if no tag provided
+sed ${sed_options} "s:SOLOS_IMAGE_TAG:tag:g"  values.yaml
 sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
 sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
 rm templates/secret.yaml.bak
@@ -131,6 +159,6 @@ echo "`date` INFO: READY TO DEPLOY Solace PubSub+ TO CLUSTER"
 echo "#############################################################"
 echo "Next steps to complete the deployment:"
 echo "cd solace-kubernetes-quickstart/solace"
-echo "../../helm/helm install . -f values.yaml"
-echo "kubectl get statefulsets,services,pods,pvc,pv"
+echo "helm install . -f values.yaml"
+echo "kubectl get statefulsets,services,pods,pvc,pv --show-labels"
 

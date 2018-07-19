@@ -52,7 +52,9 @@ Before continuing, ensure the `kubectl get svc` command returns the `kubernetes`
 
 ### Step 4: 
 
-Load the message broker image into a Docker container registry.
+Load the Solace message broker docker image into a [docker container registry](https://docs.docker.com/registry/ ).
+
+**Hint:** You may skip the rest of this step if using the free PubSub+ Standard Edition available from the [Solace public Docker Hub registry](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). The Docker Registry URL to use will be `solace/solace-pubsub-standard:<TagName>`. 
 
 > Note: If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
 
