@@ -113,7 +113,7 @@ if timeout 5s helm version --server --short >/dev/null 2>&1; then
   echo "`date` INFO: Found tiller on server, using $(helm version --server --short)"
 else
   # Need to deploy helm
-  if [[ kubectl version | grep Server | grep 'GitVersion:"v1.6.' ]]; then
+  if [[ $(kubectl version | grep Server | grep 'GitVersion:\"v1.6.') ]]; then
     # For kubernetes v6
     helm init
   else
