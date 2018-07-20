@@ -129,7 +129,7 @@ fi
 
 # Clone the solace-kubernetes-quickstart project if needed
 scriptpath="$( cd "$(dirname "$0")" ; pwd -P )"
-if echo "${scriptpath}" | grep "solace-kubernetes-quickstart/scripts"; then
+if [[ $(echo "${scriptpath}" | grep "solace-kubernetes-quickstart/scripts") ]]; then
   echo "`date` INFO: Found solace-kubernetes-quickstart project already cloned"
 else
   echo "`date` INFO: Cloning the solace-kubernetes-quickstart repo"
@@ -143,7 +143,7 @@ if [ ! -d "templates" ]; then
   echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
   exit -1
 fi
-echo "`date` INFO: Build helm charts"
+echo "`date` INFO: Building helm charts"
 cp ${values_file} ./values.yaml
 IFS=':' read -ra container_array <<< "$solace_image"
 sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml

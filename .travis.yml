@@ -28,7 +28,7 @@ script:
   - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
   - wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
   - chmod 755 create_cluster.sh
-  - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME -m n1-standard-2
+  - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME -m n1-standard-1
   - kubectl get statefulset,svc,pods,pvc,pv
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
   - passw="$(gcloud container clusters describe $TESTCLUSTERNAME --zone us-central1-b | grep password | awk '{print $2}')"
@@ -36,7 +36,7 @@ script:
   - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/configure.sh
   - chmod 755 configure.sh
   - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
-  - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/prod1k-persist-ha-provisionPvc.yaml
+  - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/dev100-persist-ha-provisionPvc.yaml
   - cd solace-kubernetes-quickstart/solace
   - helm install . -f values.yaml
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
