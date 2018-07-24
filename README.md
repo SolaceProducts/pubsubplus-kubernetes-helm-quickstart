@@ -4,11 +4,12 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool.
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool. This guide is intended mainly for development and demo purposes.
 
-This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. The deployment is intended for development purposes only. To view examples of other platforms for production grade deployments see:
+This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart )
+- [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.7 or 3.9 platform](https://github.com/SolaceProducts/solace-openshift-quickstart )
 
 ## Description of the Solace PubSub+ Software Message Broker
 
@@ -20,7 +21,7 @@ Solace PubSub+ software message brokers can be deployed in either a 3-node High-
 
 In this quick start we go through the steps to set up a small-size message broker either as a single stand-alone instance, or in a 3-node HA cluster. If you are interested in other message broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-This is a 5 step process:
+This is a 4 step process:
 
 ### Step 1: 
 
@@ -31,17 +32,6 @@ Perform any prerequisites to run Kubernetes in your target environment. These ta
 
 ### Step 2: 
 
-Go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **Docker** image.
-
-You can use this quick start with either PubSub+ `Standard` or PubSub+ `Enterprise Evaluation Edition`.
-
-| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
-| :---: | :---: |
-| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
-| [Download Standard Docker Image](http://dev.solace.com/downloads/) | [Download Evaluation Docker Image](http://dev.solace.com/downloads#eval) |
-
-### Step 3: 
-
 Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
 * The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Other Message Broker Deployment Configurations](#other-message-broker-deployment-configurations) section.
@@ -50,62 +40,75 @@ Create a Kubernetes platform. This may be a single node or a multi-node cluster.
 
 Before continuing, ensure the `kubectl get svc` command returns the `kubernetes` service listed.
 
+### Step 3 (Optional): 
+
+Obtain the Solace PubSub+ message broker docker image and load it into a [docker container registry](https://docs.docker.com/registry/ ).
+
+**Hint:** You may skip the rest of this step if using the free PubSub+ Standard Edition available from the [Solace public Docker Hub registry](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). The docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`. 
+
+> Note: If using MiniKube you can [reuse its docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.
+
+To get the message broker docker image, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
+
+| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
+| :---: | :---: |
+| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
+| [Download Standard docker image](http://dev.solace.com/downloads/) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval) |
+
+To load the docker image into a docker registry, follow the steps specific to the registry you are using.
+
 ### Step 4: 
-
-Load the message broker image into a Docker container registry.
-
-> Note: If using MiniKube you can [reuse the Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.  
-
-
-### Step 5: 
 
 Deploy message broker Pods and Service to the cluster.
 
-The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage the deployment. A deployment is defined by a Helm chart, which consists of templates and values. The values specify the particular configuration properties in the templates. 
+The [Kubernetes `helm`](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
 The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
-* First, download the following configuration script:
+* First, clone this repo, which includes helper scripts and the `solace` helm chart:
 
 ```sh
-wget https://raw.githubusercontent.com/SolaceProducts/solace-kubernetes-quickstart/master/scripts/configure.sh
-chmod 755 configure.sh
+mkdir ~/workspace; cd ~/workspace
+git clone https://github.com/SolaceDev/solace-kubernetes-quickstart.git
+cd solace-kubernetes-quickstart/solace    # location of the solace helm chart
 ```
 
-* Next, execute the config script and pass it the required parameters: 
+* Next, prepare your environment and customize your chart by executing the `configure.sh` script and pass it the required parameters: 
 
 | Parameter     | Description                                                                    |
 |---------------|--------------------------------------------------------------------------------|
-| `-p`          | REQUIRED: The desired password for the management `admin` user |
-| `-i`          | REQUIRED: The Solace image url in the Docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>`. NOTE: `<DockerRepo>` is not required if using a local repo (e.g. when using MiniKube) |
+| `-p`          | REQUIRED: The password for the management `admin` user |
+| `-i`          | OPTIONAL: The Solace image reference in the docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>` from [Step 3](#step-3-optional). The default is to use `solace/solace-pubsub-standard:latest`. NOTE: If providing a reference, the `<DockerRepo>.` is not required if using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
 | `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
 
-Executing the configuration script will install the required version of the `helm` tool, as well as clone this repo and prepare the `solace` helm chart.
+The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the `helm` tool if needed, as well as customize the `solace` helm chart to your desired configuration.
 
-> The script will place the Solace Deployment chart in the `solace-kubernetes-quickstart/solace` directory, and the `helm` executable will be installed in the `helm` directory - all relative to the directory where the script has been executed.
+When customizing the `solace` chart by the script, the `values.yaml` located in the root of the chart will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations). 
 
-When preparing the `solace` chart by the script, the `values.yaml` located in the cloned `solace-kubernetes-quickstart/solace` directory will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations). 
-
-By default if no optional parameters are specified, a `development` non-HA message broker deployment will be prepared supporting up to 100 connections using simple local non-persistent storage:
+Running the script, with no optional parameters specified, a `development` non-HA message broker deployment will be prepared with up to 100 connections using simple local non-persistent storage, using the latest Solace PubSub+ Standard edition message broker image from the Solace public Docker Hub registry:
 
 ```sh
-./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL}
+cd ~/workspace/solace-kubernetes-quickstart/solace
+../scripts/configure.sh -p <ADMIN_PASSWORD>   # add the -c <CLOUD_PROVIDER> option if using aws or gke
 ```
 
-The following will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage:
+The following example shows how to use all parameters and will prepare a `production` HA message broker deployment, supporting up to 1000 connections, using a provisioned PersistentVolume (PV) storage, using the image pulled from the SOLACE_IMAGE_URL registry reference:
 
 ```sh
-./configure.sh -p ${PASSWORD} -i ${SOLACE_IMAGE_URL} -c ${CLOUD_PROVIDER} -v values-examples/prod1k-persist-ha-provisionPvc.yaml
+cd ~/workspace/solace-kubernetes-quickstart/solace
+../scripts/configure.sh -p <ADMIN_PASSWORD> -i <SOLACE_IMAGE_URL> -c <CLOUD_PROVIDER> -v values-examples/prod1k-persist-ha-provisionPvc.yaml
 ```
 
 * Finally, use `helm` to install the deployment from the `solace` chart location, using your generated `values.yaml` file:
 
 ```sh
-cd solace-kubernetes-quickstart/solace
-../../helm/helm install . -f values.yaml
+cd ~/workspace/solace-kubernetes-quickstart/solace
+helm install . -f values.yaml
+# Wait until all pods running and ready and the active message broker pod label is "active=true"
+watch kubectl get statefulset,svc,pods,pvc,pv --show-labels
 ```
 
 To modify a deployment, refer to the section [Upgrading/modifying the message broker cluster](#upgradingmodifying-the-message-broker-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
@@ -258,6 +261,8 @@ Use the external Public IP to access the cluster. If a port required for a proto
 
 To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
 
+### Upgrading the cluster
+
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry.
@@ -272,8 +277,8 @@ image:
 - Upgrade the Kubernetes release, this will not effect running instances
 
 ```sh
-# Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
+cd ~/workspace/solace-kubernetes-quickstart/solace
+helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
 ```
 
 - Delete the pod(s) to force them to be recreated with the new release. 
@@ -283,10 +288,13 @@ kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
 > Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
+### Modifying the cluster
+
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
 ```
-tee ./port-update.yaml <<-EOF
+cd ~/workspace/solace-kubernetes-quickstart/solace
+tee ./port-update.yaml <<-EOF   # crate update file with following contents:
 service:
   internal: false
   type: LoadBalancer
@@ -300,7 +308,7 @@ service:
     - port: 55555
       protocol: TCP
       name: smf
-   - port: 1883
+    - port: 1883
       protocol: TCP
       name: mqtt    
   internalPort:
@@ -316,24 +324,20 @@ service:
       protocol: TCP
     - port: 22
       protocol: TCP
-   - port: 1883
+    - port: 1883
       protocol: TCP
 EOF
-
-# Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm upgrade  XXXX-XXXX . –f values.yaml –f port_update.yaml
+helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
-
-Next, delete the pod(s) to force them to be recreated with the new release as described above in the upgrade case. 
 
 ## Deleting a deployment
 
 Use Helm to delete a deployment, also called a release:
 
 ```
-# Relative to the solace-kubernetes-quickstart/solace directory
-../../helm/helm delete XXX-XXX
+helm delete XXX-XXX
 ```
+
 > Note: In some versions, Helm may return an error even if the deletion was successful.
 
 Check what has remained from the deployment, which should only return a single line with svc/kubernetes.

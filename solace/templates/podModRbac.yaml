@@ -1,6 +1,6 @@
 # Fix rbac
 ---
-{{- if eq .Values.cloudProvider  "gcp" }}
+{{- if semverCompare ">=1.8-0" .Capabilities.KubeVersion.GitVersion }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -22,5 +22,5 @@ subjects:
 - kind: Group
   name: system:serviceaccounts
   apiGroup: rbac.authorization.k8s.io
-{{- end }} #end gcp
+{{- end }} #end if semverCompare
 

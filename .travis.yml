@@ -12,7 +12,7 @@ before_install:
   - echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
   - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
   - sudo apt-get update && sudo apt-get install google-cloud-sdk
-  - sudo apt-get install kubectl
+  - curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.10.5/bin/linux/amd64/kubectl; chmod +x ./kubectl; sudo mv ./kubectl /usr/bin/
   - sudo apt-get install jq
   - echo $GCP_KEY_FILE | base64 -d > ./keyfile
   - gcloud auth activate-service-account -q $(jq -r .client_email keyfile) --key-file=./keyfile --project  $(jq -r .project_id keyfile)
@@ -28,20 +28,21 @@ script:
   - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
   - wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
   - chmod 755 create_cluster.sh
-  - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME -m n1-standard-2
+  - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME -m n1-standard-1
   - kubectl get statefulset,svc,pods,pvc,pv
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
   - passw="$(gcloud container clusters describe $TESTCLUSTERNAME --zone us-central1-b | grep password | awk '{print $2}')"
   - export SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS="--username=admin --password=$passw"
   - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/configure.sh
   - chmod 755 configure.sh
-  - ./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-persist-ha-provisionPvc.yaml
+  - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
+  - ./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/dev100-persist-ha-provisionPvc.yaml
   - cd solace-kubernetes-quickstart/solace
-  - ../../helm/helm install . -f values.yaml
+  - helm install . -f values.yaml
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - echo "Waiting for cluster to become active"
   - "travis_wait 30 sleep 1800 &"
-  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep solace-0 | grep -m 1 -E '1/1'; do sleep 10; done
+  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep solace-0 | grep -m 1 -E 'active=true'; do sleep 10; done
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
   - curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
