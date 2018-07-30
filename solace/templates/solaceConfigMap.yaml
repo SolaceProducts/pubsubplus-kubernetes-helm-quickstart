@@ -92,7 +92,7 @@ data:
           role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
-          case "`echo ${role_results} | xmllint -xpath "valueSearchResult" -`" in
+          case "`echo ${role_results} | xmllint -xpath "returnInfo/valueSearchResult" -`" in
             "\"Primary\"")
             role="primary"
             break
@@ -117,7 +117,7 @@ data:
           online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
-          local_activity=`echo ${online_results} | xmllint -xpath "valueSearchResult" -`
+          local_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
           echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
           run_time=$((${count} * ${pause}))
           case "${local_activity}" in
@@ -154,7 +154,7 @@ data:
             online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
-            mate_activity=`echo ${online_results} | xmllint -xpath "valueSearchResult" -`
+            mate_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
             echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
             run_time=$((${count} * ${pause}))
             case "${mate_activity}" in
@@ -225,7 +225,7 @@ data:
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      if [ `echo ${role_results} |  xmllint -xpath "countSearchResult" -` -eq 3 ]; then
+      if [ `echo ${role_results} |  xmllint -xpath "returnInfo/countSearchResult" -` -eq 3 ]; then
         echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
         exit 0
       else
@@ -269,7 +269,7 @@ data:
     online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
             -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
-    local_activity=`echo ${online_results} | xmllint -xpath "valueSearchResult" -`
+    local_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
     echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
     case "${local_activity}" in
       "\"Local Active\"")
@@ -352,7 +352,7 @@ data:
                   ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
       if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
           echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
-          echo  '<errorInfo>missing parameter</errorInfo>'
+          echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
           exit 1
         fi
       query_response=`curl -sS -u ${name}:${password} ${url} -d "${query}"`
@@ -365,14 +365,14 @@ data:
 
       if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
           echo "`date` ERROR: ${APP}-${script_name}: Query failed, bad return code -${query_response}-" >&2
-          echo  "<errorInfo>query failed -${query_response_code}-</errorInfo>"
+          echo  "<returnInfo><errorInfo>query failed -${query_response_code}-</errorInfo></returnInfo>"
           exit 1
       fi
       echo "`date` INFO: ${APP}-${script_name}: Query passed ${query_response_code}" >&2
       if [[ ! -z $value_search ]]; then
           value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
           echo "`date` INFO: ${APP}-${script_name}: Value search $value_search returned ${value_result}" >&2
-          echo  "<errorInfo></errorInfo><valueSearchResult>${value_result}</valueSearchResult>"
+          echo  "<returnInfo><errorInfo></errorInfo><valueSearchResult>${value_result}</valueSearchResult></returnInfo>"
           exit 0
       fi
       if [[ ! -z $count_search ]]; then
@@ -380,6 +380,6 @@ data:
           count_string=`echo $count_search | cut -d '"' -f 2`
           count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
           echo -e "`date` INFO: ${APP}-${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
-          echo  "<errorInfo></errorInfo><countSearchResult>${count_result}</countSearchResult>"
+          echo  "<returnInfo><errorInfo></errorInfo><countSearchResult>${count_result}</countSearchResult></returnInfo>"
           exit 0
       fi
