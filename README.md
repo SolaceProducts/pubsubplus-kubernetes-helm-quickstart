@@ -10,6 +10,7 @@ This document is applicable to any platform supporting Kubernetes, with specific
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart )
 - [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.7 or 3.9 platform](https://github.com/SolaceProducts/solace-openshift-quickstart )
+- Deploying a Solace PubSub+ Software Message Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
 
 ## Description of the Solace PubSub+ Software Message Broker
 
