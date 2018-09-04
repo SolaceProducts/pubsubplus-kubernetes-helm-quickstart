@@ -26,7 +26,7 @@ repo=${SOLACE_KUBERNETES_QUICKSTART_REPO-SolaceProducts/solace-kubernetes-quicks
 branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
 # Define if using a service account, e.g. for automation
 kubectl_create_clusterrolebinding_credentials=${SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS}
-echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=$(echo ${kubectl_create_clusterrolebinding_credentials} |cut -c1-26)..."
+echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=$(echo ${kubectl_create_clusterrolebinding_credentials} |cut -c1-30)..."
 
 # Initialize our own variables:
 cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
