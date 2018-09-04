@@ -31,8 +31,9 @@ script:
   - ./create_cluster.sh -z us-central1-b,us-central1-c,us-central1-f -c $TESTCLUSTERNAME -m n1-standard-1
   - kubectl get statefulset,svc,pods,pvc,pv
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
-  - passw="$(gcloud container clusters describe $TESTCLUSTERNAME --zone us-central1-b | grep password | awk '{print $2}')"
-  - export SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS="--username=admin --password=$passw"
+  - #passw="$(gcloud container clusters describe $TESTCLUSTERNAME --zone us-central1-b | grep password | awk '{print $2}')"
+  - #export SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS="--username=admin --password=$passw"
+  - gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-central1-b --project capable-stream-180018
   - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/configure.sh
   - chmod 755 configure.sh
   - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
