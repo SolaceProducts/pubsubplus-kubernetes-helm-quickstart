@@ -26,7 +26,7 @@ repo=${SOLACE_KUBERNETES_QUICKSTART_REPO-SolaceProducts/solace-kubernetes-quicks
 branch=${SOLACE_KUBERNETES_QUICKSTART_BRANCH-master}
 # Define if using a service account, e.g. for automation
 kubectl_create_clusterrolebinding_credentials=${SOLACE_KUBERNETES_QUICKSTART_CLUSTERROLEBINDING_CREDENTIALS}
-echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=$(echo ${kubectl_create_clusterrolebinding_credentials} |cut -c1-10)..."
+echo "`date` INFO: Using repo=${repo}, branch=${branch}, kubectl_create_clusterrolebinding_credentials=$(echo ${kubectl_create_clusterrolebinding_credentials} |cut -c1-26)..."
 
 # Initialize our own variables:
 cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
@@ -122,7 +122,7 @@ else
     # For kubernetes >=v7
     kubectl create serviceaccount --namespace kube-system tiller
     ## use of credentioals on GCE is currently broken in kubernetes v11 client, for workaround use <=v10
-    kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller --user=system:anonymous
+    kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     helm init --service-account tiller
   fi
 fi
