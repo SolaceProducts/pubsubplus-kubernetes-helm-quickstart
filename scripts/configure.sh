@@ -122,7 +122,7 @@ else
     # For kubernetes >=v7
     kubectl create serviceaccount --namespace kube-system tiller
     ## use of credentioals on GCE is currently broken in kubernetes v11 client, for workaround use <=v10
-    kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    kubectl $kubectl_create_clusterrolebinding_credentials create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller --user=system:anonymous
     helm init --service-account tiller
   fi
 fi
