@@ -88,7 +88,7 @@ spec:
             - "6"
 {{- end }}
         securityContext:
-          privileged: true
+          privileged: false
           capabilities:
             add:
               - IPC_LOCK
