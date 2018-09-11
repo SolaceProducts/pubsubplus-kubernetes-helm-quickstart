@@ -165,5 +165,5 @@ if [[ "$(pwd)" != *solace-kubernetes-quickstart/solace ]]; then
   echo "cd solace-kubernetes-quickstart/solace  # replace with the path to your chart"
 fi
 echo "helm install . -f values.yaml"
-echo "kubectl get statefulsets,services,pods,pvc,pv --show-labels"
+echo "kubectl get pods --show-labels"
 

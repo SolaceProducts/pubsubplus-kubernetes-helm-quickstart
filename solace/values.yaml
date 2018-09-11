@@ -19,39 +19,37 @@ service:
     - port: 22
       protocol: TCP
       name: ssh
-    - port: 1883
-      protocol: TCP
-      name: mqtt
-    - port: 5672
-      protocol: TCP
-      name: amqp
-    - port: 8000
-      protocol: TCP
-      name: mqttws     
+      targetport: 2222
     - port: 8080
       protocol: TCP
       name: semp
-    - port: 9000
-      protocol: TCP
-      name: rest
-    - port: 55003
-      protocol: TCP
-      name: smfc
     - port: 55555
       protocol: TCP
       name: smf
-  internalPort:
+    - port: 943
+      protocol: TCP
+      name: semptls
+      targetport: 60943
     - port: 80
+      protocol: TCP
+      name: web
+      targetport: 60080
+    - port: 443
+      protocol: TCP
+      name: webtls
+      targetport: 60443
+  internalPort:
+    - port: 2222
       protocol: TCP
     - port: 8080
       protocol: TCP
-    - port: 443
-      protocol: TCP
-    - port: 8443
-      protocol: TCP
     - port: 55555
       protocol: TCP
-    - port: 22
+    - port: 60943
+      protocol: TCP
+    - port: 60080
+      protocol: TCP
+    - port: 60443
       protocol: TCP
 storage:
   persistent: false
