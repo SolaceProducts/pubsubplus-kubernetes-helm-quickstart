@@ -54,7 +54,7 @@ data:
       export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc
 
       case ${node_ordinal} in
-      0 )
+      0)
        export nodetype=message_routing
        export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
        export redundancy_activestandbyrole=primary
@@ -93,11 +93,11 @@ data:
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
           case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
-            "\"Primary\"")
+            "Primary")
             role="primary"
             break
             ;;
-            "\"Backup\"")
+            "Backup")
             role="backup"
             break
             ;;
@@ -121,14 +121,14 @@ data:
           echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
           run_time=$((${count} * ${pause}))
           case "${local_activity}" in
-            "\"Local Active\"")
+            "Local Active")
               echo "`date` INFO: ${APP}-Redundancy is up locally Active, after ${run_time} seconds"
               echo "`date` INFO: "We should only be here on new cluster create, if not likely a bug"
               echo "`date` INFO: "   will issue a assert master to get back into sync"                              
               resync_step="assert-master"
               break
               ;;
-            "\"Mate Active\"")
+            "Mate Active")
               echo "`date` INFO: ${APP}-Redundancy is up mate Active, after ${run_time} seconds" 
               echo "`date` INFO: "This is normal state if we are backup or recreated later on"
               echo "`date` INFO: "   will issue a resync master to get back into sync"            
@@ -158,7 +158,7 @@ data:
             echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
             run_time=$((${count} * ${pause}))
             case "${mate_activity}" in
-              "\"Standby\"")
+              "Standby")
                 echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Local Active Mate Standby, after ${run_time} seconds"
                 break
                 ;;
@@ -272,14 +272,14 @@ data:
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
     case "${local_activity}" in
-      "\"Local Active\"")
+      "Local Active")
         echo "`date` INFO: ${APP}-Redundancy is up locally Active"
         # Set active label to "true"
         set_label "active" "true" $state_file
         # Pass readiness check
         exit 0
         ;;
-      "\"Mate Active\"")
+      "Mate Active")
         echo "`date` INFO: ${APP}-Redundancy is up mate Active"
         # Set active label to "false"
         set_label "active" "false" $state_file
