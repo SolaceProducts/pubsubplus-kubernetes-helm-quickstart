@@ -92,7 +92,7 @@ data:
           role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
-          case "`echo ${role_results} | xmllint -xpath "returnInfo/valueSearchResult" -`" in
+          case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
             "\"Primary\"")
             role="primary"
             break
@@ -117,7 +117,7 @@ data:
           online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
-          local_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
+          local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
           echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
           run_time=$((${count} * ${pause}))
           case "${local_activity}" in
@@ -154,7 +154,7 @@ data:
             online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
-            mate_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
+            mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
             echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
             run_time=$((${count} * ${pause}))
             case "${mate_activity}" in
@@ -225,7 +225,7 @@ data:
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      if [ `echo ${role_results} |  xmllint -xpath "returnInfo/countSearchResult" -` -eq 3 ]; then
+      if [ `echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -` -eq 3 ]; then
         echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
         exit 0
       else
@@ -269,7 +269,7 @@ data:
     online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
             -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
-    local_activity=`echo ${online_results} | xmllint -xpath "returnInfo/valueSearchResult" -`
+    local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
     case "${local_activity}" in
       "\"Local Active\"")
