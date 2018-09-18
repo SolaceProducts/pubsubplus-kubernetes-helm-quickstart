@@ -41,7 +41,9 @@ script:
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - echo "Waiting for cluster to become active"
   - "travis_wait 30 sleep 1800 &"
-  - until kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep solace-0 | grep -m 1 -E 'active=true'; do sleep 10; done
+  - until kubectl get pods --show-labels | grep solace-0 | grep -m 1 -E 'active=true'; do sleep 10; done
+  - until kubectl get pods --show-labels | grep solace-1 | grep -m 1 -E '1/1'; do sleep 10; done
+  - until kubectl get pods --show-labels | grep solace-2 | grep -m 1 -E '1/1'; do sleep 10; done
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
   - url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
