@@ -48,11 +48,11 @@ script:
   - until kubectl get pods --show-labels | grep solace-2 | grep -m 1 -E '1/1'; do sleep 10; done
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
-  - url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
+  - export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
   - curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
   - tar -xvf SDKPERF_C_LINUX64
   - pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
-  - bash -c 'if [[ -z `curl -sS -u admin:admin http://${url}:8080/SEMP -d "<rpc semp-version=\'soltr/8_5VMR\'><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi'
+  - bash -c 'if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc semp-version=\"soltr/8_5VMR\"><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi'
   
 
 after_success:
