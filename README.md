@@ -128,8 +128,8 @@ svc/XXX-XXX-solace-discovery   ClusterIP      None            <none>           8
 svc/kubernetes                        ClusterIP      10.15.240.1     <none>           443/TCP                                       6d
 NAME                         READY     STATUS    RESTARTS   AGE
 po/XXX-XXX-solace-0   1/1       Running   0          3m
-po/XXX-XXX-solace-1   0/1       Running   0          3m
-po/XXX-XXX-solace-2   0/1       Running   0          3m
+po/XXX-XXX-solace-1   1/1       Running   0          3m
+po/XXX-XXX-solace-2   1/1       Running   0          3m
 NAME                               STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS              AGE
 pvc/data-XXX-XXX-solace-0   Bound     pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
 pvc/data-XXX-XXX-solace-1   Bound     pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
