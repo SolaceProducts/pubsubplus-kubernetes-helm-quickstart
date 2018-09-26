@@ -21,6 +21,7 @@ spec:
   type: {{.Values.service.type}}
   ports:{{ range $item := .Values.service.externalPort }}
   - port: {{ $item.port }}
+    targetPort: {{ $item.targetport }}
     protocol: {{ $item.protocol }}
     name: {{ $item.name }}{{end}}
   selector:

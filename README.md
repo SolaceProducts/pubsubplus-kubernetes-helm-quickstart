@@ -109,7 +109,7 @@ cd ~/workspace/solace-kubernetes-quickstart/solace
 cd ~/workspace/solace-kubernetes-quickstart/solace
 helm install . -f values.yaml
 # Wait until all pods running and ready and the active message broker pod label is "active=true"
-watch kubectl get statefulset,svc,pods,pvc,pv --show-labels
+watch kubectl get pods --show-labels
 ```
 
 To modify a deployment, refer to the section [Upgrading/modifying the message broker cluster](#upgradingmodifying-the-message-broker-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
@@ -141,34 +141,23 @@ pv/pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete  
 
 
 prompt:~$ kubectl describe service XXX-XX-solace
-Name:                     XXX-XX-solace
+Name:                     XXX-XXX-solace
 Namespace:                default
 Labels:                   app=solace
-                          chart=solace-0.1.0
+                          chart=solace-0.3.0
                           heritage=Tiller
-                          release=XXX-XX
+                          release=XXX-XXX
 Annotations:              <none>
-Selector:                 app=solace,release=XXX-XXX
+Selector:                 active=true,app=solace,release=XXX-XXX
 Type:                     LoadBalancer
-IP:                       10.15.249.186
+IP:                       10.55.246.5
 LoadBalancer Ingress:     35.202.131.158
 Port:                     ssh  22/TCP
-TargetPort:               22/TCP
-NodePort:                 ssh  32656/TCP
-Endpoints:                10.12.7.6:22
-Port:                     semp  8080/TCP
-TargetPort:               8080/TCP
-NodePort:                 semp  32394/TCP
-Endpoints:                10.12.7.6:8080
-Port:                     smf  55555/TCP
-TargetPort:               55555/TCP
-NodePort:                 smf  31766/TCP
-Endpoints:                10.12.7.6:55555
-Session Affinity:         None
-External Traffic Policy:  Cluster
+TargetPort:               2222/TCP
+NodePort:                 ssh  30828/TCP
+Endpoints:                10.52.2.6:2222
 :
 :
-
 ```
 
 Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
@@ -210,27 +199,29 @@ Operating Mode: Message Routing Node
 XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH:
+If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH.
+
+Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
 
 * Loopback to SSH directly on the pod
 
 ```sh
-kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh admin@localhost"
+kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh -p 2222 admin@localhost"
 ```
 
 * Loopback to SSH on your host with a port-forward map
 
 ```sh
-kubectl port-forward XXX-XXX-solace-0 2222:22 &
-ssh -p 2222 admin@localhost
+kubectl port-forward XXX-XXX-solace-0 62222:2222 &
+ssh -p 62222 admin@localhost
 ```
 
 This can also be mapped to individual message brokers in the cluster via port-forward:
 
-```s
+```
 kubectl port-forward XXX-XXX-solace-0 8081:8080 &
-kubectl port-forward XXX-XXX-solace-1 8081:8080 &
-kubectl port-forward XXX-XXX-solace-2 8081:8080 &
+kubectl port-forward XXX-XXX-solace-1 8082:8080 &
+kubectl port-forward XXX-XXX-solace-2 8083:8080 &
 ```
 
 For SSH access to individual message brokers use:
@@ -272,7 +263,7 @@ To **upgrade** the version of the message broker running within a Kubernetes clu
 ```sh
 image:
   repository: <repo>/<project>/solace-pubsub-standard
-  tag: 8.10.0.XXXXX
+  tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 ```
 - Upgrade the Kubernetes release, this will not effect running instances
@@ -295,35 +286,49 @@ Similarly, to **modify** other deployment parameters, e.g. to change the ports e
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
-tee ./port-update.yaml <<-EOF   # crate update file with following contents:
+tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
   internal: false
   type: LoadBalancer
   externalPort:
+    - port: 1883
+      protocol: TCP
+      name: mqtt
+      targetport: 1883
     - port: 22
       protocol: TCP
       name: ssh
+      targetport: 2222
     - port: 8080
       protocol: TCP
       name: semp
     - port: 55555
       protocol: TCP
       name: smf
-    - port: 1883
+    - port: 943
       protocol: TCP
-      name: mqtt    
-  internalPort:
+      name: semptls
+      targetport: 60943
     - port: 80
+      protocol: TCP
+      name: web
+      targetport: 60080
+    - port: 443
+      protocol: TCP
+      name: webtls
+      targetport: 60443
+  internalPort:
+    - port: 2222
       protocol: TCP
     - port: 8080
       protocol: TCP
-    - port: 443
-      protocol: TCP
-    - port: 8443
-      protocol: TCP
     - port: 55555
       protocol: TCP
-    - port: 22
+    - port: 60943
+      protocol: TCP
+    - port: 60080
+      protocol: TCP
+    - port: 60443
       protocol: TCP
     - port: 1883
       protocol: TCP
