@@ -170,7 +170,7 @@ Refer to the [Management Tools section](https://docs.solace.com/Management-Tools
 
 ### WebUI, SolAdmin and SEMP access
 
-Use the Load Balacer's external Public IP at port 8080 to access these services.
+Use the Load Balancer's external Public IP at port 8080 to access these services.
 
 ### Solace CLI access
 
