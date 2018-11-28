@@ -1,5 +1,4 @@
 # Fix rbac
----
 {{- if semverCompare ">=1.8-0" .Capabilities.KubeVersion.GitVersion }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1

@@ -1,5 +1,4 @@
 # Load Service part of template
----
 apiVersion: v1
 kind: Service
 metadata:

@@ -1,5 +1,4 @@
 # Create the StatefullSet, (petset), needed for redundancy
----
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
