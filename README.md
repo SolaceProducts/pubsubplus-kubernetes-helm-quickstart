@@ -344,14 +344,15 @@ Use Helm to delete a deployment, also called a release:
 helm delete XXX-XXX
 ```
 
-> Note: In some versions, Helm may return an error even if the deletion was successful.
-
-Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
+Check what has remained from the deployment, which should only return a single line with svc/kubernetes:
 
 ```
 kubectl get statefulsets,services,pods,pvc,pv
+NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)         AGE
+service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            443/TCP         XX
 ```
-> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. Check their existence with `kubectl get all` and if necessary, use `kubectl delete` to delete those.
+
+> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `kubectl delete` to delete those.
 
 ## Other Message Broker Deployment Configurations
 
