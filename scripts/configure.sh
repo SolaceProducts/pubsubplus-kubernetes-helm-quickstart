@@ -18,7 +18,7 @@
 # The purpose of this script is to:
 #  - take a URL to a Solace PubSub+ docker container, admin password and cloud provider parameters
 #  - install the required version of helm
-#  - clone locally and prepare the solace chart for deployment
+#  - clone locally if not already cloned and prepare the solace chart for deployment
 
 # Use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
 # otherwise fall back to defaults (defaults are after the - (dash))
@@ -36,15 +36,17 @@ verbose=0
 
 # Read options
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "c:i:p:v:" opt; do
+while getopts "c:i:p:v:s:" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
         ;;
     i)  solace_image=$OPTARG     # optional
         ;;
-    p)  solace_password=$OPTARG
+    p)  solace_password=$OPTARG  # optional if using -s (skip values.yaml customization)
         ;;
     v)  values_file=$OPTARG      # optional
+        ;;
+    s)  values_file=""           # optional - skip values.yaml customization
         ;;
     esac
 done
@@ -137,20 +139,25 @@ else
   cd solace
 fi
 
-# Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
-if [ ! -d "templates" ]; then
-  echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
-  exit -1
+# Copy and customize values.xml
+if [[ ${values_file} != "" ]]; then
+  # Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
+  if [ ! -d "templates" ]; then
+    echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
+    exit -1
+  fi
+  echo "`date` INFO: Building helm charts"
+  cp ${values_file} ./values.yaml
+  IFS=':' read -ra container_array <<< "$solace_image"
+  sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
+  tag=${container_array[1]-latest}   # default to latest if no tag provided
+  sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
+  sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
+  sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
+  rm templates/secret.yaml.bak
+else
+  echo "Skipping the setup of helm charts."
 fi
-echo "`date` INFO: Building helm charts"
-cp ${values_file} ./values.yaml
-IFS=':' read -ra container_array <<< "$solace_image"
-sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
-tag=${container_array[1]-latest}   # default to latest if no tag provided
-sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
-sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
-sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
-rm templates/secret.yaml.bak
 
 # Wait until helm tiller is up and ready to proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
