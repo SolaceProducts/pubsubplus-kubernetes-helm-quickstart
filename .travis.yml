@@ -57,6 +57,9 @@ script:
   - bash -c 'if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc semp-version=\"soltr/8_5VMR\"><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi'
   - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc semp-version=\"soltr/8_5VMR\"><show><redundancy></redundancy></show></rpc>"
   - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc semp-version=\"soltr/8_5VMR\"><show><config-sync></config-sync></show></rpc>"
+  - helm list
+  - helm delete $(helm list | grep DEPLOYED | awk '{print $1}')
+  - kubectl delete pvc --all
   
 
 after_success:
