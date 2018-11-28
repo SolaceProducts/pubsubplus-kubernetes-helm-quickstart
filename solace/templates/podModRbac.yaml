@@ -3,7 +3,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pod-tag-updater
+  name: {{ template "solace.fullname" . }}-pod-tag-updater
 rules:
 - apiGroups: [""] # "" indicates the core API group
   resources: ["pods"]
@@ -12,11 +12,11 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: solace
+  name: {{ template "solace.fullname" . }}-solace
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: pod-tag-updater
+  name: {{ template "solace.fullname" . }}-pod-tag-updater
 subjects:
 - kind: Group
   name: system:serviceaccounts
