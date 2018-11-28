@@ -36,7 +36,7 @@ verbose=0
 
 # Read options
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "c:i:p:v:s:" opt; do
+while getopts "c:i:p:v:s" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
         ;;
@@ -140,7 +140,7 @@ else
 fi
 
 # Copy and customize values.xml
-if [[ ${values_file} != "" ]]; then
+if [[ "${values_file}" != "" ]]; then
   # Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
   if [ ! -d "templates" ]; then
     echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
@@ -156,7 +156,7 @@ if [[ ${values_file} != "" ]]; then
   sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
   rm templates/secret.yaml.bak
 else
-  echo "Skipping the setup of helm charts."
+  echo "-s option detected, skipping the setup of helm charts."
 fi
 
 # Wait until helm tiller is up and ready to proceed
