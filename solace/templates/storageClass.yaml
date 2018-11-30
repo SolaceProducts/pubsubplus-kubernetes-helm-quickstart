@@ -1,5 +1,5 @@
 # If there is a need to external disks for Assured Delivery perforamance or scale reasons
-{{ if .Values.storage }}{{ if .Values.storage.persistent }}{{ if not .Values.storage.storageClass }}
+{{ if .Values.storage }}{{ if .Values.storage.persistent }}{{ if not .Values.storage.useStorageClass }}
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -22,4 +22,4 @@ parameters:
 {{- if .Values.storage.fsType }}
   fsType: {{ .Values.storage.fsType }}
 {{- end }}
-{{ end  }}{{ end  }}{{end}}
+{{ end  }}{{end}}{{end}}

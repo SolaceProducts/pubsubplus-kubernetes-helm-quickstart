@@ -55,5 +55,5 @@ service:
       protocol: TCP
 storage:
   persistent: true
-# Set storageClass the same as defined in the NFS provisioner service
-  storageClass: nfs
+# Set useStorageClass the same as defined in the NFS provisioner service
+  useStorageClass: nfs

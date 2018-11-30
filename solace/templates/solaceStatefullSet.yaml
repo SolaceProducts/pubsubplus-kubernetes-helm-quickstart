@@ -176,10 +176,10 @@ spec:
   - metadata:
       name: data
     spec:
-  {{- if .Values.storage.storageClass }}
-    storageClassName: {{ .Values.storage.storageClass }}
+  {{- if .Values.storage.useStorageClass }}
+      storageClassName: {{ .Values.storage.useStorageClass }}
   {{ else }}
-    storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+      storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
   {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:
