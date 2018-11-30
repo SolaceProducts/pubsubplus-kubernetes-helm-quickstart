@@ -176,7 +176,11 @@ spec:
   - metadata:
       name: data
     spec:
-      storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+  {{- if .Values.storage.storageClass }}
+    storageClassName: {{ .Values.storage.storageClass }}
+  {{ else }}
+    storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+  {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
