@@ -57,3 +57,4 @@ storage:
   persistent: true
 # Set useStorageClass the same as defined in the NFS provisioner service
   useStorageClass: nfs
+  size: 30Gi

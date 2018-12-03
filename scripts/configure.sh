@@ -81,6 +81,7 @@ case ${os_type} in
     archive_extension="tar.gz"
     sed_options="-E -i.bak"
     sudo_command="sudo"
+    helm_target_location="/usr/bin"
     ;;
   "Linux" )
     helm_type="linux-amd64"
@@ -88,6 +89,7 @@ case ${os_type} in
     archive_extension="tar.gz"
     sed_options="-i.bak"
     sudo_command="sudo"
+    helm_target_location="/usr/bin"
     ;;
   *_NT* ) # BASH emulation on windows
     helm_type="windows-amd64"
@@ -95,17 +97,23 @@ case ${os_type} in
     archive_extension="zip"
     sed_options="-i.bak"
     sudo_command=""
+    helm_target_location="/usr/bin"
     ;;
 esac
 if exists helm; then
   echo "`date` INFO: Found helm $(helm version --client --short)"
 else
-  pushd /tmp
-  curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
-  tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
-  ${sudo_command} mv ${helm_type}/helm* /usr/bin
-  popd
-  echo "`date` INFO: Installed helm $(helm version --client --short)"
+  if [[ "$helm_type" != "windows-amd64" ]]; then
+    pushd /tmp
+    curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
+    tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
+    ${sudo_command} mv ${helm_type}/helm* $helm_target_location
+    popd
+    echo "`date` INFO: Installed helm $(helm version --client --short)"
+  else
+    echo "Automated install of helm is not supported on Windows. Please refer to https://github.com/helm/helm#install to install it manually then re-run this script."
+    exit  -1
+  fi
 fi
 
 # Deploy tiller
