@@ -19,6 +19,7 @@
 #  - take a URL to a Solace PubSub+ docker container, admin password and cloud provider parameters
 #  - install the required version of helm
 #  - clone locally if not already cloned and prepare the solace chart for deployment
+#  - optionally restore helm installed on both client and server if missing
 
 # Use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
 # otherwise fall back to defaults (defaults are after the - (dash))
@@ -36,7 +37,7 @@ verbose=0
 
 # Read options
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "c:i:p:v:h" opt; do
+while getopts "c:i:p:v:r" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
         ;;
@@ -46,7 +47,7 @@ while getopts "c:i:p:v:h" opt; do
         ;;
     v)  values_file=$OPTARG      # optional
         ;;
-    h)  values_file=""           # optional - helm only, no values file customization
+    r)  values_file=""           # optional - restore helm only, no values file customization
         ;;
     esac
 done
@@ -164,7 +165,7 @@ if [[ "${values_file}" != "" ]]; then
   sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
   rm templates/secret.yaml.bak
 else
-  echo "-s option detected, skipping the setup of helm charts."
+  echo "-r option detected, skipping the setup of helm charts."
 fi
 
 # Wait until helm tiller is up and ready to proceed
