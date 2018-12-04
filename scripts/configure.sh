@@ -36,7 +36,7 @@ verbose=0
 
 # Read options
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "c:i:p:v:s" opt; do
+while getopts "c:i:p:v:h" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
         ;;
@@ -46,7 +46,7 @@ while getopts "c:i:p:v:s" opt; do
         ;;
     v)  values_file=$OPTARG      # optional
         ;;
-    s)  values_file=""           # optional - skip values.yaml customization
+    h)  values_file=""           # optional - helm only, no values file customization
         ;;
     esac
 done
