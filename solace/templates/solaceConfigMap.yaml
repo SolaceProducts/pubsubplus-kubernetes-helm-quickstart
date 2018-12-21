@@ -219,6 +219,17 @@ data:
     node_ordinal=${host_array[-1]}
     echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
     password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+
+    # First ensure redundancy is up
+    results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc><show><redundancy/></show></rpc>" \
+            -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
+    echo "`date` INFO: ${APP}-Redundancy state is: ${redundancystatus_results}"
+    if [ "${redundancystatus_results}" != "Up" ]; then
+      echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
+      exit 1
+    fi
+
     if [ "${node_ordinal}" = "2" ]; then
       echo "`date` INFO: ${APP}-Monitor node ready check"
       # Note that when dealing with Monitor, only need to be concerned and readiness response.
