@@ -226,7 +226,7 @@ data:
             -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
     redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     if [ "${redundancystatus_results}" != "Up" ]; then
-      echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}""
+      echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
       exit 1
     fi
 
