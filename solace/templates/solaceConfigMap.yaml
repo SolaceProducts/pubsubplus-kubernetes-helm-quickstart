@@ -224,9 +224,9 @@ data:
     results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
             -q "<rpc><show><redundancy/></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
-    echo "`date` INFO: ${APP}-Redundancy state is: ${redundancystatus_results}"
+    redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     if [ "${redundancystatus_results}" != "Up" ]; then
-      echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
+      echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}""
       exit 1
     fi
 
