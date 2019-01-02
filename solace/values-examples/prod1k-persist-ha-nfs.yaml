@@ -1,7 +1,7 @@
 # Create a PV of specified size and type, bind PVC to PV 
 solace:
   redundancy: true
-  size: dev100
+  size: prod1k
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
@@ -15,7 +15,6 @@ service:
   internal: false
   type: LoadBalancer
   externalPort:
-  externalPort:
     - port: 22
       protocol: TCP
       name: ssh
@@ -23,11 +22,9 @@ service:
     - port: 8080
       protocol: TCP
       name: semp
-      targetport: 8080
     - port: 55555
       protocol: TCP
       name: smf
-      targetport: 55555
     - port: 943
       protocol: TCP
       name: semptls
