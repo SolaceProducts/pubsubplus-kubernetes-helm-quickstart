@@ -55,6 +55,6 @@ service:
       protocol: TCP
 storage:
   persistent: true
-# Set useStorageClass the same as defined in the NFS provisioner service
+  nfs: true
   useStorageClass: nfs
   size: 30Gi

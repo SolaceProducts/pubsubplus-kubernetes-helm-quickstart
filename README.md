@@ -72,7 +72,7 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone https://github.com/SolaceDev/solace-kubernetes-quickstart.git
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart/solace    # location of the solace helm chart
 ```
 

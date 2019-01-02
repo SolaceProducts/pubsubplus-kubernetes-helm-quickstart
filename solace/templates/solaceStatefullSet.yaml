@@ -123,9 +123,10 @@ spec:
           readOnly: true
         - name: dshm
           mountPath: /dev/shm
-        - name: data
-          mountPath: /usr/sw/jail
-          subPath: jail
+        #  jail is no longer mounted
+        #  - name: data
+        #  mountPath: /usr/sw/jail
+        #  subPath: jail
         - name: data
           mountPath: /usr/sw/var
           subPath: var
@@ -135,9 +136,12 @@ spec:
         - name: data
           mountPath: /usr/sw/adb
           subPath: adb
+{{- if not .Values.storage.nfs }}
+        # only mount when not using nfs
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
+{{- end }} #end !nfs
         ports:{{ range $item := .Values.service.internalPort }}
         - containerPort: {{ $item.port }}
           protocol: {{ $item.protocol }}{{end}}
