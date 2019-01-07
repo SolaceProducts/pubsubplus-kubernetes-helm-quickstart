@@ -92,7 +92,7 @@ data:
         echo "`date` INFO: ${APP}-Determine if Active or Backup role to know which Virtual router to check"
         while [ ${count} -lt ${loop_guard} ]; do 
           role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
           case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
             "Primary")
@@ -117,7 +117,7 @@ data:
         echo "`date` INFO: ${APP}-Active or Backup role is ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
           online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+              -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
           local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
           echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
@@ -154,7 +154,7 @@ data:
           echo "`date` INFO: ${APP}-Wait for mate to be 'Standby'"
           while [ ${count} -lt ${loop_guard} ]; do 
             online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+                -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
             mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
             echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
@@ -176,9 +176,9 @@ data:
         fi # if assert-master
         # If only needs to do is resync master, can issue cammand and exit.
         {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+              -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
         {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+              -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
         echo "`date` INFO: ${APP}-Solace VMR bringup complete"
       fi # if not monitor
 {{- end }}
@@ -242,7 +242,7 @@ data:
       # active label will always be "false"
       echo "`date` INFO: ${APP}-For monitor node just check for 3 online nodes in group"
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><group/></redundancy></show></rpc>" \
+              -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
       if [ `echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -` -eq 3 ]; then
         echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
@@ -286,7 +286,7 @@ data:
         ;;
     esac
     online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-            -q "<rpc semp-version='soltr/8_5VMR'><show><redundancy><detail/></redundancy></show></rpc>" \
+            -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
