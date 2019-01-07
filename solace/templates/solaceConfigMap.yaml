@@ -231,6 +231,17 @@ data:
         echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
         exit 1
       fi
+      # Additionally check config-sync status for non-monitoring nodes
+      if [ "${node_ordinal}" != "2" ]; then
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+                -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
+        confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "${confsyncstatus_results}" != "Up" ]; then
+          echo "`date` INFO: ${APP}-Config-sync state is not yet up. Query results: ${confsyncstatus_results}"
+          exit 1
+        fi
+      fi
       echo "Creating redundacycheck_file"
       echo "true" > ${redundacycheck_file}
     fi
