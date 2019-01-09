@@ -16,7 +16,7 @@ data:
       export service_webtransport_port='60080'
       export service_webtransport_tlsport='60443'
       export service_semp_tlsport='60943'
-      export logging_debug_output=stdout
+      export logging_debug_output=all
 {{- if eq .Values.solace.size "dev100" }}
       export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod100" }}
