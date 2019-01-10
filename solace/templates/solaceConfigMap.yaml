@@ -223,14 +223,30 @@ data:
     # For upgrade purposes, ensure redundancy is up only when the pod is started
     redundacycheck_file=/tmp/redundacycheck
     if [ ! -f ${redundacycheck_file} ]; then
+      # First check all nodes are online
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc><show><redundancy/></show></rpc>" \
-              -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
-      redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-      if [ "${redundancystatus_results}" != "Up" ]; then
-        echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
+              -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
+              -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
+      nr_node_results=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
+      if [ nr_node_results -ne 3 ]; then
+        echo "`date` INFO: ${APP}-Not all nodes are online. Query results: ${nr_node_results}"
         exit 1
       fi
+      # Then for each node determine the ip address and check redundancy. Note: id starts here from 1 and not 0.
+      for id in 1 2 3; do
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
+                -v "//ip-address[$id]"`
+        node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://$node_ip_address:8080/SEMP \
+                -q "<rpc><show><redundancy/></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
+        redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "${redundancystatus_results}" != "Up" ]; then
+          echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
+          exit 1
+        fi
+      done
       # Additionally check config-sync status for non-monitoring nodes
       if [ "${node_ordinal}" != "2" ]; then
         results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
@@ -244,6 +260,8 @@ data:
       fi
       echo "Creating redundacycheck_file"
       echo "true" > ${redundacycheck_file}
+      # wait at first startup for stability
+      # sleep 20
     fi
     
 
