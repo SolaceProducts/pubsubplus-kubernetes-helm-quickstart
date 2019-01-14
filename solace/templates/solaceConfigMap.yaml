@@ -261,7 +261,7 @@ data:
       echo "Creating redundacycheck_file"
       echo "true" > ${redundacycheck_file}
       # wait at first startup for stability
-      # sleep 20
+      sleep 20
     fi
     
 
