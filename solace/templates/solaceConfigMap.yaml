@@ -258,10 +258,22 @@ data:
           exit 1
         fi
       fi
+      # Then for each node check that they report 3 Consul voters.
+      for id in 1 2 3; do
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
+                -v "//ip-address[$id]"`
+        node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        nr_voter_results=`curl --unix-socket /var/run/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  | python -m json.tool | grep Voter | grep true | wc -l`
+        if [ nr_voter_results -ne 3 ]; then
+          echo "`date` INFO: ${APP}-Still waiting for all 3 Consul voters to be present for node $node_ip_address. Query results: ${nr_voter_results}"
+          exit 1
+        fi
+      done
       echo "Creating redundacycheck_file"
       echo "true" > ${redundacycheck_file}
       # wait at first startup for stability
-      sleep 20
+      #sleep 20
     fi
     
 
