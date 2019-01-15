@@ -82,7 +82,7 @@ data:
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
       password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
-      loop_guard=30
+      loop_guard=60
       pause=10
       count=0
       resync_step=""
