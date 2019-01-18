@@ -94,6 +94,7 @@ data:
           role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+          run_time=$((${count} * ${pause}))
           case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
             "Primary")
             role="primary"
