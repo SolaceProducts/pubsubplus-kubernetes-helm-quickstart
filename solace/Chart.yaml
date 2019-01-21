@@ -4,10 +4,8 @@ name: solace
 version: 1.0.1
 icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
 maintainers:
-  - name: bczoma
-    email: balazs.czoma@solace.com
-  - name: kenbarr
-    email: ken.barr@solace.com
+  - name: support
+    email: support@solace.com
 home: http://dev.solace.com
 sources:
    - https://github.com/SolaceProducts/solace-kubernetes-quickstart
