@@ -12,9 +12,11 @@ metadata:
 spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
-{{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}  
   podManagementPolicy: Parallel
-  updateStrategy: 
+  updateStrategy:
+{{- if .Values.solace.scalingTierUpgrade }} 
+    type: OnDelete
+{{- else }} 
     type: RollingUpdate
 {{- end }}
   template:
@@ -114,6 +116,9 @@ spec:
            # not using postinstall hooks because of order dependencies
            # launch config check then Solace so VCMR can provide return code
            nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
+{{- if .Values.solace.scalingTierUpgrade }}
+           nohup {{ .Values.filepaths.configmap }}/vertical_scale_upgrade.sh \-s {{ .Values.solace.size }} \-r {{ .Release.Name }} &
+{{- end}}
            /usr/sbin/boot.sh
 
         volumeMounts:

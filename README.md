@@ -280,7 +280,7 @@ kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
 > Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
-### Modifying the cluster
+### Modifying the ports access
 
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
@@ -334,6 +334,24 @@ service:
       protocol: TCP
 EOF
 helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
+```
+
+### Modifying the scaling tier
+
+Similarly, you can change the scaling tier.  This will change the resource and limits requested to the new values depending on the scaling tier selected.  NOTICE: The change of a scaling teir is done with the HA cluster offline.  Expect the entire HA cluster to be down for 2 minutes or more during this procedure.  In this example we are changing the scaling tier to prod1k.
+
+```
+cd ~/workspace/solace-kubernetes-quickstart/solace
+tee ./scale-tier-update.yaml <<-EOF   # create update file with following contents:
+solace:
+  redundancy: true
+  size: prod1k
+  scalingTierUpgrade: true
+EOF
+helm upgrade  XXXX-XXXX . --values values.yaml --values scale-tier-update.yaml
+kubctrl delete pod XXXX-XXXX-solace-2
+kubctrl delete pod XXXX-XXXX-solace-1
+kubctrl delete pod XXXX-XXXX-solace-0
 ```
 
 ## Deleting a deployment
