@@ -1,6 +1,5 @@
+{{ if .Values.storage }}{{ if .Values.storage.persistent }}{{ if not .Values.storage.useStorageClass }}{{ if .Values.storage.type }}
 # If there is a need to external disks for Assured Delivery perforamance or scale reasons
-{{ if .Values.storage }}{{ if .Values.storage.persistent }}
----
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -19,8 +18,10 @@ parameters:
   type: {{- if eq .Values.storage.type "fast" }} io1 {{ else }} gp2 {{ end -}}
 {{- else if eq .Values.cloudProvider "gcp" }}
   type: {{- if eq .Values.storage.type "fast" }} pd-ssd {{ else }} pd-standard {{ end -}}
-{{- end}}
+{{- else }}
+  type: {{ .Values.storage.type }}
+{{- end }}
 {{- if .Values.storage.fsType }}
   fsType: {{ .Values.storage.fsType }}
 {{- end }}
-{{ end  }}{{end}}
+{{ end }}{{end}}{{end}}{{end}}

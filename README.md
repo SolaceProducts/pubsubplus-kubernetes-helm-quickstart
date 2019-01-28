@@ -9,7 +9,7 @@ This repository explains how to install a Solace PubSub+ Software Message Broker
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart )
-- [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.7 or 3.9 platform](https://github.com/SolaceProducts/solace-openshift-quickstart )
+- [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.10 or 3.11 platform](https://github.com/SolaceProducts/solace-openshift-quickstart )
 - Deploying a Solace PubSub+ Software Message Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
 
 ## Description of the Solace PubSub+ Software Message Broker
@@ -62,18 +62,18 @@ To load the docker image into a docker registry, follow the steps specific to th
 
 Deploy message broker Pods and Service to the cluster.
 
-The [Kubernetes `helm`](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
+The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
 The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
 ![alt text](/images/template_relationship.png "Template Relationship")
 
-* First, clone this repo, which includes helper scripts and the `solace` helm chart:
+* First, clone this repo, which includes helper scripts and the `solace` Helm chart:
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone https://github.com/SolaceDev/solace-kubernetes-quickstart.git
-cd solace-kubernetes-quickstart/solace    # location of the solace helm chart
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
+cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
 * Next, prepare your environment and customize your chart by executing the `configure.sh` script and pass it the required parameters: 
@@ -85,7 +85,7 @@ cd solace-kubernetes-quickstart/solace    # location of the solace helm chart
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
 | `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
 
-The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the `helm` tool if needed, as well as customize the `solace` helm chart to your desired configuration.
+The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the Helm tool if needed, as well as customize the `solace` Helm chart to your desired configuration.
 
 When customizing the `solace` chart by the script, the `values.yaml` located in the root of the chart will be replaced with what is specified in the argument `-v <value-file>`. A number of examples are provided in the `values-examples/` directory, for details refer to [this section](#other-message-broker-deployment-configurations). 
 
@@ -103,7 +103,7 @@ cd ~/workspace/solace-kubernetes-quickstart/solace
 ../scripts/configure.sh -p <ADMIN_PASSWORD> -i <SOLACE_IMAGE_URL> -c <CLOUD_PROVIDER> -v values-examples/prod1k-persist-ha-provisionPvc.yaml
 ```
 
-* Finally, use `helm` to install the deployment from the `solace` chart location, using your generated `values.yaml` file:
+* Finally, use Helm to install the deployment from the `solace` chart location, using your generated `values.yaml` file:
 
 ```sh
 cd ~/workspace/solace-kubernetes-quickstart/solace
@@ -116,7 +116,7 @@ To modify a deployment, refer to the section [Upgrading/modifying the message br
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that `helm` dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that Helm dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -251,7 +251,20 @@ Use the external Public IP to access the cluster. If a port required for a proto
 
 ## Upgrading/modifying the message broker cluster
 
-To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the `helm` tool from here. When passing multiple `-f <values-file>` to helm, the override priority will be given to the last (right-most) file specified.
+To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+
+### Restoring Helm if not available
+
+Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment Helm may not be available. This can be the case when e.g. using cloud shell, which may be terminated any time.
+
+To restore Helm, run the configure command with the -r option:
+
+```
+cd ~/workspace/solace-kubernetes-quickstart/solace
+../scripts/configure.sh -r
+```
+
+Now Helm shall be available, e.g: `helm list` shall no longer return an error message.
 
 ### Upgrading the cluster
 
@@ -344,14 +357,15 @@ Use Helm to delete a deployment, also called a release:
 helm delete XXX-XXX
 ```
 
-> Note: In some versions, Helm may return an error even if the deletion was successful.
-
-Check what has remained from the deployment, which should only return a single line with svc/kubernetes.
+Check what has remained from the deployment, which should only return a single line with svc/kubernetes:
 
 ```
 kubectl get statefulsets,services,pods,pvc,pv
+NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)         AGE
+service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            443/TCP         XX
 ```
-> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. Check their existence with `kubectl get all` and if necessary, use `kubectl delete` to delete those.
+
+> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `kubectl delete` to delete those.
 
 ## Other Message Broker Deployment Configurations
 
@@ -363,6 +377,7 @@ The `solace-kubernetes-quickstart/solace/values-examples` directory provides exa
 * `prod1k-direct-noha-localDirectory`: production, up to 1000 connections, non-HA, bind the PVC to a local directory on the host node
 * `prod1k-direct-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 * `prod1k-persist-ha-provisionPvc`: production, up to 1000 connections, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `prod1k-persist-ha-nfs`: production, up to 1000 connections, HA, to dynamically bind the PVC to an NFS volume provided by an NFS server, exposed as storage class `nfs`. Note: "root_squash" configuration is supported on the NFS server.
 
 Similar value-files can be defined extending above examples:
 

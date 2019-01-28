@@ -1,5 +1,4 @@
 # Create the StatefullSet, (petset), needed for redundancy
----
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
@@ -30,7 +29,7 @@ spec:
         resources:
           requests:
 {{- if eq .Values.solace.size "dev100" }}
-            cpu: "0.3"
+            cpu: "0.2"
             memory: 0.8Gi
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "1.2"
@@ -124,9 +123,10 @@ spec:
           readOnly: true
         - name: dshm
           mountPath: /dev/shm
-        - name: data
-          mountPath: /usr/sw/jail
-          subPath: jail
+        #  jail is no longer mounted
+        #  - name: data
+        #  mountPath: /usr/sw/jail
+        #  subPath: jail
         - name: data
           mountPath: /usr/sw/var
           subPath: var
@@ -136,9 +136,12 @@ spec:
         - name: data
           mountPath: /usr/sw/adb
           subPath: adb
+{{- if not .Values.storage.nfs }}
+        # only mount when not using nfs
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
+{{- end }} #end !nfs
         ports:{{ range $item := .Values.service.internalPort }}
         - containerPort: {{ $item.port }}
           protocol: {{ $item.protocol }}{{end}}
@@ -154,32 +157,40 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-{{- if .Values.storage }}{{- if not .Values.storage.persistent }}
+{{- if .Values.storage }}
+  {{- if not .Values.storage.persistent }}
         - name: data
-{{- if .Values.storage.hostPath }}
+    {{- if .Values.storage.hostPath }}
           hostPath:
             path: {{ .Values.storage.hostPath }}
-{{- else if .Values.storage.existingVolume }}
-  {{- if eq .Values.cloudProvider  "aws" }}
+    {{- else if .Values.storage.existingVolume }}
+      {{- if eq .Values.cloudProvider  "aws" }}
           awsElasticBlockStore:
             volumeID: {{ .Values.storage.existingVolume }}
             fsType: xfs
-  {{- else if eq .Values.cloudProvider "gcp" }}
+      {{- else if eq .Values.cloudProvider "gcp" }}
           gcePersistentDisk:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
-  {{- end}}
-{{ else }} #end existingVolume            
+      {{- end}}
+    {{ else }} #end existingVolume
           emptyDir: {}
-{{- end }} #end !persistent
-{{ else }}
+    {{- end }} #end !persistent
+  {{ else }}
   volumeClaimTemplates:
   - metadata:
       name: data
     spec:
+  {{- if .Values.storage.useStorageClass }}
+      storageClassName: {{ .Values.storage.useStorageClass }}
+  {{- else if .Values.storage.type }}
       storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+  {{- else }}
+      storageClassName: standard
+  {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
           storage: {{ .Values.storage.size}}
-{{- end }}{{- end}} #end storage
+  {{- end }}
+{{- end}} #end storage

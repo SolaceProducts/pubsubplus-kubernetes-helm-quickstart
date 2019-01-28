@@ -52,5 +52,6 @@ service:
       protocol: TCP
 storage:
   persistent: true
-# Uses the default standard storage class
-  size: 30Gi
+  nfs: true
+  useStorageClass: nfs
+  size: 5Gi

@@ -1,7 +1,7 @@
 # Create a PV of specified size and type, bind PVC to PV 
 solace:
   redundancy: true
-  size: dev100
+  size: prod1k
 # Current options are [gcp|aws]
 cloudProvider: SOLOS_CLOUD_PROVIDER
 image:
@@ -52,5 +52,6 @@ service:
       protocol: TCP
 storage:
   persistent: true
-# Uses the default standard storage class
+  nfs: true
+  useStorageClass: nfs
   size: 30Gi

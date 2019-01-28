@@ -18,7 +18,8 @@
 # The purpose of this script is to:
 #  - take a URL to a Solace PubSub+ docker container, admin password and cloud provider parameters
 #  - install the required version of helm
-#  - clone locally and prepare the solace chart for deployment
+#  - clone locally if not already cloned and prepare the solace chart for deployment
+#  - optionally restore helm installed on both client and server if missing
 
 # Use external env variables if defined: SOLACE_KUBERNETES_QUICKSTART_REPO, SOLACE_KUBERNETES_QUICKSTART_BRANCH
 # otherwise fall back to defaults (defaults are after the - (dash))
@@ -36,15 +37,17 @@ verbose=0
 
 # Read options
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "c:i:p:v:" opt; do
+while getopts "c:i:p:v:r" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
         ;;
     i)  solace_image=$OPTARG     # optional
         ;;
-    p)  solace_password=$OPTARG
+    p)  solace_password=$OPTARG  # optional if using -s (skip values.yaml customization)
         ;;
     v)  values_file=$OPTARG      # optional
+        ;;
+    r)  values_file=""           # optional - restore helm only, no values file customization
         ;;
     esac
 done
@@ -79,6 +82,7 @@ case ${os_type} in
     archive_extension="tar.gz"
     sed_options="-E -i.bak"
     sudo_command="sudo"
+    helm_target_location="/usr/bin"
     ;;
   "Linux" )
     helm_type="linux-amd64"
@@ -86,6 +90,7 @@ case ${os_type} in
     archive_extension="tar.gz"
     sed_options="-i.bak"
     sudo_command="sudo"
+    helm_target_location="/usr/bin"
     ;;
   *_NT* ) # BASH emulation on windows
     helm_type="windows-amd64"
@@ -93,17 +98,23 @@ case ${os_type} in
     archive_extension="zip"
     sed_options="-i.bak"
     sudo_command=""
+    helm_target_location="/usr/bin"
     ;;
 esac
 if exists helm; then
   echo "`date` INFO: Found helm $(helm version --client --short)"
 else
-  pushd /tmp
-  curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
-  tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
-  ${sudo_command} mv ${helm_type}/helm* /usr/bin
-  popd
-  echo "`date` INFO: Installed helm $(helm version --client --short)"
+  if [[ "$helm_type" != "windows-amd64" ]]; then
+    pushd /tmp
+    curl -O https://storage.googleapis.com/kubernetes-helm/helm-${helm_version}-${helm_type}.${archive_extension}
+    tar zxf helm-${helm_version}-${helm_type}.${archive_extension} || unzip helm-${helm_version}-${helm_type}.${archive_extension}
+    ${sudo_command} mv ${helm_type}/helm* $helm_target_location
+    popd
+    echo "`date` INFO: Installed helm $(helm version --client --short)"
+  else
+    echo "Automated install of helm is not supported on Windows. Please refer to https://github.com/helm/helm#install to install it manually then re-run this script."
+    exit  -1
+  fi
 fi
 
 # Deploy tiller
@@ -137,20 +148,25 @@ else
   cd solace
 fi
 
-# Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
-if [ ! -d "templates" ]; then
-  echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
-  exit -1
+# Copy and customize values.xml
+if [[ "${values_file}" != "" ]]; then
+  # Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
+  if [ ! -d "templates" ]; then
+    echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
+    exit -1
+  fi
+  echo "`date` INFO: Building helm charts"
+  cp ${values_file} ./values.yaml
+  IFS=':' read -ra container_array <<< "$solace_image"
+  sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
+  tag=${container_array[1]-latest}   # default to latest if no tag provided
+  sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
+  sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
+  sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
+  rm templates/secret.yaml.bak
+else
+  echo "-r option detected, skipping the setup of helm charts."
 fi
-echo "`date` INFO: Building helm charts"
-cp ${values_file} ./values.yaml
-IFS=':' read -ra container_array <<< "$solace_image"
-sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
-tag=${container_array[1]-latest}   # default to latest if no tag provided
-sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
-sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
-sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
-rm templates/secret.yaml.bak
 
 # Wait until helm tiller is up and ready to proceed
 #  workaround until https://github.com/kubernetes/helm/issues/2114 resolved
