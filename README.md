@@ -84,6 +84,7 @@ cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 | `-i`          | OPTIONAL: The Solace image reference in the docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>` from [Step 3](#step-3-optional). The default is to use `solace/solace-pubsub-standard:latest`. NOTE: If providing a reference, the `<DockerRepo>.` is not required if using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
 | `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
+| `-r`          | OPTIONAL: Restore Helm tooling, see section [Restoring Helm if not available](#restoring-helm-if-not-available ) |
 
 The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the Helm tool if needed, as well as customize the `solace` Helm chart to your desired configuration.
 
@@ -255,7 +256,7 @@ To upgrade/modify the message broker cluster, make the required modifications to
 
 ### Restoring Helm if not available
 
-Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment Helm may not be available. This can be the case when e.g. using cloud shell, which may be terminated any time.
+Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment the Helm client may not be available or out of sync with the server. This can be the case when e.g. using cloud shell, which may be terminated any time.
 
 To restore Helm, run the configure command with the -r option:
 
