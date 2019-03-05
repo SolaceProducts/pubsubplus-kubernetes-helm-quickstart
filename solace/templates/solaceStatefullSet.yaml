@@ -114,9 +114,10 @@ spec:
          - |
            source {{ .Values.filepaths.configmap }}/init.sh
            # not using postinstall hooks because of order dependencies
-           # launch config check then Solace so VCMR can provide return code
+           # launch config check then Solace so VMR boot can provide return code
            nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
 {{- if .Values.solace.scalingTierUpgrade }}
+           # {{ .Values.filepaths.configmap }}/pre_vertical_scale_upgrade.sh \-r {{ .Release.Name }}
            nohup {{ .Values.filepaths.configmap }}/vertical_scale_upgrade.sh \-s {{ .Values.solace.size }} \-r {{ .Release.Name }} &
 {{- end}}
            /usr/sbin/boot.sh
