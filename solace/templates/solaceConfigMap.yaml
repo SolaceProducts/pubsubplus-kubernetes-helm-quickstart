@@ -210,7 +210,7 @@ data:
     state_file=/tmp/activity_state
     if [ ! -f ${state_file} ]; then
       echo "State file not found, creating!"
-      echo "false" > ${state_file}
+      echo "unknown" > ${state_file}
     fi
 
 {{- if .Values.solace.redundancy }}
