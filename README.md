@@ -4,7 +4,7 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster. We recommend using the Helm tool for convenience. An [alternative method](#alternative-installation-generating-templates-for-kubernetes-kubectl-tool) using generated templates is also provided.
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster. We recommend using the Helm tool for convenience, which will be described in the next sections. An [alternative method](#alternative-installation-generating-templates-for-kubernetes-kubectl-tool) using generated templates is also provided.
 
 This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
 
