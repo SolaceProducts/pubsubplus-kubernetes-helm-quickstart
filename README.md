@@ -4,7 +4,9 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool. This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster. We recommend using the Helm tool for convenience. An [alternative method](#alternative-installation-generating-templates-for-kubernetes-kubectl-tool) using generated templates is also provided.
+
+This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
@@ -395,11 +397,13 @@ Similar value-files can be defined extending above examples:
 
 ## Alternative installation: generating templates for Kubernetes Kubectl tool
 
-This is for users not wishing to install Helm server-side Tiller on the Kubernetes cluster. This method will first generate installable Kubernetes templates, then the templates are installed using the Kubectl tool.
+This is for users not wishing to install the Helm server-side Tiller on the Kubernetes cluster.
+
+This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
 
 ### Step 1: Generate Kubernetes templates for Solace message broker deployment
 
-1) Clone the Solace Kubernetes quickstart git project
+1) Clone this project:
 
 ```sh
 git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
@@ -418,16 +422,17 @@ The chart is located in the `solace` directory:
 
 `cd <project-root>/solace`
 
-a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to https://github.com/SolaceProducts/solace-kubernetes-quickstart#other-message-broker-deployment-configurations
+a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations ]) in this document.
 
 b) Then edit `<project-root>/solace/values.yaml` and replace following parameters:
 
 SOLOS_CLOUD_PROVIDER: Current options are [gcp|aws] or leave it unchanged for unknown (note: this is to optimize volume provisioning for supported providers)
-SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available version from DockerHub (https://hub.docker.com/r/solace/solace-pubsub-standard/tags/). For more options, refer to https://github.com/SolaceProducts/solace-kubernetes-quickstart#step-3-optional
+<br/>
+SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available [version from DockerHub](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
 
 c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
 
-SOLOS_ADMIN_PASSWORD: change it to the desired password. For password rules, refer to https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords
+SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords )
 
 4) Generate the templates
 
