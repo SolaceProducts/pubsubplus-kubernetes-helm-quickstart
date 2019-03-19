@@ -422,17 +422,17 @@ The chart is located in the `solace` directory:
 
 `cd <project-root>/solace`
 
-a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations ]) in this document.
+a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations) in this document.
 
 b) Then edit `<project-root>/solace/values.yaml` and replace following parameters:
 
-SOLOS_CLOUD_PROVIDER: Current options are [gcp|aws] or leave it unchanged for unknown (note: this is to optimize volume provisioning for supported providers)
+SOLOS_CLOUD_PROVIDER: Current options are "gcp" or "aws" or leave it unchanged for unknown (note: specifying the provider will optimize volume provisioning for supported providers).
 <br/>
-SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available [version from DockerHub](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
+SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
 
 c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
 
-SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords )
+SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
 
 4) Generate the templates
 
