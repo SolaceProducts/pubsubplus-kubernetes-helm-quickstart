@@ -312,7 +312,7 @@ data:
         fi
         ;;
       "")
-        echo "`date -Ins` WARN $(hostname) ${APP}: Unable to deturmine config role, failing readiness check" >&2
+        echo "`date -Ins` WARN $(hostname) ${APP}: Unable to deturmine config role, failing readiness check"
         set_label "active" "false" $state_file
         exit 1
     esac
@@ -347,7 +347,7 @@ data:
         exit 0
         ;;
       *)
-        echo "`date -Ins` WARN $(hostname) ${APP}: Redundancy not up or not responding, failing readiness check" >&2
+        echo "`date -Ins` WARN $(hostname) ${APP}: Redundancy not up or not responding, failing readiness check"
         # Set active label to "false"
         set_label "active" "false" $state_file
         # Fail readiness check
@@ -370,7 +370,7 @@ data:
         exit 1
         ;;
       "")
-        echo "`date -Ins` WARN $(hostname) ${APP}: Unable to determine config role, failing readiness check" >&2
+        echo "`date -Ins` WARN $(hostname) ${APP}: Unable to determine config role, failing readiness check"
         set_label "active" "false" $state_file
         exit 1
     esac

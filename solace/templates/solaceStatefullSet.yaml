@@ -117,7 +117,6 @@ spec:
            # launch config check then Solace so VMR boot can provide return code
            nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
 {{- if .Values.solace.scalingTierUpgrade }}
-           # {{ .Values.filepaths.configmap }}/pre_vertical_scale_upgrade.sh \-r {{ .Release.Name }}
            nohup {{ .Values.filepaths.configmap }}/vertical_scale_upgrade.sh \-s {{ .Values.solace.size }} \-r {{ .Release.Name }} &
 {{- end}}
            /usr/sbin/boot.sh
