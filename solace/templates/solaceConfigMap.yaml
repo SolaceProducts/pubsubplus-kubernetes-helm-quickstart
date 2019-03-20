@@ -180,8 +180,8 @@ data:
         {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
         echo "`date -Ins` INFO $(hostname) ${APP}: Solace VMR bringup complete"
-      fi # if not monitor
-{{- end }}
+      fi # end if not monitor,(node_ordinal =2)
+{{- end }} # end if redundancy
       exit 0
 
 
@@ -191,10 +191,11 @@ data:
     # Function to set Kubernetes metadata labels
     set_label () {
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
-      previous_state=`cat $3`
+        previous_state=`cat $3`
       if [ "${2}" = "${previous_state}" ]; then
         echo "`date -Ins` INFO $(hostname) ${APP}: Current and Previous state match, not updating label"
       else
+        echo "`date -Ins` INFO $(hostname) ${APP}: Changing local state from ${previous_state} to ${2}"
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -209,7 +210,7 @@ data:
     state_file=/tmp/activity_state
     if [ ! -f ${state_file} ]; then
       echo "State file not found, creating!"
-      echo "false" > ${state_file}
+      echo "unknown" > ${state_file}
     fi
 
 {{- if .Values.solace.redundancy }}
@@ -227,7 +228,7 @@ data:
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      nr_node_results=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
+      nr_node_results=`echo ${results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
       if [ $nr_node_results -ne 3 ]; then
         echo "`date -Ins` INFO $(hostname) ${APP}: Not all nodes are online. Query results: ${nr_node_results}"
         exit 1
@@ -382,7 +383,7 @@ data:
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
       APP=`basename "$0"`
-      echo "`date -Ins` INFO $(hostname) ${APP}: Sclaing tier for node ordinal ${node_ordinal}"
+      echo "`date -Ins` INFO $(hostname) ${APP}: Scaling tier for node ordinal ${node_ordinal}"
       OPTIND=1         # Reset in case getopts has been used previously in the shell.
       # Initialize our own variables:
       namespace="default"
@@ -402,13 +403,15 @@ data:
       done
       shift $((OPTIND-1))
       [ "$1" = "--" ] && shift
+
       case ${node_ordinal} in
-        2)
-          echo "`date -Ins` INFO $(hostname) ${APP}: Tier scaling for mnitor node is a no-op exiting script"
-          exit 0
+      2)
+        echo "`date -Ins` INFO $(hostname) ${APP}: Connection scaling on the monitore node is a no-op"
+        exit 0
         ;;
       esac
 
+      # Convert kubernetes tee-shirt size to actual solace connection count
       case ${size} in
       "dev100")
         connection_count=100
@@ -428,27 +431,125 @@ data:
       "prod200k")
         connection_count=200000
         ;;
-      esac     
-      echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection count to ${connection_count} would happen here"
-      loop_guard=0
-      while [ $loop_guard -le $max_tries ]; do
-        ((loop_guard++))
-        echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection scalling to ${connection_count} try ${loop_guard}"
-      #  cc_upgrade_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-      #    -q "<rpc><system><scaling><max-connections><max-connections>${connection_count}</max-connections></max-connections></scaling></system></rpc>"`
-      cc_upgrade_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-          -q "<rpc><reload/></rpc>"`
-        if [[ -z $cc_upgrade_results ]]; then
-          echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection scalling passed: ${cc_upgrade_results} :"
-          break
+      esac
+
+
+        #Check to see if we are already at the correct scale tier
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -r 10 \
+            -q "<rpc><show><system><detail/></system></show></rpc>" \
+            -v "/rpc-reply/rpc/show/system/max-connections[text()]"`
+        current_max_connection=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+        if [[ ${current_max_connection} -eq ${connection_count} ]]; then
+          echo "`date -Ins` INFO $(hostname) ${APP}: Already at correct scalling tier ${size}, nothing to do"
+          exit 0
         else
-          echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection scalling failed: ${cc_upgrade_results} :"
+          echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection count from ${current_max_connection} to ${connection_count}"
         fi
-        sleep ${try_interval}
+
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -r 10 \
+            -q "<rpc><show><system><detail/></system></show></rpc>" \
+            -v "/rpc-reply/rpc/show/system/supported-max-connections[text()]"`
+        supported_max_connection=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+        if [[ ${connection_count} -gt ${supported_max_connection} ]]; then
+          echo "`date -Ins` ERROR $(hostname) ${APP}: Requested scale tier of ${connection_count} is larger then supported scale tier of ${supported_max_connection}"
+          exit 1
+        fi
+
+        # Shut down message spool and message backbone on Primary and backup
+        result=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -r 10 \
+          -q "<rpc><service><msg-backbone><shutdown/></msg-backbone></service></rpc>"`
+        echo "`date -Ins` INFO $(hostname) ${APP}: shutting message-backbone for Hostname: $(hostname) result ${result}"
+        result=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -r 10 \
+          -q "<rpc><hardware><message-spool><shutdown/></message-spool></hardware></rpc>"`
+        echo "`date -Ins` INFO $(hostname) ${APP}: shutting message-spool for Hostname: $(hostname) result ${result}"
+
+        echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection count to ${connection_count}"
+
+        echo "`date -Ins` INFO $(hostname) ${APP}: Changing connection scalling to ${connection_count} try ${loop_guard}"
+        cc_upgrade_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          -q "<rpc><system><scaling><max-connections><max-connections>${connection_count}</max-connections></max-connections></scaling></system></rpc>"`
+        exit 0
+
+
+  post_vertical_scale_upgrade.sh: |-
+      #!/bin/bash
+      password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      OPTIND=1         # Reset in case getopts has been used previously in the shell.
+      # Initialize our own variables:
+      release_name=""
+      size=""
+      verbose=0
+      while getopts "r:s:" opt; do
+          case "$opt" in
+          r)  release_name=$OPTARG
+              ;;
+          s)  size=$OPTARG
+              ;;
+          esac
       done
-      if [ $loop_guard -eq $max_tries ]; then
-        echo "`date -Ins` INFO $(hostname) ${APP}: Failed to set connection limit to: ${connection_count}"
+      shift $((OPTIND-1))
+      [ "$1" = "--" ] && shift
+      if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
+        namespace=`echo $STATEFULSET_NAMESPACE`
+      else
+        namespace=default
       fi
+
+      # Convert kubernetes tee-shirt size to actual solace connection count
+      case ${size} in
+      "dev100")
+        connection_count=100
+        ;;
+      "prod100")
+        connection_count=100
+        ;;
+      "prod1k")
+        connection_count=1000
+        ;;
+      "prod10k")
+        connection_count=10000
+        ;;
+      "prod100k")
+        connection_count=100000
+        ;;
+      "prod200k")
+        connection_count=200000
+        ;;
+      esac
+
+      current_max_connection=0
+      loop_guard=0
+      max_tries=180
+      for i in `seq 0 1`; do
+        host_name="${release_name}-solace-${i}.${release_name}-solace-discovery.${namespace}.svc"
+        while [[ $current_max_connection -ne $connection_count ]]; do
+          results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://${host_name}:8080/SEMP -r 60 \
+              -q "<rpc><show><system><detail/></system></show></rpc>" \
+              -v "/rpc-reply/rpc/show/system/max-connections[text()]"`
+          current_max_connection=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+          ((loop_guard++))
+          sleep 10
+          if [[ $loop_guard -eq $max_tries ]]; then
+            echo "`date -Iseconds` ERROR $(hostname) ${APP}: Failed get correct max connection count. Current value: ${current_max-connection} Expected value: ${connection_count}"
+            exit 1
+          fi
+        done
+        echo "`date -Iseconds` INFO $(hostname) ${APP}: Bring up message-backbone for Hostname: ${host_name}"
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://${host_name}:8080/SEMP -r 60 \
+          -q "<rpc><service><msg-backbone><no><shutdown/></no></msg-backbone></service></rpc>"
+
+        if [[ ${i} -eq 0 ]]; then
+          role="<primary/>"
+        else
+          role="<backup/>"
+        fi
+        echo "`date -Iseconds` INFO $(hostname) ${APP}: Bring up message-spool for Hostname: ${host_name} role: ${role}"
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://${host_name}:8080/SEMP -r 60 \
+          -q "<rpc><hardware><message-spool><no><shutdown>${role}</shutdown></no></message-spool></hardware></rpc>"
+      done
+      exit 0
 
   semp_query.sh: |-
       #!/bin/bash
@@ -461,17 +562,23 @@ data:
       query=""
       url=""
       value_search=""
+      retry_count=0
+      retry_interval=10
       script_name=$0
       verbose=0
-      while getopts "c:n:p:q:u:v:" opt; do
+      while getopts "c:i:n:p:q:r:u:v:" opt; do
           case "$opt" in
           c)  count_search=$OPTARG
+              ;;
+          i)  retry_interval=$OPTARG
               ;;
           n)  name=$OPTARG
               ;;
           p)  password=$OPTARG
               ;;
           q)  query=$OPTARG
+              ;;
+          r)  retry_count=$OPTARG
               ;;
           u)  url=$OPTARG
               ;;
@@ -482,30 +589,51 @@ data:
       shift $((OPTIND-1))
       [ "$1" = "--" ] && shift
       verbose=1
-      echo "`date -Ins` INFO $(hostname) ${APP}: ${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
-                  ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
+      INPUTS=$(cat <<-END
+        count_search=${count_search}
+        name=${name}
+        retry_count=${retry_count}
+        retry_interval=${retry_interval}
+        query=${query}
+        url=${url}
+        value_search=${value_search}
+        Leftovers $@
+      END
+      )
+      echo "`date -Iseconds` INFO $(hostname) ${APP}:  ${INPUTS}" >&2
       if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
-          echo "`date -Ins` ERROR $(hostname) ${APP}:  url, name, password and query are madatory fields" >&2
+          echo "`date -Iseconds` ERROR $(hostname) ${APP}:  url, name, password and query are madatory fields" >&2
           echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
           exit 1
         fi
-      query_response=`curl -sS -u ${name}:${password} ${url} -d "${query}"`
-      # Validate first char of response is "<", otherwise no hope of being valid xml
-      if [[ ${query_response:0:1} != "<" ]] ; then 
-        echo "`date -Ins` ERROR $(hostname) ${APP}:  Query failed, non-xml response -${query_response}-" >&2
+      retry_guard=0
+      query_success=
+      while [[ ${retry_count} -ge ${retry_guard} ]]; do
+        query_response=`curl -sS -u ${name}:${password} ${url} -d "${query}"`
+        ((retry_guard++))
+        # Validate first char of response is "<", otherwise no hope of being valid xml
+        if [[ ${query_response:0:1} != "<" ]] ; then 
+          echo "`date -Iseconds` WARN $(hostname) ${APP}:  Query failed count ${retry_guard}, non-xml response -${query_response}-" >&2
+          sleep ${retry_interval}
+        else
+          query_success=1
+          break
+        fi
+      done
+      if [[ -z ${query_success} ]]; then
+        echo "`date -Iseconds` ERROR $(hostname) ${APP}:  Query failed non-xml response -${query_response}-" >&2
         exit 1
       fi
       query_response_code=`echo $query_response | xmllint -xpath 'string(/rpc-reply/execute-result/@code)' -`
-
       if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
-          echo "`date -Ins` ERROR $(hostname) ${APP}:  Query failed, bad return code -${query_response}-" >&2
-          echo  "<returnInfo><errorInfo>query failed -${query_response_code}-</errorInfo></returnInfo>"
-          exit 1
+        echo "`date -Iseconds` ERROR $(hostname) ${APP}:  Query failed, bad return code -${query_response}-" >&2
+        echo  "<returnInfo><errorInfo>query failed -${query_response_code}-</errorInfo></returnInfo>"
+        exit 1
       fi
-      echo "`date -Ins` INFO $(hostname) ${APP}: ${script_name}: Query passed ${query_response_code}" >&2
+      echo "`date -Iseconds` INFO $(hostname) ${APP}: Query passed ${query_response_code}" >&2
       if [[ ! -z $value_search ]]; then
           value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
-          echo "`date -Ins` INFO $(hostname) ${APP}: ${script_name}: Value search $value_search returned ${value_result}" >&2
+          echo "`date -Iseconds` INFO $(hostname) ${APP}: Value search $value_search returned ${value_result}" >&2
           echo  "<returnInfo><errorInfo></errorInfo><valueSearchResult>${value_result}</valueSearchResult></returnInfo>"
           exit 0
       fi
@@ -513,7 +641,7 @@ data:
           count_line=`echo $query_response | xmllint -xpath "$count_search" -`
           count_string=`echo $count_search | cut -d '"' -f 2`
           count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
-          echo -e "`date -Ins` INFO $(hostname) ${APP}: ${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
-          echo  "<returnInfo><errorInfo></errorInfo><countSearchResult>${count_result}</countSearchResult></returnInfo>"
+          echo -e "`date -Iseconds` INFO $(hostname) ${APP}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
+          echo  "<returnInfo><errorInfo></errorInfo><countSearchResult>${count_result}</countSearchResult></returnInfo>" 
           exit 0
       fi
