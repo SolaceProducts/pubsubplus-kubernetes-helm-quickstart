@@ -119,10 +119,9 @@ spec:
           readOnly: true
         - name: dshm
           mountPath: /dev/shm
-        #  jail is no longer mounted
-        #  - name: data
-        #  mountPath: /usr/sw/jail
-        #  subPath: jail
+        - name: data
+          mountPath: /usr/sw/jail
+          subPath: jail
         - name: data
           mountPath: /usr/sw/var
           subPath: var
@@ -132,6 +131,9 @@ spec:
         - name: data
           mountPath: /usr/sw/adb
           subPath: adb
+        - name: data
+          mountPath: /var/lib/solace/diags
+          subPath: diags
 {{- if not .Values.storage.nfs }}
         # only mount when not using nfs
         - name: data
