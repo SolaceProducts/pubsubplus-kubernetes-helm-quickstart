@@ -26,6 +26,12 @@ service:
     - port: 55555
       protocol: TCP
       name: smf
+    - port: 55003
+      protocol: TCP
+      name: smfcompr
+    - port: 55443
+      protocol: TCP
+      name: smftls
     - port: 943
       protocol: TCP
       name: semptls
@@ -44,6 +50,10 @@ service:
     - port: 8080
       protocol: TCP
     - port: 55555
+      protocol: TCP
+    - port: 55003
+      protocol: TCP
+    - port: 55443
       protocol: TCP
     - port: 60943
       protocol: TCP

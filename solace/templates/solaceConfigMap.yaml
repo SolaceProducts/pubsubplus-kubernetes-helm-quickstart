@@ -228,7 +228,7 @@ data:
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      nr_node_results=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
+      nr_node_results=`echo ${results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
       if [ $nr_node_results -ne 3 ]; then
         echo "`date` INFO: ${APP}-Not all nodes are online. Query results: ${nr_node_results}"
         exit 1
