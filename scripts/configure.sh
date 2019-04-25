@@ -30,9 +30,12 @@ echo "`date` INFO: Using repo=${repo}, branch=${branch}"
 
 # Initialize our own variables:
 cloud_provider="undefined"  # recognized other options are "gcp" or "aws"
+configure_cloud_provider=false
 solace_password=""
+configure_solace_password=false
 solace_image="solace/solace-pubsub-standard:latest"
-values_file="values-examples/dev100-direct-noha.yaml"
+configure_solace_image=false
+restore_helm=false
 verbose=0
 
 # Read options
@@ -40,14 +43,18 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 while getopts "c:i:p:v:r" opt; do
     case "$opt" in
     c)  cloud_provider=$OPTARG   # optional but default will not work in all env
+        configure_cloud_provider=true
         ;;
-    i)  solace_image=$OPTARG     # optional
+    i)  solace_image=$OPTARG     # optional, if not provided default will be used
+        configure_solace_image=true
         ;;
-    p)  solace_password=$OPTARG  # optional if using -s (skip values.yaml customization)
+    p)  solace_password=$OPTARG  # optional if using -r
+        configure_solace_password=true
         ;;
-    v)  values_file=$OPTARG      # optional
+    v)  values_file=$OPTARG      # optional - replace values.yaml with example (provide relative path to solace dir)
+        unconfigured_values_file=true
         ;;
-    r)  values_file=""           # optional - restore helm only, no values file customization
+    r)  restore_helm=true        # optional - restore helm only, no values file customization
         ;;
     esac
 done
@@ -56,7 +63,7 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 verbose=1
-echo "`date` INFO: solace_image=${solace_image}, cloud_provider=${cloud_provider}, values_file=${values_file} Leftovers: $@"
+echo "`date` INFO: cloud_provider=${cloud_provider}, solace_image=${solace_image}, values_file=${values_file} Leftovers: $@"
 
 # kubectl installed is a pre-requisite
 exists()
@@ -118,7 +125,7 @@ else
 fi
 
 # Deploy tiller
-## possible other option but then need to deal with installed helm : if [[ `helm init | grep "Tiller is already installed"` ]] ; then
+## code note: possible other option but then need to deal with installed helm : if [[ `helm init | grep "Tiller is already installed"` ]] ; then
 if timeout 5s helm version --server --short >/dev/null 2>&1; then
   tiller_already_deployed=true
   echo "`date` INFO: Found tiller on server, using $(helm version --server --short)"
@@ -148,24 +155,52 @@ else
   cd solace
 fi
 
-# Copy and customize values.xml
-if [[ "${values_file}" != "" ]]; then
-  # Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
-  if [ ! -d "templates" ]; then
-    echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
-    exit -1
-  fi
+if [ "$restore_helm" == false ] ; then
   echo "`date` INFO: Building helm charts"
-  cp ${values_file} ./values.yaml
-  IFS=':' read -ra container_array <<< "$solace_image"
-  sed ${sed_options} "s:SOLOS_IMAGE_REPO:${container_array[0]}:g" values.yaml
-  tag=${container_array[1]-latest}   # default to latest if no tag provided
-  sed ${sed_options} "s:SOLOS_IMAGE_TAG:${tag}:g"  values.yaml
-  sed ${sed_options} "s/SOLOS_CLOUD_PROVIDER/${cloud_provider}/g"  values.yaml
-  sed ${sed_options} "s/SOLOS_ADMIN_PASSWORD/${solace_password}/g" templates/secret.yaml
-  rm templates/secret.yaml.bak
+  # non-empty password is required if never configured
+  if grep -Fq "b64enc \"SOLOS_ADMIN_PASSWORD\"" templates/secret.yaml ; then
+    if [ "$configure_solace_password" == false ] || [ "$solace_password" == "" ] ; then
+      echo "`date` INFO: A non-empty admin password must be provided for a new template, use the -p <password> option - please retry."
+      exit -1
+    fi
+  fi
+  # Copy values.yaml if required
+  if [[ "${values_file}" != "" ]]; then
+    # Ensure current dir is within the chart - e.g solace-kubernetes-quickstart/solace
+    if [ ! -d "templates" ]; then
+      echo "`date` INFO: Must be in the chart directory, exiting. Current dir is $(pwd)."
+      exit -1
+    fi
+    cp ${values_file} ./values.yaml
+  fi
+  # Determine values file configuration needs
+  if grep -Fq "SOLOS_IMAGE_REPO" ./values.yaml ; then
+    configure_solace_image=true
+    echo "`date` INFO: Unconfigured SOLOS_IMAGE_REPO detected, will configure it with: ${solace_image}"
+  fi
+  if grep -Fq "SOLOS_CLOUD_PROVIDER" ./values.yaml ; then
+    configure_cloud_provider=true
+    echo "`date` INFO: Unconfigured SOLOS_CLOUD_PROVIDER detected, will configure it with: ${cloud_provider}"
+  fi
+  # Configure the chart - both values file and password, as required
+  if [ "$configure_solace_image" == true ] ; then
+    IFS=':' read -ra container_array <<< "$solace_image"
+    sed ${sed_options} "s:^  repository\:.*$:  repository\: ${container_array[0]}:"  values.yaml
+    tag=${container_array[1]-latest}   # default to latest if no tag provided
+    sed ${sed_options} "s:^  tag\:.*$:  tag\: ${tag}:"  values.yaml
+    echo "`date` INFO: Solace image configured: ${solace_image}"
+  fi
+  if [ "$configure_cloud_provider" == true ] ; then
+    sed ${sed_options} "s/^cloudProvider:.*$/cloudProvider: ${cloud_provider}/"  values.yaml
+    echo "`date` INFO: Cloud provider configured: ${cloud_provider}"
+  fi
+  if [ "$configure_solace_password" == true ] ; then
+    sed ${sed_options} "/^  username_admin_password:/s/\".*\"/\"${solace_password}\"/" templates/secret.yaml
+    rm templates/secret.yaml.bak
+    echo "`date` INFO: Password configured"
+  fi
 else
-  echo "-r option detected, skipping the setup of helm charts."
+  echo "-r option (restore Helm) detected, skipping the setup of helm charts."
 fi
 
 # Wait until helm tiller is up and ready to proceed
