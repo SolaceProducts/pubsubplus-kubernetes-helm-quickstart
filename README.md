@@ -4,7 +4,9 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster using the Helm tool. This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Kubernetes cluster. We recommend using the Helm tool for convenience, which will be described in the next sections. An [alternative method](#alternative-installation-generating-templates-for-kubernetes-kubectl-tool) using generated templates is also provided.
+
+This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
@@ -76,15 +78,15 @@ git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
-* Next, prepare your environment and customize your chart by executing the `configure.sh` script and pass it the required parameters: 
+* Next, prepare your environment and customize your chart by executing the `configure.sh` script and pass it the following parameters: 
 
 | Parameter     | Description                                                                    |
 |---------------|--------------------------------------------------------------------------------|
-| `-p`          | REQUIRED: The password for the management `admin` user |
-| `-i`          | OPTIONAL: The Solace image reference in the docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>` from [Step 3](#step-3-optional). The default is to use `solace/solace-pubsub-standard:latest`. NOTE: If providing a reference, the `<DockerRepo>.` is not required if using a local repo (e.g. when using MiniKube) |
+| `-p`          | REQUIRED for the first time: The password for the management `admin` user |
+| `-i`          | OPTIONAL: The Solace image reference in the docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>` from [Step 3](#step-3-optional). The default is to use `solace/solace-pubsub-standard:latest`. NOTE: If providing a reference, the `<DockerRepo>.` is not required when using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
 | `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
-| `-r`          | OPTIONAL: Restore Helm tooling, see section [Restoring Helm if not available](#restoring-helm-if-not-available ) |
+| No parameter | OPTIONAL: Restore Helm tooling, see section [Restoring Helm if not available](#restoring-helm-if-not-available ) |
 
 The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the Helm tool if needed, as well as customize the `solace` Helm chart to your desired configuration.
 
@@ -258,14 +260,14 @@ To upgrade/modify the message broker cluster, make the required modifications to
 
 Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment the Helm client may not be available or out of sync with the server. This can be the case when e.g. using cloud shell, which may be terminated any time.
 
-To restore Helm, run the configure command with the -r option:
+To restore Helm, run the configure command with no parameter provided:
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
-../scripts/configure.sh -r
+../scripts/configure.sh
 ```
 
-Now Helm shall be available, e.g: `helm list` shall no longer return an error message.
+Now Helm shall be available on your client, e.g: `helm list` shall no longer return an error message.
 
 ### Upgrading the cluster
 
@@ -392,6 +394,87 @@ Similar value-files can be defined extending above examples:
     * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
+
+## Alternative installation: generating templates for Kubernetes Kubectl tool
+
+This is for users not wishing to install the Helm server-side Tiller on the Kubernetes cluster.
+
+This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
+
+### Step 1: Generate Kubernetes templates for Solace message broker deployment
+
+1) Clone this project:
+
+```sh
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
+cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
+```
+
+2) [Download](https://github.com/helm/helm/releases/tag/v2.9.1 ) and install the Helm client locally.
+
+We will assume that it has been installed to the `<project-root>/bin` directory.
+
+3) Customize the Solace chart for your deployment
+
+The Solace chart includes raw Kubernetes templates and a "values.yaml" file to customize them when the templates are generated.
+
+The chart is located in the `solace` directory:
+
+`cd <project-root>/solace`
+
+a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations) in this document.
+
+b) Then edit `<project-root>/solace/values.yaml` and replace following parameters:
+
+SOLOS_CLOUD_PROVIDER: Current options are "gcp" or "aws" or leave it unchanged for unknown (note: specifying the provider will optimize volume provisioning for supported providers).
+<br/>
+SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
+
+c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
+
+SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
+
+4) Generate the templates
+
+```sh
+cd <project-root>/solace
+# Create location for the generated templates
+mkdir generated-templates
+# In next command replace myrelease to the desired release name
+<project-root>/bin/helm template --name myrelease --values values.yaml --output-dir ./generated-templates .
+```
+
+The generated set of templates are now available in the `<project-root>/solace/generated-templates` directory.
+
+### Step 2: Deploy the templates on the target system
+
+Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
+
+1) Optionally copy the `generated-templates` directory with contents if this is on a different host
+
+2) Assign rights to current user to modify cluster-wide RBAC (required for creating clusterrole binding when deploying the Solace template podModRbac.yaml)
+
+Example:
+
+```sh
+# Get current user - GCP example. Returns e.g.: myname@example.org
+gcloud info | grep Account  
+# Assign rigths - replace user
+kubectl create clusterrolebinding myname-cluster-admin-binding \
+  --clusterrole=cluster-admin \
+  --user=myname@example.org
+```
+
+3) Initiate the deployment:
+
+`kubectl apply --recursive -f ./generated-templates/solace`
+
+Wait for the deployment to complete, which is then ready to use.
+
+4) To delete deployment, execute:
+
+`kubectl delete --recursive -f ./generated-templates/solace`
+
 
 ## Contributing
 
