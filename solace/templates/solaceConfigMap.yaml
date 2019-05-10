@@ -81,6 +81,7 @@ data:
       # node_ordinal=$(STATEFULSET_ORDINAL)
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
+      echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
       password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
       loop_guard=60
       pause=10
@@ -89,7 +90,6 @@ data:
       role=""
       #exclude monitor node from config-sync check
       if [ "${node_ordinal}" != "2" ]; then
-        echo "`date` INFO: ${APP}-Determine if Active or Backup role to know which Virtual router to check"
         while [ ${count} -lt ${loop_guard} ]; do 
           role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
@@ -106,81 +106,78 @@ data:
             ;;
           esac
           ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Management API not yet accessible"
           sleep ${pause}
         done
         if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+          echo "`date` ERROR: ${APP}-Solace Management API never came up"  >&2
           exit 1 
         fi
 
         count=0
-        echo "`date` INFO: ${APP}-Active or Backup role is ${role}"
+        echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
           online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
           local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-          echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
           run_time=$((${count} * ${pause}))
           case "${local_activity}" in
             "Local Active")
-              echo "`date` INFO: ${APP}-Redundancy is up locally Active, after ${run_time} seconds"
-              echo "`date` INFO: "We should only be here on new cluster create, if not likely a bug"
-              echo "`date` INFO: "   will issue a assert master to get back into sync"                              
+              echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
+              # We should only be here on new cluster create, if not likely a bug
+              # Need to issue assert master to get back into sync"
               resync_step="assert-master"
               break
               ;;
             "Mate Active")
-              echo "`date` INFO: ${APP}-Redundancy is up mate Active, after ${run_time} seconds" 
-              echo "`date` INFO: "This is normal state if we are backup or recreated later on"
-              echo "`date` INFO: "   will issue a resync master to get back into sync"            
+              echo "`date` INFO: ${APP}-Node activity status is Mate Active, after ${run_time} seconds"
+              # This is normal state if we are backup or recreated later on
+              # will issue a resync master to get back into sync
               resync_step="resync-master"
               break
               ;;
           esac
           ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Redundancy not yet up"
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Local activity state is: ${local_activity}"
           sleep ${pause}
         done
         if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+          echo "`date` ERROR: ${APP}-Local activity state never become Local Active or Mate Active"  >&2
           exit 1 
         fi
 
-        # If we need to assert master, then we need to wait for mate to reconsile
-        
+        # If we need to assert master, then we need to wait for mate to reconcile
         if [ "${resync_step}" = "assert-master" ]; then
           count=0
-          echo "`date` INFO: ${APP}-Wait for mate to be 'Standby'"
+          echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
           while [ ${count} -lt ${loop_guard} ]; do 
             online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
             mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-            echo "`date` INFO: ${APP}-Mate activity state is: ${mate_activity}"
             run_time=$((${count} * ${pause}))
             case "${mate_activity}" in
               "Standby")
-                echo "`date` INFO: ${APP}-Redundancy is up end-to-end, Local Active Mate Standby, after ${run_time} seconds"
+                echo "`date` INFO: ${APP}-Activity state reported by mate is Standby, after ${run_time} seconds"
                 break
                 ;;
             esac
             ((count++))
-            echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate not yet in sync"
+            echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate activity state is: ${mate_activity}, not yet in sync"
             sleep ${pause}
           done
           if [ ${count} -eq ${loop_guard} ]; then
-            echo "`date` ERROR: ${APP}-Solace redundancy group never came up" | tee /dev/stderr
+            echo "`date` ERROR: ${APP}-Mate not in sync, never reached Standby" >&2
             exit 1 
           fi
         fi # if assert-master
-        # If only needs to do is resync master, can issue cammand and exit.
+        # Now can issue {resync_step} command and exit.
         {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
         {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
-        echo "`date` INFO: ${APP}-Solace VMR bringup complete"
+        echo "`date` INFO: ${APP}-Solace message broker bringup complete for this node."
       fi # if not monitor
 {{- end }}
       exit 0
@@ -194,22 +191,22 @@ data:
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
       previous_state=`cat $3`
       if [ "${2}" = "${previous_state}" ]; then
-        echo "`date` INFO: ${APP}-Current and Previous state match, not updating label"
+        #echo "`date` INFO: ${APP}-Current and Previous state match, not updating label"
+        :
       else
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
-        curl -sSk -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
+        result=`curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Content-Type:application/json-patch+json" \
-            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME
+            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME`
       fi
     }
 
     # note that there are no re-tries here, if check fails the return not ready.
     APP=`basename "$0"`
     state_file=/tmp/activity_state
-    if [ ! -f ${state_file} ]; then
-      echo "State file not found, creating!"
+    if [ ! -f ${state_file} ]; then  # State file not found, creating
       echo "unknown" > ${state_file}
     fi
 
@@ -218,7 +215,6 @@ data:
     version=${1}
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
-    echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
     password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
 
     # For upgrade purposes, ensure redundancy is up only when the pod is started
@@ -228,9 +224,14 @@ data:
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
+      if [[ ${results} != *"<errorInfo></errorInfo>"* ]]; then
+        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" -` || errorinfo=
+        echo "`date` INFO: ${APP}-Waiting for valid server status response, got ${errorinfo}"
+        exit 1
+      fi
       nr_node_results=`echo ${results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
-      if [ $nr_node_results -ne 3 ]; then
-        echo "`date` INFO: ${APP}-Not all nodes are online. Query results: ${nr_node_results}"
+      if [ "$nr_node_results" -ne "3" ]; then
+        echo "`date` INFO: ${APP}-Waiting for all 3 nodes online, got ${nr_node_results}"
         exit 1
       fi
       # Then for each node determine the ip address and check redundancy. Note: id starts here from 1 and not 0.
@@ -244,7 +245,7 @@ data:
                 -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
         redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
         if [ "${redundancystatus_results}" != "Up" ]; then
-          echo "`date` INFO: ${APP}-Redundancy state is not yet up. Query results: ${redundancystatus_results}"
+          echo "`date` INFO: ${APP}-Redundancy state is not yet up."
           exit 1
         fi
       done
@@ -255,7 +256,7 @@ data:
                 -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
         confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
         if [ "${confsyncstatus_results}" != "Up" ]; then
-          echo "`date` INFO: ${APP}-Config-sync state is not yet up. Query results: ${confsyncstatus_results}"
+          echo "`date` INFO: ${APP}-Config-sync state is not yet up."
           exit 1
         fi
       fi
@@ -267,30 +268,30 @@ data:
         node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
         nr_voter_results=`curl --unix-socket /var/run/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  | python -m json.tool | grep Voter | grep true | wc -l`
         if [ $nr_voter_results -ne 3 ]; then
-          echo "`date` INFO: ${APP}-Still waiting for all 3 Consul voters to be present for node $node_ip_address. Query results: ${nr_voter_results}"
+          echo "`date` INFO: ${APP}-Waiting for all 3 Consul voters to be present for node $node_ip_address, got ${nr_voter_results}"
           exit 1
         fi
       done
-      echo "Creating redundacycheck_file"
+      # Creating marker - important that after initial startup pod keeps being ready to serve traffic during failover while redundancy is down
       echo "true" > ${redundacycheck_file}
-      # wait at first startup for stability
-      #sleep 20
     fi
     
-
     if [ "${node_ordinal}" = "2" ]; then
-      echo "`date` INFO: ${APP}-Monitor node ready check"
-      # Note that when dealing with Monitor, only need to be concerned and readiness response.
-      # active label will always be "false"
-      echo "`date` INFO: ${APP}-For monitor node just check for 3 online nodes in group"
+      # For monitor node just check for 3 online nodes in group; active label will always be "false"
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      if [ `echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -` -eq 3 ]; then
+      if [[ ${role_results} != *"<errorInfo></errorInfo>"* ]]; then
+        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" -` || errorinfo=
+        echo "`date` INFO: ${APP}-Waiting for valid server status response, got ${errorinfo}"
+        exit 1
+      fi
+      nodes_online=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
+      if [ "$nodes_online" -eq "3" ]; then
         echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
         exit 0
       else
-        echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, result: ${role_results}"
+        echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, ${nodes_online} of 3 nodes online"
         exit 1
       fi
     fi # End Monitor Node
@@ -306,19 +307,19 @@ data:
       "503")
         set_label "active" "false" $state_file
         if (( "$version" < 7 )); then
-         echo "`date` INFO: ${APP}-Message Router is Healthy and not Active, this is K8S 1.6 ready"
+         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, this is K8S 1.6 ready"
          exit 0
         else
-         echo "`date` INFO: ${APP}-Message Router is Healthy and not Active, further check required"
+         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
         fi
         ;;
       "")
-        echo "`date` WARN: ${APP}-Unable to deturmine config role, failing readiness check"
+        echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
         set_label "active" "false" $state_file
         exit 1
     esac
      
-    echo "`date` INFO: ${APP}-Checking if Message Router is Standby"
+    # Checking if Message Router is Standby
     case "${node_ordinal}" in
       "0")
         config_role="primary"
@@ -331,24 +332,23 @@ data:
             -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-    echo "`date` INFO: ${APP}-Local activity state is: ${local_activity}"
     case "${local_activity}" in
       "Local Active")
-        echo "`date` INFO: ${APP}-Redundancy is up locally Active"
+        # Redundancy is up and node is locally Active"
         # Set active label to "true"
         set_label "active" "true" $state_file
         # Pass readiness check
         exit 0
         ;;
       "Mate Active")
-        echo "`date` INFO: ${APP}-Redundancy is up mate Active"
+        # Redundancy is up and node is mate Active"
         # Set active label to "false"
         set_label "active" "false" $state_file
         # Pass readiness check
         exit 0
         ;;
       *)
-        echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check"
+        echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check. Local activity state is: ${local_activity}"
         # Set active label to "false"
         set_label "active" "false" $state_file
         # Fail readiness check
@@ -409,30 +409,32 @@ data:
       shift $((OPTIND-1))
       [ "$1" = "--" ] && shift
       verbose=1
-      echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
-                  ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
+      #echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
+      #            ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
       if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
-          echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
-          echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
-          exit 1
-        fi
+        echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
+        echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
+        exit 1
+      fi
+      if [ `curl --write-out '%{http_code}' --silent --output /dev/null -u ${name}:${password} ${url}` != "200" ] ; then
+        echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
+        exit 1
+      fi
       query_response=`curl -sS -u ${name}:${password} ${url} -d "${query}"`
       # Validate first char of response is "<", otherwise no hope of being valid xml
       if [[ ${query_response:0:1} != "<" ]] ; then 
-        echo "`date` ERROR: ${APP}-${script_name}: Query failed, non-xml response -${query_response}-" >&2
+        echo  "<returnInfo><errorInfo>no valid xml returned</errorInfo></returnInfo>"
         exit 1
       fi
       query_response_code=`echo $query_response | xmllint -xpath 'string(/rpc-reply/execute-result/@code)' -`
 
       if [[ -z ${query_response_code} && ${query_response_code} != "ok" ]]; then
-          echo "`date` ERROR: ${APP}-${script_name}: Query failed, bad return code -${query_response}-" >&2
           echo  "<returnInfo><errorInfo>query failed -${query_response_code}-</errorInfo></returnInfo>"
           exit 1
       fi
-      echo "`date` INFO: ${APP}-${script_name}: Query passed ${query_response_code}" >&2
+      #echo "`date` INFO: ${APP}-${script_name}: query passed ${query_response_code}" >&2
       if [[ ! -z $value_search ]]; then
           value_result=`echo $query_response | xmllint -xpath "string($value_search)" -`
-          echo "`date` INFO: ${APP}-${script_name}: Value search $value_search returned ${value_result}" >&2
           echo  "<returnInfo><errorInfo></errorInfo><valueSearchResult>${value_result}</valueSearchResult></returnInfo>"
           exit 0
       fi
@@ -440,7 +442,6 @@ data:
           count_line=`echo $query_response | xmllint -xpath "$count_search" -`
           count_string=`echo $count_search | cut -d '"' -f 2`
           count_result=`echo ${count_line} | tr "><" "\n" | grep -c ${count_string}`
-          echo -e "`date` INFO: ${APP}-${script_name}: \n\t count search: $count_search \n\t count_line: ${count_line} \n\t count_string: ${count_string} \n\t count_result: ${count_result}" >&2
           echo  "<returnInfo><errorInfo></errorInfo><countSearchResult>${count_result}</countSearchResult></returnInfo>"
           exit 0
       fi
