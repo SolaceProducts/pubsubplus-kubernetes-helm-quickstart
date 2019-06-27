@@ -196,10 +196,17 @@ data:
       else
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
+        K8S=https://kubernetes.default.svc.cluster.local:$KUBERNETES_SERVICE_PORT
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
-        result=`curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
-            -H "Content-Type:application/json-patch+json" \
-            https://kubernetes.default.svc.cluster.local:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME`
+        CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
+        if ! curl -sS --output /dev/null --cacert $CACERT --connect-timeout 5 \
+            --request PATCH --data "$(cat /tmp/patch_label.json)" \
+            -H "Authorization: Bearer $KUBE_TOKEN" -H "Content-Type:application/json-patch+json" \
+            $K8S/api/v1/namespaces/$NAMESPACE/pods/$HOSTNAME ; then
+          echo "`date` ERROR: ${APP}-Unable to update pod label, check access to API or RBAC authorization"
+          exit 1
+        fi
       fi
     }
 
