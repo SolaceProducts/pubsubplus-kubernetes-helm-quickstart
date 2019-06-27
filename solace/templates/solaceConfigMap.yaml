@@ -199,7 +199,7 @@ data:
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
         result=`curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Content-Type:application/json-patch+json" \
-            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME`
+            https://kubernetes.default.svc.cluster.local:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME`
       fi
     }
 
