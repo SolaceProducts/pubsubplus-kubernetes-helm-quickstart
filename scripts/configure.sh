@@ -140,7 +140,7 @@ else
     kubectl create serviceaccount --namespace kube-system tiller
     # Requires account/service account to have add-iam-policy-binding to "roles/container.admin"
     kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    helm init --service-account tiller
+    helm init --service-account tiller --upgrade
   fi
 fi
 
