@@ -394,7 +394,7 @@ The `solace-kubernetes-quickstart/solace/values-examples` directory provides exa
 * `prod1k-direct-noha`: production, up to 1000 connections, non-HA, simple local non-persistent storage
 * `prod1k-direct-noha-existingVolume`: production, up to 1000 connections, non-HA, bind the PVC to an existing external volume in the network
 * `prod1k-direct-noha-localDirectory`: production, up to 1000 connections, non-HA, bind the PVC to a local directory on the host node
-* `prod1k-direct-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `prod1k-persist-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 * `prod1k-persist-ha-provisionPvc`: production, up to 1000 connections, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 * `prod1k-persist-ha-nfs`: production, up to 1000 connections, HA, to dynamically bind the PVC to an NFS volume provided by an NFS server, exposed as storage class `nfs`. Note: "root_squash" configuration is supported on the NFS server.
 
