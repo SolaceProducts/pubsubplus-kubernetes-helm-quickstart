@@ -8,11 +8,14 @@ This repository explains how to install a Solace PubSub+ Software Message Broker
 
 This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
 
-This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
+This document is applicable to any platform supporting Kubernetes, with hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. For specific Kubernetes platforms, see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
 - [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.10 or 3.11 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
 - Deploying a Solace PubSub+ Software Message Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](//docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
+- [Install a Solace PubSub+ Software Message Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
+- Deploying a Solace PubSub+ Software Message Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
+
 
 ## Description of the Solace PubSub+ Software Message Broker
 
