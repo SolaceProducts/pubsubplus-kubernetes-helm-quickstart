@@ -77,7 +77,7 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone //github.com/SolaceProducts/solace-kubernetes-quickstart.git -b SecurityEnhancements
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git -b SecurityEnhancements
 cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
