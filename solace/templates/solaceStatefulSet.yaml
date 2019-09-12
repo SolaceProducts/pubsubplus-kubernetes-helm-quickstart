@@ -183,8 +183,6 @@ spec:
       storageClassName: {{ .Values.storage.useStorageClass }}
   {{- else if .Values.storage.type }}
       storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
-  {{- else }}
-      storageClassName: standard
   {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:

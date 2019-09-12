@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
+[![Build Status](//travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](//travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
 
 # Install a Solace PubSub+ Software Message Broker onto a Kubernetes cluster
 
@@ -10,28 +10,31 @@ This guide is intended mainly for development and demo purposes. The recommended
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
-- [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](https://github.com/SolaceProducts/solace-gke-quickstart )
-- [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.10 or 3.11 platform](https://github.com/SolaceProducts/solace-openshift-quickstart )
-- Deploying a Solace PubSub+ Software Message Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
+- [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
+- [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.10 or 3.11 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
+- Deploying a Solace PubSub+ Software Message Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](//docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
+- [Install a Solace PubSub+ Software Message Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
+- Deploying a Solace PubSub+ Software Message Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
+
 
 ## Description of the Solace PubSub+ Software Message Broker
 
 The Solace PubSub+ software message broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The message broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
 
-Solace PubSub+ software message brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single node deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+Solace PubSub+ software message brokers can be deployed in either a 3-node High-Availability (HA), or as a single node deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
 ## How to deploy a message broker onto Kubernetes
 
-In this quick start we go through the steps to set up a small-size message broker either as a single stand-alone instance, or in a 3-node HA cluster. If you are interested in other message broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+In this quick start we go through the steps to set up a small-size message broker either as a single stand-alone instance, or in a 3-node HA deployment. If you are interested in other message broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 This is a 4 step process:
 
 ### Step 1: 
 
-Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc. You will also need following tools:
+Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](//github.com/kubernetes/minikube/blob/master/README.md ), etc. You will also need following tools:
 
-* Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ).
-* Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required depending on your environment.
+* Install [`kubectl`](//kubernetes.io/docs/tasks/tools/install-kubectl/ ).
+* Installation of [`docker`](//docs.docker.com/get-started/ ) may also be required for [Step 3](#step-3-optional).
 
 ### Step 2: 
 
@@ -45,18 +48,18 @@ Before continuing, ensure the `kubectl get svc` command returns the `kubernetes`
 
 ### Step 3 (Optional): 
 
-Obtain the Solace PubSub+ message broker docker image and load it into a [docker container registry](https://docs.docker.com/registry/ ).
+Obtain the Solace PubSub+ message broker docker image and load it into a [docker container registry](//docs.docker.com/registry/ ).
 
-**Hint:** You may skip the rest of this step if using the free PubSub+ Standard Edition available from the [Solace public Docker Hub registry](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). The docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`. 
+**Hint:** You may skip the rest of this step if using the free PubSub+ Standard Edition available from the [Solace public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). The docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`. 
 
-> Note: If using MiniKube you can [reuse its docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.
+> Note: If using MiniKube you can [reuse its docker daemon](//github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.
 
 To get the message broker docker image, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
 
 | PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
-| [Download Standard docker image](http://dev.solace.com/downloads/) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval) |
+| [Download Standard docker image](//dev.solace.com/downloads/) | [Download Evaluation docker image](//dev.solace.com/downloads#eval) |
 
 To load the docker image into a docker registry, follow the steps specific to the registry you are using.
 
@@ -64,7 +67,7 @@ To load the docker image into a docker registry, follow the steps specific to th
 
 Deploy message broker Pods and Service to the cluster.
 
-The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
+The [Kubernetes Helm](//github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
 The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
@@ -74,7 +77,7 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
+git clone //github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
@@ -86,7 +89,7 @@ cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 | `-i`          | OPTIONAL: The Solace image reference in the docker container registry in the form `<DockerRepo>.<ImageName>:<releaseTag>` from [Step 3](#step-3-optional). The default is to use `solace/solace-pubsub-standard:latest`. NOTE: If providing a reference, the `<DockerRepo>.` is not required when using a local repo (e.g. when using MiniKube) |
 | `-c`          | OPTIONAL: The cloud environment you will be running in, current options are [aws\|gcp]. NOTE: if you are not using dynamic provisioned persistent disks, or, if you are running a local MiniKube environment, this option can be left out. |
 | `-v`          | OPTIONAL: The path to a `values.yaml` example/custom file to use. The default file is `values-examples/dev100-direct-noha.yaml` |
-| No parameter | OPTIONAL: Restore Helm tooling, see section [Restoring Helm if not available](#restoring-helm-if-not-available ) |
+| `-r`          | OPTIONAL: Restore Helm tooling only, no change to values. See section [Restoring Helm if not available](#restoring-helm-if-not-available ) |
 
 The location of the `configure.sh` script is in the `../scripts` directory, relative to the `solace` chart. Executing the configuration script will install the required version of the Helm tool if needed, as well as customize the `solace` Helm chart to your desired configuration.
 
@@ -111,15 +114,18 @@ cd ~/workspace/solace-kubernetes-quickstart/solace
 ```sh
 cd ~/workspace/solace-kubernetes-quickstart/solace
 helm install . -f values.yaml
-# Wait until all pods running and ready and the active message broker pod label is "active=true"
+# Wait until all pods running, ready and the active message broker pod label is "active=true"
+# This can take several minutes
 watch kubectl get pods --show-labels
 ```
 
-To modify a deployment, refer to the section [Upgrading/modifying the message broker cluster](#upgradingmodifying-the-message-broker-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
+The deployment is complete if all Solace pods are running, ready and the active message broker pod's label is "active=true". The exposed `solace` service will now forward traffic to the active message broker node. Refer to section [Using pod label "active"](#using-pod-label-active-to-identify-the-active-message-broker-node) for more information about what needs to be in place for the active pod's label to become "active" and possible related issues.
+
+To modify a deployment, refer to the section [Upgrading/modifying the message broker](#upgradingmodifying-the-message-broker). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that Helm dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA configuration is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that Helm dynamically generates, e.g: "tinseled-lamb".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -169,7 +175,7 @@ Generally, all services including management and messaging are accessible throug
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](https://docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
 
 ### WebUI, SolAdmin and SEMP access
 
@@ -190,19 +196,19 @@ Solace PubSub+ Standard Version 8.10.0.1057
 The Solace PubSub+ Standard is proprietary software of
 Solace Corporation. By accessing the Solace PubSub+ Standard
 you are agreeing to the license terms and conditions located at
-http://www.solace.com/license-software
+//www.solace.com/license-software
 
 Copyright 2004-2018 Solace Corporation. All rights reserved.
 
 To purchase product support, please contact Solace at:
-http://dev.solace.com/contact-us/
+//dev.solace.com/contact-us/
 
 Operating Mode: Message Routing Node
 
 XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH.
+If you are using an HA deployment, it is better to access the CLI through the Kubernets pod and not directly via SSH.
 
 Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
 
@@ -219,7 +225,7 @@ kubectl port-forward XXX-XXX-solace-0 62222:2222 &
 ssh -p 62222 admin@localhost
 ```
 
-This can also be mapped to individual message brokers in the cluster via port-forward:
+This can also be mapped to individual message brokers in the deployment via port-forward:
 
 ```
 kubectl port-forward XXX-XXX-solace-0 8081:8080 &
@@ -227,17 +233,20 @@ kubectl port-forward XXX-XXX-solace-1 8082:8080 &
 kubectl port-forward XXX-XXX-solace-2 8083:8080 &
 ```
 
-For SSH access to individual message brokers use:
+## SSH access to individual message brokers
+
+For direct access, use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
 ```
 
 ## Viewing logs
+
 Logs from the currently running container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace
+kubectl logs XXX-XXX-solace-0 -c solace  # use -f to follow live
 ```
 
 Logs from the previously terminated container:
@@ -246,21 +255,31 @@ Logs from the previously terminated container:
 kubectl logs XXX-XXX-solace-0 -c solace -p
 ```
 
+## Viewing events
+
+Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace message broker deployment.
+
+It is recommeded to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
+
+```sh
+kubectl get events  # use -w to watch live
+```
+
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](//dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
-Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
+Use the external Public IP to access the deployment. If a port required for a protocol is not opened, refer to the next section on how to open it up.
 
-## Upgrading/modifying the message broker cluster
+## Upgrading/modifying the message broker deployment
 
-To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+To upgrade/modify the message broker deployment, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 ### Restoring Helm if not available
 
-Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment the Helm client may not be available or out of sync with the server. This can be the case when e.g. using cloud shell, which may be terminated any time.
+Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new client to access the deployment, the Helm client may not be available or out of sync with the server. This can be the case when e.g. using cloud shell, which may be terminated any time.
 
-To restore Helm, run the configure command with no parameter provided:
+To restore Helm, run the configure command with `-r` parameter:
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
@@ -269,7 +288,7 @@ cd ~/workspace/solace-kubernetes-quickstart/solace
 
 Now Helm shall be available on your client, e.g: `helm list` shall no longer return an error message.
 
-### Upgrading the cluster
+### Upgrading the deployment
 
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
@@ -296,7 +315,7 @@ kubectl delete po/XXX-XXX-solace-<pod-ordinal>
 ```
 > Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
-### Modifying the cluster
+### Modifying the deployment
 
 Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
@@ -378,13 +397,13 @@ The `solace-kubernetes-quickstart/solace/values-examples` directory provides exa
 * `prod1k-direct-noha`: production, up to 1000 connections, non-HA, simple local non-persistent storage
 * `prod1k-direct-noha-existingVolume`: production, up to 1000 connections, non-HA, bind the PVC to an existing external volume in the network
 * `prod1k-direct-noha-localDirectory`: production, up to 1000 connections, non-HA, bind the PVC to a local directory on the host node
-* `prod1k-direct-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
+* `prod1k-persist-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 * `prod1k-persist-ha-provisionPvc`: production, up to 1000 connections, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
 * `prod1k-persist-ha-nfs`: production, up to 1000 connections, HA, to dynamically bind the PVC to an NFS volume provided by an NFS server, exposed as storage class `nfs`. Note: "root_squash" configuration is supported on the NFS server.
 
 Similar value-files can be defined extending above examples:
 
-- To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/SW-Broker-Configuration-Defaults.htm) in the Solace customer documentation.
+- To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/SW-Broker-Configuration-Defaults.htm) in the Solace customer documentation.
 
 - It is also possible to configure the message broker deployment with different CPU and memory resources to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
 
@@ -394,6 +413,73 @@ Similar value-files can be defined extending above examples:
     * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
+
+## Kubernetes Volume Types support
+
+This quickstart is expected to work with all [Types of Volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
+* awsElasticBlockStore (when specifying `aws` as cloud provider  in `values.yaml`); and
+* gcePersistentDisk (`aws` cloud provider)
+
+The built-in support creates a StorageClass when specifying `type`. Example:
+
+```yaml
+storage:
+  persistent: true
+  type: standard    # use type for a faster but more expensive storage type
+  size: 30Gi
+```
+
+If using a different provider, create a [StorageClass](//kubernetes.io/docs/concepts/storage/storage-classes/ ) and provide its name in `values.yaml`. Example:
+
+```yaml
+# Create your storage class
+#  or query existing ones using "kubectl get storageclasses"
+storage:
+  persistent: true
+  useStorageClass: <My-Storage-Class>
+  size: 30Gi
+```
+
+## Using pod label "active" to identify the active message broker node
+
+This section provides more information about what is required to achieve the correct label for the pod hosting the active message broker node and provides help for troubleshooting in case of possible issues because of tightened security.
+
+Use `kubectl get pods --show-labels` to check for the status of the "active" label. In a stable deployment, one of the message routing nodes with ordinal 0 or 1 shall have the label `active=true`. You can find out if there is an issue by [checking events](#viewing-events) for related ERROR reported.
+
+This label is set by the `readiness_check.sh` script in `solace/templates/solaceConfigMap.yaml`, triggered by the StatefulSet's readiness probe. For this to happen the followings are required:
+
+- the Solace pods must be able to communicate with each-other at port 8080
+- the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active message broker is service ready
+- the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
+
+In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable required communication.
+
+The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
+is used to associate "patch label" rights. For simplicity, by default this opens up cluster-wide access of patching pod labels for all service accounts. For label update to work in a restricted security environment, adjust `podtagupdater` to be a `Role` and use a `RoleBinding` only to the specific service account in the specific namespace:
+
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "solace.fullname" . }}-podtagupdater
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ template "solace.fullname" . }}-serviceaccounts-to-podtagupdater
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "solace.fullname" . }}-podtagupdater
+subjects:
+- kind: ServiceAccount
+  name: <My-Service-Account>
+  namespace: <My-Namespace>
+```
 
 ## Alternative installation: generating templates for Kubernetes Kubectl tool
 
@@ -406,11 +492,11 @@ This method will first generate installable Kubernetes templates from this proje
 1) Clone this project:
 
 ```sh
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git -b SecurityEnhancements
 cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
 ```
 
-2) [Download](https://github.com/helm/helm/releases/tag/v2.9.1 ) and install the Helm client locally.
+2) [Download](//github.com/helm/helm/releases/tag/v2.9.1 ) and install the Helm client locally.
 
 We will assume that it has been installed to the `<project-root>/bin` directory.
 
@@ -428,11 +514,11 @@ b) Then edit `<project-root>/solace/values.yaml` and replace following parameter
 
 SOLOS_CLOUD_PROVIDER: Current options are "gcp" or "aws" or leave it unchanged for unknown (note: specifying the provider will optimize volume provisioning for supported providers).
 <br/>
-SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
+SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
 
 c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
 
-SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](https://docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
+SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](//docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
 
 4) Generate the templates
 
@@ -482,7 +568,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Authors
 
-See the list of [contributors](https://github.com/SolaceProducts/solace-kubernetes-quickstart/graphs/contributors) who participated in this project.
+See the list of [contributors](//github.com/SolaceProducts/solace-kubernetes-quickstart/graphs/contributors) who participated in this project.
 
 ## License
 
@@ -492,6 +578,6 @@ This project is licensed under the Apache License, Version 2.0. - See the [LICEN
 
 For more information about Solace technology in general please visit these resources:
 
-- The Solace Developer Portal website at: http://dev.solace.com
-- Understanding [Solace technology.](http://dev.solace.com/tech/)
-- Ask the [Solace community](http://dev.solace.com/community/).
+- The Solace Developer Portal website at: //dev.solace.com
+- Understanding [Solace technology.](//dev.solace.com/tech/)
+- Ask the [Solace community](//dev.solace.com/community/).

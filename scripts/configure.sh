@@ -85,7 +85,7 @@ os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
-    helm_version="v2.9.1"
+    helm_version="v2.14.1"
     archive_extension="tar.gz"
     sed_options="-E -i.bak"
     sudo_command="sudo"
@@ -93,7 +93,7 @@ case ${os_type} in
     ;;
   "Linux" )
     helm_type="linux-amd64"
-    helm_version="v2.9.1"
+    helm_version="v2.14.1"
     archive_extension="tar.gz"
     sed_options="-i.bak"
     sudo_command="sudo"
@@ -101,7 +101,7 @@ case ${os_type} in
     ;;
   *_NT* ) # BASH emulation on windows
     helm_type="windows-amd64"
-    helm_version=v2.9.1
+    helm_version=v2.14.1
     archive_extension="zip"
     sed_options="-i.bak"
     sudo_command=""
@@ -140,7 +140,7 @@ else
     kubectl create serviceaccount --namespace kube-system tiller
     # Requires account/service account to have add-iam-policy-binding to "roles/container.admin"
     kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    helm init --service-account tiller
+    helm init --service-account tiller --upgrade
   fi
 fi
 
