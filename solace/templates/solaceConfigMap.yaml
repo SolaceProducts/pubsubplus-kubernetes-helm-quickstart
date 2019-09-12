@@ -275,7 +275,11 @@ data:
         node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
         nr_voter_results=`curl --unix-socket /var/run/solace/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  | python -m json.tool | grep Voter | grep true | wc -l`
         if [ $nr_voter_results -ne 3 ]; then
-          echo "`date` INFO: ${APP}-Waiting for all 3 Consul voters to be present for node $node_ip_address, got ${nr_voter_results}"
+          # For backwards compatibility - will revise.
+          nr_voter_results=`curl --unix-socket /var/run/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  | python -m json.tool | grep Voter | grep true | wc -l`
+          if [ $nr_voter_results -ne 3 ]; then
+            echo "`date` INFO: ${APP}-Waiting for all 3 Consul voters to be present for node $node_ip_address, got ${nr_voter_results}"
+          fi
           exit 1
         fi
       done
