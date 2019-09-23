@@ -8,7 +8,7 @@ This repository explains how to install a Solace PubSub+ Software Message Broker
 
 This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Message Broker version is 9.0 or later.
 
-This document is applicable to any platform supporting Kubernetes, with hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. For specific Kubernetes platforms, see:
+This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Unix-based machine. To view examples of other platforms see:
 
 - [Deploying a Solace PubSub+ Software Message Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
 - [Deploying a Solace PubSub+ Software Message Broker HA Group onto an OpenShift 3.10 or 3.11 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
@@ -77,7 +77,7 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone //github.com/SolaceProducts/solace-kubernetes-quickstart.git
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
@@ -283,7 +283,7 @@ To restore Helm, run the configure command with `-r` parameter:
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
-../scripts/configure.sh -r
+../scripts/configure.sh
 ```
 
 Now Helm shall be available on your client, e.g: `helm list` shall no longer return an error message.
@@ -492,7 +492,7 @@ This method will first generate installable Kubernetes templates from this proje
 1) Clone this project:
 
 ```sh
-git clone //github.com/SolaceProducts/solace-kubernetes-quickstart.git
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
 ```
 
