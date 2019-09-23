@@ -1,4 +1,4 @@
-[![Build Status](//travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](//travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
+[![Build Status](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
 
 # Install a Solace PubSub+ Software Message Broker onto a Kubernetes cluster
 
