@@ -77,7 +77,7 @@ The following diagram illustrates the template structure used for the Solace Dep
 
 ```sh
 mkdir ~/workspace; cd ~/workspace
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git -b SecurityEnhancements
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart/solace    # location of the solace Helm chart
 ```
 
@@ -492,7 +492,7 @@ This method will first generate installable Kubernetes templates from this proje
 1) Clone this project:
 
 ```sh
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git -b SecurityEnhancements
+git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
 ```
 
