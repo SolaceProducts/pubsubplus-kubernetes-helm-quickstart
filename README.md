@@ -301,19 +301,15 @@ image:
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 ```
-- Upgrade the Kubernetes release, this will not effect running instances
+- Upgrade the Kubernetes release.
+
+Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, Backup, Primary) taken down for upgrade in an HA deployment. This will affect running message broker instances, result in potentially multiple failovers and requires connection retries configured in the client.
 
 ```sh
 cd ~/workspace/solace-kubernetes-quickstart/solace
 helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
 ```
 
-- Delete the pod(s) to force them to be recreated with the new release. 
-
-```sh
-kubectl delete po/XXX-XXX-solace-<pod-ordinal>
-```
-> Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
 ### Modifying the deployment
 
@@ -429,7 +425,7 @@ storage:
   size: 30Gi
 ```
 
-If using a different provider, create a [StorageClass](//kubernetes.io/docs/concepts/storage/storage-classes/ ) and provide its name in `values.yaml`. Example:
+If using a different provider, create a [StorageClass](//kubernetes.io/docs/concepts/storage/storage-classes/ ) <My-Storage-Class> and provide its name in `values.yaml`. Example:
 
 ```yaml
 # Create your storage class
@@ -439,6 +435,8 @@ storage:
   useStorageClass: <My-Storage-Class>
   size: 30Gi
 ```
+
+If no `type` or `useStorageClass` parameters are configured the deployment will attempt to use the provider's default storage class.
 
 ## Using pod label "active" to identify the active message broker node
 
