@@ -410,6 +410,12 @@ Similar value-files can be defined extending above examples:
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
 
+## Exposing the Solace message broker services
+
+The default way of exposing the Solace message broker services is through an external load balancer. The options are ClusterIP, NodePort and LoadBalancer (default), which are the standard [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
+
+To configure other options, adjust/override the `service.type` parameter in `values.yaml`.
+
 ## Kubernetes Volume Types support
 
 This quickstart is expected to work with all [Types of Volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
