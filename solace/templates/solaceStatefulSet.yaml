@@ -1,5 +1,5 @@
-# Create the StatefullSet, (petset), needed for redundancy
-apiVersion: apps/v1beta1
+# Create the StatefulSet needed for redundancy
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "solace.fullname" . }}
@@ -103,7 +103,7 @@ spec:
  #       - name: STATEFULSET_ORDINAL
  #         valueFrom:
  #           fieldRef:
- #             fieldPath: metadata.annotations['annotationKey']
+ #             fieldPath: metadata.annotations['annotationKey'] 
 
         command:
          - bash
