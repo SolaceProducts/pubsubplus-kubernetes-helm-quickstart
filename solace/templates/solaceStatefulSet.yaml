@@ -9,6 +9,10 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      app: {{ template "solace.name" . }}
+      release: {{ .Release.Name }}
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
 {{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}  
