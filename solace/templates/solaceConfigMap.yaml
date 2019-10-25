@@ -224,7 +224,6 @@ data:
 
 {{- if .Values.solace.redundancy }}
     # HA config
-    version=${1}
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
     password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
@@ -316,18 +315,13 @@ data:
     
     case "${health_result}" in
       "200")
-         echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
+        echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
         set_label "active" "false" $state_file
-        if (( "$version" < 7 )); then
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, this is K8S 1.6 ready"
-         exit 0
-        else
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
-        fi
+        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
         ;;
       "")
         echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
