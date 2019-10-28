@@ -23,7 +23,8 @@ before_install:
 install: true
 
 script:
-  - yaml-lint -n solace/*.yaml
+  - pwd
+  - yaml-lint -n pubsubplus/*.yaml
   - echo "Testing GKE deployment, cloud provider Google Cloud Platform (gcp) "
   - mkdir gke_test; pushd gke_test
   - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
