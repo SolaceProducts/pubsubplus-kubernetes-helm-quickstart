@@ -97,7 +97,7 @@ spec:
  #       - name: STATEFULSET_ORDINAL
  #         valueFrom:
  #           fieldRef:
- #             fieldPath: metadata.annotations['annotationKey'] 
+ #             fieldPath: metadata.annotations['annotationKey']
 
         command:
          - bash
@@ -169,8 +169,6 @@ spec:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
       {{- end}}
-    {{ else }} #end existingVolume
-          emptyDir: {}
     {{- end }} #end !persistent
   {{ else }}
   volumeClaimTemplates:
