@@ -35,6 +35,8 @@ script:
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
   - gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project capable-stream-180018
   - popd
+  - pwd; ls -l
+  - git status
   - helm lint pubsubplus
   - helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin --name my-release pubsubplus
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
