@@ -1,5 +1,5 @@
-# Create the StatefullSet, (petset), needed for redundancy
-apiVersion: apps/v1beta1
+# Create the StatefulSet needed for redundancy
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "solace.fullname" . }}
@@ -9,26 +9,32 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      app: {{ template "solace.name" . }}
+      release: {{ .Release.Name }}
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
-{{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}  
   podManagementPolicy: Parallel
   updateStrategy: 
     type: RollingUpdate
-{{- end }}
   template:
     metadata:
       labels:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
     spec:
+{{- if .Values.image.pullSecretName }}
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecretName}}
+{{- end}}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
         resources:
           requests:
-{{- if eq .Values.solace.size "dev100" }}
+{{- if eq .Values.solace.size "dev" }}
             cpu: "0.2"
             memory: 0.8Gi
 {{- else if eq .Values.solace.size "prod100" }}
@@ -48,7 +54,7 @@ spec:
             memory: 56Gi
 {{- end }}
           limits:
-{{- if eq .Values.solace.size "dev100" }}
+{{- if eq .Values.solace.size "dev" }}
             cpu: "1"
             memory: 2Gi
 {{- else if eq .Values.solace.size "prod100" }}
@@ -75,17 +81,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-{{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}
           exec:
             command:
-            - {{ .Values.filepaths.configmap }}/readiness_check.sh
-            - "7"
-{{- else }}
-          exec:
-            command:
-            - {{ .Values.filepaths.configmap }}/readiness_check.sh
-            - "6"
-{{- end }}
+            - /mnt/disks/solace/readiness_check.sh
         securityContext:
           privileged: false
           capabilities:
@@ -109,17 +107,17 @@ spec:
          - bash
          - "-ec"
          - |
-           source {{ .Values.filepaths.configmap }}/init.sh
+           source /mnt/disks/solace/init.sh
            # not using postinstall hooks because of order dependencies
            # launch config check then Solace so VCMR can provide return code
-           nohup {{ .Values.filepaths.configmap }}/config-sync-check.sh &
+           nohup /mnt/disks/solace/config-sync-check.sh &
            /usr/sbin/boot.sh
 
         volumeMounts:
         - name: config-map
-          mountPath: {{ .Values.filepaths.configmap }}
+          mountPath: /mnt/disks/solace
         - name: secrets
-          mountPath: {{ .Values.filepaths.secrets }}
+          mountPath: /mnt/disks/secrets
           readOnly: true
         - name: dshm
           mountPath: /dev/shm
@@ -144,9 +142,27 @@ spec:
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
 {{- end }} #end !nfs
-        ports:{{ range $item := .Values.service.internalPort }}
+        ports:
+        - containerPort: 2222
+          protocol: TCP
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 55555
+          protocol: TCP
+        - containerPort: 55003
+          protocol: TCP
+        - containerPort: 55443
+          protocol: TCP
+        - containerPort: 60943
+          protocol: TCP
+        - containerPort: 60080
+          protocol: TCP
+        - containerPort: 60443
+          protocol: TCP
+        {{- range $item := .Values.service.addInternalPort }}
         - containerPort: {{ $item.port }}
-          protocol: {{ $item.protocol }}{{end}}
+          protocol: {{ $item.protocol }}
+        {{- end}}
       volumes:
         - name: config-map
           configMap:
@@ -175,8 +191,6 @@ spec:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
       {{- end}}
-    {{ else }} #end existingVolume
-          emptyDir: {}
     {{- end }} #end !persistent
   {{ else }}
   volumeClaimTemplates:

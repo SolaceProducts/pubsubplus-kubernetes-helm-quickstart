@@ -23,10 +23,9 @@ before_install:
 install: true
 
 script:
-  - yaml-lint -n solace/values-examples/
   - yaml-lint -n solace/*.yaml
   - echo "Testing GKE deployment, cloud provider Google Cloud Platform (gcp) "
-  - mkdir gke_test; cd gke_test
+  - mkdir gke_test; pushd gke_test
   - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
   - wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
   - chmod 755 create_cluster.sh
@@ -34,13 +33,9 @@ script:
   - kubectl get statefulset,svc,pods,pvc,pv
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
   - gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project capable-stream-180018
-  - wget https://raw.githubusercontent.com/$SOLACE_KUBERNETES_QUICKSTART_REPO/$SOLACE_KUBERNETES_QUICKSTART_BRANCH/scripts/configure.sh
-  - chmod 755 configure.sh
-  - #./configure.sh -c gcp -p admin -i gcr.io/capable-stream-180018/solace-pubsub-standard:8.10.0.1057 -v values-examples/prod1k-direct-noha.yaml
-  - #./configure.sh -c gcp -p admin -i solace/solace-pubsub-standard:8.11.0.1029 -v values-examples/dev100-persist-ha-provisionPvc.yaml
-  - ./configure.sh -c gcp -p admin -v values-examples/dev100-persist-ha-provisionPvc.yaml
-  - cd solace-kubernetes-quickstart/solace
-  - helm install . -f values.yaml
+  - popd
+  - helm lint pubsubplus
+  - helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin --name my-release pubsubplus
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
   - echo "Waiting for cluster to become active"
   - "travis_wait 30 sleep 1800 &"

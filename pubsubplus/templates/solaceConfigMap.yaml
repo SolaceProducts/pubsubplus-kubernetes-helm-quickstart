@@ -9,15 +9,15 @@ metadata:
     app: {{ template "solace.name" . }}
 data:
   init.sh: |-
-    # export username_admin_passwordfilepath={{ .Values.filepaths.secrets }}/username_admin_password
-      export username_admin_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+    # export username_admin_passwordfilepath=/mnt/disks/secrets/username_admin_password
+      export username_admin_password=`cat /mnt/disks/secrets/username_admin_password`
       export username_admin_globalaccesslevel=admin
       export service_ssh_port='2222'
       export service_webtransport_port='60080'
       export service_webtransport_tlsport='60443'
       export service_semp_tlsport='60943'
       export logging_debug_output=all
-{{- if eq .Values.solace.size "dev100" }}
+{{- if eq .Values.solace.size "dev" }}
       export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod100" }}
       export system_scaling_maxconnectioncount="100"
@@ -47,7 +47,7 @@ data:
       export routername=$(echo $(hostname) | sed 's/-//g')
       export redundancy_enable=yes
       export configsync_enable=yes
-      export redundancy_group_password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      export redundancy_group_password=`cat /mnt/disks/secrets/username_admin_password`
       export redundancy_group_node_${service_name}0_nodetype=message_routing
       export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
       export redundancy_group_node_${service_name}1_nodetype=message_routing
@@ -82,7 +82,7 @@ data:
       IFS='-' read -ra host_array <<< $(hostname)
       node_ordinal=${host_array[-1]}
       echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
-      password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+      password=`cat /mnt/disks/secrets/username_admin_password`
       loop_guard=60
       pause=10
       count=0
@@ -91,7 +91,7 @@ data:
       #exclude monitor node from config-sync check
       if [ "${node_ordinal}" != "2" ]; then
         while [ ${count} -lt ${loop_guard} ]; do 
-          role_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
           run_time=$((${count} * ${pause}))
@@ -117,7 +117,7 @@ data:
         count=0
         echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
-          online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
           local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -152,7 +152,7 @@ data:
           count=0
           echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
           while [ ${count} -lt ${loop_guard} ]; do 
-            online_results=`{{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
                 -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
             mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -173,9 +173,9 @@ data:
           fi
         fi # if assert-master
         # Now can issue {resync_step} command and exit.
-        {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
-        {{ .Values.filepaths.configmap }}/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
         echo "`date` INFO: ${APP}-Solace message broker bringup complete for this node."
       fi # if not monitor
@@ -204,8 +204,13 @@ data:
             --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Authorization: Bearer $KUBE_TOKEN" -H "Content-Type:application/json-patch+json" \
             $K8S/api/v1/namespaces/$NAMESPACE/pods/$HOSTNAME ; then
-          echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
-          exit 1
+          # Fall back to alternative method to update label
+          if ! curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
+            -H "Content-Type:application/json-patch+json" \
+            https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME ; then
+            echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
+            exit 1
+          fi
         fi
       fi
     }
@@ -219,10 +224,9 @@ data:
 
 {{- if .Values.solace.redundancy }}
     # HA config
-    version=${1}
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
-    password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
+    password=`cat /mnt/disks/secrets/username_admin_password`
 
     # For upgrade purposes, ensure redundancy is up only when the pod is started
     redundacycheck_file=/tmp/redundacycheck
@@ -311,18 +315,13 @@ data:
     
     case "${health_result}" in
       "200")
-         echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
+        echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
         set_label "active" "false" $state_file
-        if (( "$version" < 7 )); then
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, this is K8S 1.6 ready"
-         exit 0
-        else
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
-        fi
+        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
         ;;
       "")
         echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
