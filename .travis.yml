@@ -92,11 +92,9 @@ after_success:
   - git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
   - git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart.git > /dev/null 2>&1
   - git push --quiet --set-upstream origin-pages gh-pages
+  - echo "Pushed GH pages!"
 - fi
 after_script:
 - gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-east4-a
 - gcloud compute disks list | grep travis | sed 1d $rpt | while read -r a b c; do
   gcloud compute disks delete $a --zone $b --quiet; done
-env:
-  global:
-    secure: WeZxznL2ZRjeM8QWxblgkyVALUe0wjk7qWSNrst8GNA963g3fsnOTHIgtrfBUnCrVfkDqHBLFtmpImFrEHHStMXCZpVK4NFIf6gtu13xuU4yqiPVm29HUjH+E8IMBDF+BcfXEviIHu5NYEi3s9kzU7c5+8mGX1maE+5zu8kZ3ro7Wbbq3Ih7BWgBMFN4gJKt7Qpu1LrlNJV/4EropuUKCvxbcLbxYrGe2eSxRVj4NugFCm931jPaEJd7eZxAUy+4J3cZodj3rWAo32u7zkarFyDTJTdPrQBVB95ZQXVS+AO0kTIxBP599n13dEkSzQH1zRbZ4lCWS6LgBqMP8iIv2++mB9OrYlEqGSKYio6LAfRvZUke+ZlwOB6jM8pSbPVd5/pbPtLvUujiC2EVB/kEe1/ezrkYTqhKeeRSBrCH14zAwzxYNSB3WiePLSGCl11B97EJzuyquLT4zEV5QKd433qCp0ozBwC0HVZwTv9Unkd03gpGHErDTMURTpyO9MNlp8nUq/1EC/1RReOMP9xNJvBaUbP0GKMImTK7RZxDVroImKcz56H2atoAJXm8qNbXHI3DZQeI/dFMNCBudr520gOd/ymDK5MdZObhbBdgrHaVqqpN47N0QUXZ41aUmB2329OVcc3lJaVHGrXgMBGaPTs1UR6lj+1mKeSG/gQ/87A=
