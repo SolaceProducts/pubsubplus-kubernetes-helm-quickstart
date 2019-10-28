@@ -11,6 +11,8 @@ metadata:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
   ports:
+  - port: 8080
+    name: semp
   - port: 8741
     name: ha-mate-link
   - port: 8300
