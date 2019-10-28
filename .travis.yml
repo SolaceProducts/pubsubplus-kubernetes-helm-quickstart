@@ -19,6 +19,7 @@ before_install:
   - echo $GCP_KEY_FILE | base64 -d > ./keyfile
   - gcloud auth activate-service-account -q $(jq -r .client_email keyfile) --key-file=./keyfile --project  $(jq -r .project_id keyfile)
   - rm ./keyfile
+  - export DESIRED_VERSION=v2.14.3; curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
   
 install: true
 
@@ -35,8 +36,9 @@ script:
   - export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
   - gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project capable-stream-180018
   - popd
-  - pwd; ls -l
-  - git status
+  - kubectl -n kube-system create serviceaccount tiller
+  - kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+  - helm init --service-account=tiller
   - helm lint pubsubplus
   - helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin --name my-release pubsubplus
   - kubectl get statefulset,svc,pods,pvc,pv --show-labels
