@@ -83,10 +83,24 @@ after_success:
   - git config --global user.name "travis-ci"
   - mkdir gh-pages
   - git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1
-  - popd
+  - # Customize pubsubplus-ha
+  - cp -r pubsubplus/ pubsubplus-ha/
+  - sed -i 's/description:.*$/description: Deploy an HA redundancy group of Solace PubSub+ software event broker onto a Kubernetes Cluster/g' pubsubplus-ha/Chart.yaml
+  - sed -i '/name:/ s/pubsubplus/pubsubplus-ha/g' pubsubplus-ha/Chart.yaml
+  - helm package pubsubplus-ha
+  - mv pubsubplus-*.tgz gh-pages/helm-charts/
+  - # Customize pubsubplus-dev
+  - cp -r pubsubplus/ pubsubplus-dev/
+  - sed -i 's/description:.*$/description: Deploy a minimum footprint non-HA Solace PubSub+ software event broker onto a Kubernetes Cluster for development purposes/g' pubsubplus-dev/Chart.yaml
+  - sed -i '/name:/ s/pubsubplus/pubsubplus-dev/g' pubsubplus-dev/Chart.yaml
+  - helm package pubsubplus-dev
+  - mv pubsubplus-*.tgz gh-pages/helm-charts/
+  - # Customize pubsubplus
+  - sed -i 's/description:.*$/description: Deploy a single-node non-HA Solace PubSub+ software event broker onto a Kubernetes Cluster/g' pubsubplus/Chart.yaml
   - helm package pubsubplus
   - mv pubsubplus-*.tgz gh-pages/helm-charts/
-  - helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/helm-charts
+  - # Now update gh-pages
+  - helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
   - cd gh-pages
   - git add -f .
   - git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
