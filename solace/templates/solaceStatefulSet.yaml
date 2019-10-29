@@ -1,5 +1,5 @@
-# Create the StatefullSet, (petset), needed for redundancy
-apiVersion: apps/v1beta1
+# Create the StatefulSet needed for redundancy
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "solace.fullname" . }}
@@ -9,13 +9,15 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      app: {{ template "solace.name" . }}
+      release: {{ .Release.Name }}
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
-{{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}  
   podManagementPolicy: Parallel
   updateStrategy: 
     type: RollingUpdate
-{{- end }}
   template:
     metadata:
       labels:
@@ -75,17 +77,9 @@ spec:
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 5
-{{- if semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion }}
           exec:
             command:
             - {{ .Values.filepaths.configmap }}/readiness_check.sh
-            - "7"
-{{- else }}
-          exec:
-            command:
-            - {{ .Values.filepaths.configmap }}/readiness_check.sh
-            - "6"
-{{- end }}
         securityContext:
           privileged: false
           capabilities:
@@ -175,8 +169,6 @@ spec:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
       {{- end}}
-    {{ else }} #end existingVolume
-          emptyDir: {}
     {{- end }} #end !persistent
   {{ else }}
   volumeClaimTemplates:

@@ -11,9 +11,18 @@ metadata:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
   ports:
-    - port: 8080
-      name: semp
+  - port: 8080
+    name: semp
+  - port: 8741
+    name: ha-mate-link
+  - port: 8300
+    name: ha-conf-sync0
+  - port: 8301
+    name: ha-conf-sync1
+  - port: 8302
+    name: ha-conf-sync2
   clusterIP: None
   selector:
     app: {{ template "solace.name" . }}
     release: {{ .Release.Name }}
+  publishNotReadyAddresses: true

@@ -204,8 +204,13 @@ data:
             --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Authorization: Bearer $KUBE_TOKEN" -H "Content-Type:application/json-patch+json" \
             $K8S/api/v1/namespaces/$NAMESPACE/pods/$HOSTNAME ; then
-          echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
-          exit 1
+          # Fall back to alternative method to update label
+          if ! curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
+              -H "Content-Type:application/json-patch+json" \
+              https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME ; then
+            echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
+            exit 1
+          fi
         fi
       fi
     }
@@ -219,7 +224,6 @@ data:
 
 {{- if .Values.solace.redundancy }}
     # HA config
-    version=${1}
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
     password=`cat {{ .Values.filepaths.secrets }}/username_admin_password`
@@ -311,18 +315,13 @@ data:
     
     case "${health_result}" in
       "200")
-         echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
+        echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
         set_label "active" "false" $state_file
-        if (( "$version" < 7 )); then
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, this is K8S 1.6 ready"
-         exit 0
-        else
-         echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
-        fi
+        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
         ;;
       "")
         echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
