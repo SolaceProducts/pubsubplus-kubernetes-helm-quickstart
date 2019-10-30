@@ -24,74 +24,74 @@ before_install:
 install: true
 script:
 - pwd
-- yaml-lint -n pubsubplus/*.yaml
-- echo "Testing GKE deployment, cloud provider Google Cloud Platform (gcp) "
-- mkdir gke_test; pushd gke_test
-- export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
-- wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
-- chmod 755 create_cluster.sh
-- "./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -m
-  n1-standard-1"
-- kubectl get statefulset,svc,pods,pvc,pv
-- export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
-- gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project
-  capable-stream-180018
-- popd
-- kubectl -n kube-system create serviceaccount tiller
-- kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-- helm init --service-account=tiller; kubectl rollout status -w deployment/tiller-deploy
-  -n kube-system
-- helm lint pubsubplus
-- helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin
-  --name my-release pubsubplus
-- kubectl get statefulset,svc,pods,pvc,pv --show-labels
-- echo "Waiting for cluster to become active"
-- travis_wait 30 sleep 1800 &
-- sleep 40; kubectl describe nodes
-- until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep
-  10; done
-- until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep
-  10; done
-- until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep
-  10; done
-- until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true';
-  do sleep 10; done
-- kubectl get statefulset,svc,pods,pvc,pv --show-labels
-- bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo
-  "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
-- export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer
-  | awk '{print $4}')"; echo $url
-- curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
-- tar -xvf SDKPERF_C_LINUX64
-- pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
-- sleep 30
-- bash -c 'if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
-  | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit
-  1; fi'
-- curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
-- curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
-- helm list
-- helm delete $(helm list | grep DEPLOYED | awk '{print $1}')
-- kubectl delete pvc --all
+#- yaml-lint -n pubsubplus/*.yaml
+#- echo "Testing GKE deployment, cloud provider Google Cloud Platform (gcp) "
+#- mkdir gke_test; pushd gke_test
+#- export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
+#- wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
+#- chmod 755 create_cluster.sh
+#- "./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -m
+#  n1-standard-1"
+#- kubectl get statefulset,svc,pods,pvc,pv
+#- export SOLACE_KUBERNETES_QUICKSTART_REPO="$TRAVIS_REPO_SLUG"; export SOLACE_KUBERNETES_QUICKSTART_BRANCH="$TRAVIS_BRANCH"
+#- gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project
+#  capable-stream-180018
+#- popd
+#- kubectl -n kube-system create serviceaccount tiller
+#- kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+#- helm init --service-account=tiller; kubectl rollout status -w deployment/tiller-deploy
+#  -n kube-system
+#- helm lint pubsubplus
+#- helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin
+#  --name my-release pubsubplus
+#- kubectl get statefulset,svc,pods,pvc,pv --show-labels
+#- echo "Waiting for cluster to become active"
+#- travis_wait 30 sleep 1800 &
+#- sleep 40; kubectl describe nodes
+#- until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep
+#  10; done
+#- until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep
+#  10; done
+#- until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep
+#  10; done
+#- until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true';
+#  do sleep 10; done
+#- kubectl get statefulset,svc,pods,pvc,pv --show-labels
+#- bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo
+#  "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
+#- export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer
+#  | awk '{print $4}')"; echo $url
+#- curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
+#- tar -xvf SDKPERF_C_LINUX64
+#- pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
+#- sleep 30
+#- bash -c 'if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
+#  | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit
+#  1; fi'
+#- curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
+#- curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
+#- helm list
+#- helm delete $(helm list | grep DEPLOYED | awk '{print $1}')
+#- kubectl delete pvc --all
 after_success:
 - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
 - echo "YAML linted"
 - echo "GKE cluster deployment tested"
 - echo "Messaging tested"
 - if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "HelmReorg" ]; then
--   docs/helm-charts/create-chart-variants.sh # Create chart variants
--   git config --global user.email "travis@travis-ci.org"
--   git config --global user.name "travis-ci"
--   mkdir gh-pages # Now update gh-pages
--   git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1
--   mv pubsubplus-*.tgz gh-pages/helm-charts/
--   helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
--   cd gh-pages
--   git add -f .
--   git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
--   git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart.git > /dev/null 2>&1
--   git push --quiet --set-upstream origin-pages gh-pages
--   echo "Updated and pushed GH pages!"
+-   docs/helm-charts/create-chart-variants.sh; # Create chart variants
+-   git config --global user.email "travis@travis-ci.org";
+-   git config --global user.name "travis-ci";
+-   mkdir gh-pages; # Now update gh-pages
+-   git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1;
+-   mv pubsubplus-*.tgz gh-pages/helm-charts/;
+-   helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
+-   cd gh-pages;
+-   git add -f .;
+-   git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
+-   git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart.git > /dev/null 2>&1;
+-   git push --quiet --set-upstream origin-pages gh-pages;
+-   echo "Updated and pushed GH pages!";
 - fi
 after_script:
 - gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-east4-a
