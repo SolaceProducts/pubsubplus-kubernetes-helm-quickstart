@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-10-30T18:06:19.517605566Z"
+    created: "2019-10-30T18:49:24.477163849Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: ed746a52451dfc6272356dc47014402f93e8edeb62ce3e55d199279bf1842f84
+    digest: a62fd2bbb6146988edb735ddd801d377d6416da8cf709a90cceed7c72aee7730
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 2.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-10-30T18:06:19.519119138Z"
-    description: Deploy a minimum footprint non-HA Solace PubSub+ software event broker
-      onto a Kubernetes Cluster for development purposes
-    digest: 5ada77152e83632cabd20443da6a9db944080a34a16361dbd00aa3434967116b
+    created: "2019-10-30T18:49:24.478639391Z"
+    description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
+      event broker onto a Kubernetes Cluster for development purposes
+    digest: 8a1730c76d3954331a20dc3dba47fe83c99b7a3fac791056e219d2e4c80e85c2
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 2.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-10-30T18:06:19.520528887Z"
+    created: "2019-10-30T18:49:24.480123757Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: b48ba03734c7642cf8d8e15b7e327f6fb4f8bc46aca64f9913dc29e3d2ff9c87
+    digest: 5e2d8eb4e6bdc6e811df08558854d3ae4cb3f62b4073a5847f759798da359216
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-2.0.0.tgz
     version: 2.0.0
-generated: "2019-10-30T18:06:19.515851108Z"
+generated: "2019-10-30T18:49:24.475531038Z"
