@@ -78,21 +78,22 @@ after_success:
 - echo "YAML linted"
 - echo "GKE cluster deployment tested"
 - echo "Messaging tested"
-- if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "HelmReorg" ]; then
--   docs/helm-charts/create-chart-variants.sh; # Create chart variants
--   git config --global user.email "travis@travis-ci.org";
--   git config --global user.name "travis-ci";
--   mkdir gh-pages; # Now update gh-pages
--   git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1;
--   mv pubsubplus-*.tgz gh-pages/helm-charts/;
--   helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
--   cd gh-pages;
--   git add -f .;
--   git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
--   git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart.git > /dev/null 2>&1;
--   git push --quiet --set-upstream origin-pages gh-pages;
--   echo "Updated and pushed GH pages!";
-- fi
+- >
+  if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "HelmReorg" ]; then
+    docs/helm-charts/create-chart-variants.sh; # Create chart variants
+    git config --global user.email "travis@travis-ci.org";
+    git config --global user.name "travis-ci";
+    mkdir gh-pages; # Now update gh-pages
+    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1;
+    mv pubsubplus-*.tgz gh-pages/helm-charts/;
+    helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
+    cd gh-pages;
+    git add -f .;
+    git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
+    git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/solace-kubernetes-quickstart.git > /dev/null 2>&1;
+    git push --quiet --set-upstream origin-pages gh-pages;
+    echo "Updated and pushed GH pages!";
+  fi
 after_script:
 - gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-east4-a
 - gcloud compute disks list | grep travis | sed 1d $rpt | while read -r a b c; do
