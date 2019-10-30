@@ -13,11 +13,12 @@
 
 ## Perform any necessary platform-specific setup
 
-- GCP
 - Amazon EKS
 - Azure AKS
+- GCP
 - OpenShift
 - Minikube
+- VMWare PKS
 
 ## Install the `kubectl` command-line tool
 
@@ -25,7 +26,9 @@ Refer to [these instructions](//kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ## Install and setup the Helm package manager
 
-This involves installing Helm on your command-line client and if using Helm v2 (default for now) deploying Tiller, its in-cluster operator.
+The Solace PubSub+ event broker can be deployed using both Helm v2 (stable) and Helm v3 (about to be released). Most deployments currently use Helm v2.
+
+If `helm version` fails on your command-line client then this involves installing Helm and if using Helm v2 (default for now) then also deploying Tiller, its in-cluster operator.
 
 ### TL;DR;
 
@@ -35,13 +38,16 @@ export DESIRED_VERSION=v2.14.3
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
 
-2. Deploy Tiller by creating a cluster-admin role and initializing Helm following [the Example: Service account with cluster-admin role](//helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role ). (Use the provided content to create a `rbac-config.yaml` file then execute the commands below)<br/><br/>
-**Important:** this will grant Tiller `cluster-admin` privileges to enable getting started on most platforms. This should be secured for Production environments, see section [Securing Helm and Tiller](#securing-helm-and-tiller).
+2. Deploy Tiller. Following script is based on [the Example: Service account with cluster-admin role](//helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role ).
 
+**Important:** this will grant Tiller `cluster-admin` privileges to enable getting started on most platforms. This should be more secured for Production environments and may already fail in a restricted security environment. For options, see section [Security considerations](#security-considerations).
 
-### Introduction
-
-The Solace PubSub+ event broker can be deployed using both Helm v2 (stable) and Helm v3 (about to be released). Most deployments currently use Helm v2.
+```shell
+kubectl -n kube-system create serviceaccount tiller
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account=tiller  --upgrade
+kubectl rollout status -w deployment/tiller-deploy
+```
 
 ### Installing Helm v2
 
@@ -53,7 +59,7 @@ By default Tiller is deployed in a permissive configuration.
 
 [Securing your Helm Installation](//helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
 
-Particularly, the [Role-based Access Control section of the Helm documentation](//helm.sh/docs/using_helm/#role-based-access-control) provides options that should be used in recent RBAC-enabled Kubernetes environments (v1.6+).
+Particularly, the [Role-based Access Control section of the Helm documentation](//helm.sh/docs/using_helm/#role-based-access-control) provides options that should be used in RBAC-enabled Kubernetes environments (v1.6+).
 
 **Update Link**
 It is also possible to [use Helm v2 as a templating engine only, with no Tiller deployed](Ref to Solace HowTo), however Helm will not be able to manage your Kubernetes rollouts lifecycle.

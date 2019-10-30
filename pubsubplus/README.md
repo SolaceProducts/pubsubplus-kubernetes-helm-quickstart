@@ -1,19 +1,16 @@
 # Solace PubSub+ Message Broker Helm Chart
 
-This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https://solace.com/products/) message broker on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https://solace.com/products/) software message broker on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-## Notes
-
-* If using a private Docker registry an image pull secret needs to be created before installing the chart.
+The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/README.md) provides additional details to this Helm chart.
 
 ## Prerequisites
 
-* Kubernetes 1.11.0 or later, with beta APIs enabled.
-* A user with cluster administrator role is required to install the chart.
-* If persistent storage is enabled (see [configuration](#configuration)):
-  * You must either create a persistent volume, or specify a storage class if classes are defined in your cluster.
-  * The storage class must support read-write-many
-
+* Kubernetes 1.9 or later
+* Helm package manager installed and configured
+* If using a private Docker registry an image pull secret needs to be created before installing the chart
+* With persistent storage enabled (see [configuration](#configuration)):
+  * You must specify a storage class if no default class is available in your cluster
 
 ## Configuration
 
@@ -21,12 +18,13 @@ This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https
 
 The following table lists the configurable parameters of the Solace chart and their default values.
 
-Override each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
-
+Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
 $ helm install --name my-release \
   --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword <solace-chart-location>
 ```
+
+For more ways to override default values, refer to [Customizing the Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
 
 | Parameter                      | Description                                                                                             | Default                                                 |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -45,4 +43,3 @@ $ helm install --name my-release \
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
 
-For more ways to override default values, refer to [Customizing the Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
