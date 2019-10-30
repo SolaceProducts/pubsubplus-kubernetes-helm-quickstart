@@ -80,7 +80,7 @@ after_success:
 - echo "Messaging tested"
 - >
   if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "HelmReorg" ]; then
-    docs/helm-charts/create-chart-variants.sh; # Create chart variants
+    bash docs/helm-charts/create-chart-variants.sh; # Create chart variants
     git config --global user.email "travis@travis-ci.org";
     git config --global user.name "travis-ci";
     mkdir gh-pages; # Now update gh-pages
