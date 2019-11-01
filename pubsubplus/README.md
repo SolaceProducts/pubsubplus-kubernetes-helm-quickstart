@@ -12,17 +12,28 @@ The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solac
 * With persistent storage enabled (see [configuration](#configuration)):
   * You must specify a storage class if no default class is available in your cluster
 
-## Configuration
+## Create a deployment
 
-//helm.sh/docs/using_helm/#customizing-the-chart-before-installing
+```bash
+helm install --name my-release \
+  --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword <solace-chart-location>
+```
+
+## Delete a deployment
+
+```bash
+helm delete --purge my-release
+kubectl get pvc | grep my-release
+# Delete any PVCs reated to my-release
+```
+
+
+
+## Configuration
 
 The following table lists the configurable parameters of the Solace chart and their default values.
 
 Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
-```bash
-$ helm install --name my-release \
-  --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword <solace-chart-location>
-```
 
 For more ways to override default values, refer to [Customizing the Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
 
