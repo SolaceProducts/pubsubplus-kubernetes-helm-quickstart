@@ -97,12 +97,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-# [TODO] not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
- #       - name: STATEFULSET_ORDINAL
- #         valueFrom:
- #           fieldRef:
- #             fieldPath: metadata.annotations['annotationKey']
-
         command:
          - bash
          - "-ec"
@@ -191,8 +185,10 @@ spec:
             pdName: {{ .Values.storage.existingVolume }}
             fsType: ext4
       {{- end}}
-    {{- end }} #end !persistent
-  {{ else }}
+    {{- else }}
+          emptyDir: {}
+    {{- end }}
+  {{ else }} #end !persistent
   volumeClaimTemplates:
   - metadata:
       name: data

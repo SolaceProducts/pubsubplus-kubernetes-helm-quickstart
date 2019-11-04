@@ -214,7 +214,6 @@ data:
         fi
       fi
     }
-
     # note that there are no re-tries here, if check fails the return not ready.
     APP=`basename "$0"`
     state_file=/tmp/activity_state
