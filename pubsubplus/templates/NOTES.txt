@@ -1,30 +1,41 @@
 
-== Solace PubSub+ deployment progress ==
+== Check Solace PubSub+ deployment progress ==
 
-Watch progress by running 'kubectl get pods --show-labels -w'
-
-Deployment is complete when a Solace pod representing an active event broker node's label reports "active=true".
+Deployment is complete when a PubSub+ pod representing an active event broker node's label reports "active=true".
+Watch progress by running:
+   kubectl get pods --namespace {{ .Release.Namespace }} --show-labels -w | grep {{ template "solace.fullname" . }}
 
 For troubleshooting, refer to ***TroubleShooting.md***
 
-== Admin access and credentials ==
+== Admin credentials and access ==
 {{- if not .Values.solace.usernameAdminPassword }}
-*******************************************************************
-* Important:
-* An admin password has been auto-generated. You must retrieve it
-* and provide it as value override if using Helm upgrade
-* otherwise your cluster will become unusable.
-*******************************************************************
+*********************************************************************
+* An admin password was not specified and has been auto-generated.
+* You must retrieve it and provide it as value override
+* if using Helm upgrade otherwise your cluster will become unusable.
+*********************************************************************
 
 {{- end }}
     Username       : admin
     Admin password : echo `kubectl get secret --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }}-secrets -o jsonpath="{.data.username_admin_password}" | base64 --decode`
+    Use the "semp" service address to access the management API via browser or a REST tool, see Services access below.
 
 == Image used ==
 {{ .Values.image.repository }}:{{ .Values.image.tag }}
 
 == Storage used ==
-
+{{- if and ( .Values.storage.persistent ) ( .Values.storage.useStorageClass ) }}
+Using persistent volumes via dynamic provisioning, ensure specified StorageClass exists: `kubectl get sc {{ .Values.storage.useStorageClass }}`
+{{- else if  .Values.storage.persistent}}
+Using persistent volumes via dynamic provisioning with the "default" StorageClass, ensure it exists: `kubectl get sc`
+{{- end }}
+{{- if and ( not .Values.storage.persistent ) ( not .Values.storage.hostPath ) ( not .Values.storage.existingVolume ) }}
+*******************************************************************************
+* This deployment is using ephemeral storage.
+* Note that any configuration and stored messages will be lost at pod restart.
+*******************************************************************************
+For production purposes it is recommended to use persistent storage.
+{{- end }}
 
 == Performance ==
 {{- if contains "dev" .Values.solace.size }}
@@ -34,12 +45,13 @@ The connection scaling tier for this deployment is: max {{ substr 4 10 .Values.s
 {{- end }}
 
 == Services access ==
-PubSub+ can be accessed within the cluster on port {{ .Values.service.nodePort }} at {{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+To access services from pods within the k8s cluster, use these addresses:
 
-To access for outside the cluster, perform the following steps:
+    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t{{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{.port}\n"`
+
+To access from outside the cluster, perform the following steps:
 
 {{- if contains "NodePort" .Values.service.type }}
-
 Obtain the NodePort IP and ports:
 
     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[*].status.addresses[0].address}")
@@ -55,11 +67,9 @@ To Access the PubSub+ Management interface:
     echo "URL : http://$NODE_IP:$NODE_PORT_STATS/"
 
 {{- else if contains "LoadBalancer" .Values.service.type }}
-The k8s service type is LoadBalancer.
-
 Obtain the LoadBalancer IP and the service addresses:
 
-NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+NOTE: At initial deployment it may take a few minutes for the LoadBalancer IP to be available.
       Watch the status with: 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ template "solace.fullname" . }}'
 
     export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}"); echo $SERVICE_IP
@@ -69,11 +79,7 @@ NOTE: It may take a few minutes for the LoadBalancer IP to be available.
 {{- else if contains "ClusterIP"  .Values.service.type }}
 The k8s service type is ClusterIP.
 
-To access services from pods within the k8s cluster, use these addresses:
-
-    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t{{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{.port}\n"`
-
-For local testing purposes you can also use port-forward in a background process to map pod ports to local host, then use these service addresses:
+For local testing purposes you can use port-forward in a background process to map pod ports to local host, then use these service addresses:
 
     kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "solace.fullname" . }} $(echo `kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.targetPort}:{.port} "`) &
     echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t127.0.0.1:{.targetPort}\n"`
