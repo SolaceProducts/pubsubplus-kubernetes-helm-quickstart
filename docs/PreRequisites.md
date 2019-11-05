@@ -34,7 +34,7 @@ If `helm version` fails on your command-line client then this involves installin
 
 1. Install the Helm client following [your platform-specific instructions](//helm.sh/docs/using_helm/#installing-the-helm-client ). For Linux, you can use:
 ```shell
-export DESIRED_VERSION=v2.14.3
+export DESIRED_VERSION=v2.15.2
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
 

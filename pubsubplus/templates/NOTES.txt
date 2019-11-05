@@ -1,6 +1,5 @@
 
 == Check Solace PubSub+ deployment progress ==
-
 Deployment is complete when a PubSub+ pod representing an active event broker node's label reports "active=true".
 Watch progress by running:
    kubectl get pods --namespace {{ .Release.Namespace }} --show-labels -w | grep {{ template "solace.fullname" . }}
@@ -27,7 +26,7 @@ For troubleshooting, refer to ***TroubleShooting.md***
 {{- if and ( .Values.storage.persistent ) ( .Values.storage.useStorageClass ) }}
 Using persistent volumes via dynamic provisioning, ensure specified StorageClass exists: `kubectl get sc {{ .Values.storage.useStorageClass }}`
 {{- else if  .Values.storage.persistent}}
-Using persistent volumes via dynamic provisioning with the "default" StorageClass, ensure it exists: `kubectl get sc`
+Using persistent volumes via dynamic provisioning with the "default" StorageClass, ensure it exists: `kubectl get sc | grep default`
 {{- end }}
 {{- if and ( not .Values.storage.persistent ) ( not .Values.storage.hostPath ) ( not .Values.storage.existingVolume ) }}
 *******************************************************************************
@@ -37,34 +36,28 @@ Using persistent volumes via dynamic provisioning with the "default" StorageClas
 For production purposes it is recommended to use persistent storage.
 {{- end }}
 
-== Performance ==
+== Performance and resource requirements ==
 {{- if contains "dev" .Values.solace.size }}
-This is a minimum footprint deployment for development purposes without any guaranteed performance.
+This is a minimum footprint deployment for development purposes. For guaranteed performance, specify a different solace.size value.
 {{- else }}
-The connection scaling tier for this deployment is: max {{ substr 4 10 .Values.solace.size }} connections.
+The requested connection scaling tier for this deployment is: max {{ substr 4 10 .Values.solace.size }} connections. 
 {{- end }}
+Requested resources:
+    echo `kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.containers[].resources}Minimum resources: {.requests}"`
 
 == Services access ==
 To access services from pods within the k8s cluster, use these addresses:
 
     echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t{{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{.port}\n"`
 
-To access from outside the cluster, perform the following steps:
+To access from outside the k8s cluster, perform the following steps:
 
 {{- if contains "NodePort" .Values.service.type }}
-Obtain the NodePort IP and ports:
+Obtain the NodePort IP and service ports:
 
-    export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[*].status.addresses[0].address}")
-    export NODE_PORT_AMQP=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[1].nodePort}" services {{ template "solace.fullname" . }})
-    export NODE_PORT_STATS=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[3].nodePort}" services {{ template "solace.fullname" . }})
-
-To Access the PubSub+ AMQP port:
-
-    echo "URL : amqp://$NODE_IP:$NODE_PORT_AMQP/"
-
-To Access the PubSub+ Management interface:
-
-    echo "URL : http://$NODE_IP:$NODE_PORT_STATS/"
+    export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[*].status.addresses[0].address}"); echo $NODE_IP
+    # Use following ports with ny of the NodeIPs
+    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t<NodeIP>:{.nodePort}\n"`
 
 {{- else if contains "LoadBalancer" .Values.service.type }}
 Obtain the LoadBalancer IP and the service addresses:
@@ -77,7 +70,7 @@ NOTE: At initial deployment it may take a few minutes for the LoadBalancer IP to
     echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t$SERVICE_IP:{.port}\n"`
 
 {{- else if contains "ClusterIP"  .Values.service.type }}
-The k8s service type is ClusterIP.
+Note: The specified k8s service type for this deployment is "ClusterIP" and it is not exposing services externally.
 
 For local testing purposes you can use port-forward in a background process to map pod ports to local host, then use these service addresses:
 

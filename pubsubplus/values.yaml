@@ -30,17 +30,59 @@ service:
   # specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer
 
-  # Already exposing frequently-used ports.
-  #  List here additional ports to be exposed as external port
-  #   The internal port is the port the container is exposing, which is the targetport to be mapped to the external port
+  # Frequently-used ports are already exposed.
+  #  List here additional ports to be exposed as external service port
+  #   The PubSub+ container is exposing internal ports. addExternalPort.targetPort==addInternalPort.port
   #    Refer to the Solace documentation of Default Port Numbers exposed by the container
   # addExternalPort:
+  #   - port: 5671
+  #     targetPort: 5671
+  #     protocol: TCP
+  #     name: amqptls
+  #   - port: 5672
+  #     targetPort: 5672
+  #     protocol: TCP
+  #     name: amqp
   #   - port: 1883
+  #     targetPort: 1883
   #     protocol: TCP
   #     name: mqtt
-  #     targetport: 1883
+  #   - port: 8883
+  #     targetPort: 8883
+  #     protocol: TCP
+  #     name: mqtttls
+  #   - port: 8000
+  #     targetPort: 8000
+  #     protocol: TCP
+  #     name: mqttws
+  #   - port: 8443
+  #     targetPort: 8443
+  #     protocol: TCP
+  #     name: mqttwss
+  #   - port: 9000
+  #     targetPort: 9000
+  #     protocol: TCP
+  #     name: rest
+  #   - port: 9443
+  #     targetPort: 9443
+  #     protocol: TCP
+  #     name: resttls
   # addInternalPort:
+  #   - port: 5671
+  #     protocol: TCP
+  #   - port: 5672
+  #     protocol: TCP
   #   - port: 1883
+  #     protocol: TCP
+  #   - port: 8883
+  #     protocol: TCP
+  #   - port: 8000
+  #     protocol: TCP
+  #   - port: 8443
+  #     protocol: TCP
+  #   - port: 9000
+  #     protocol: TCP
+  #   - port: 9443
   #     protocol: TCP
 
 storage:

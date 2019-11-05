@@ -19,6 +19,10 @@ spec:
     targetPort: 
     protocol: TCP
     name: semp
+  - port: 943
+    targetPort: 60943
+    protocol: TCP
+    name: semptls
   - port: 55555
     targetPort: 
     protocol: TCP
@@ -26,15 +30,11 @@ spec:
   - port: 55003
     targetPort: 
     protocol: TCP
-    name: smfcompr
+    name: smfcomp
   - port: 55443
     targetPort: 
     protocol: TCP
     name: smftls
-  - port: 943
-    targetPort: 60943
-    protocol: TCP
-    name: semptls
   - port: 80
     targetPort: 60080
     protocol: TCP
