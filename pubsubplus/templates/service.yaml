@@ -11,41 +11,9 @@ metadata:
 spec:
   type: {{.Values.service.type | default "LoadBalancer"}}
   ports:
-  - port: 22
-    targetPort: 2222
-    protocol: TCP
-    name: ssh
-  - port: 8080
-    targetPort: 
-    protocol: TCP
-    name: semp
-  - port: 943
-    targetPort: 60943
-    protocol: TCP
-    name: semptls
-  - port: 55555
-    targetPort: 
-    protocol: TCP
-    name: smf
-  - port: 55003
-    targetPort: 
-    protocol: TCP
-    name: smfcomp
-  - port: 55443
-    targetPort: 
-    protocol: TCP
-    name: smftls
-  - port: 80
-    targetPort: 60080
-    protocol: TCP
-    name: web
-  - port: 443
-    targetPort: 60443
-    protocol: TCP
-    name: webtls
-  {{- range $item := .Values.service.addExternalPort }}
-  - port: {{ $item.port }}
-    targetPort: {{ $item.targetport }}
+  {{- range $item := .Values.service.ports }}
+  - port: {{ $item.servicePort }}
+    targetPort: {{ $item.containerPort }}
     protocol: {{ $item.protocol }}
     name: {{ $item.name }}
   {{- end}}

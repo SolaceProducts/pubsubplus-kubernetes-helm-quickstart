@@ -137,24 +137,8 @@ spec:
           subPath: softAdb
 {{- end }} #end !nfs
         ports:
-        - containerPort: 2222
-          protocol: TCP
-        - containerPort: 8080
-          protocol: TCP
-        - containerPort: 55555
-          protocol: TCP
-        - containerPort: 55003
-          protocol: TCP
-        - containerPort: 55443
-          protocol: TCP
-        - containerPort: 60943
-          protocol: TCP
-        - containerPort: 60080
-          protocol: TCP
-        - containerPort: 60443
-          protocol: TCP
-        {{- range $item := .Values.service.addInternalPort }}
-        - containerPort: {{ $item.port }}
+        {{- range $item := .Values.service.ports }}
+        - containerPort: {{ $item.containerPort }}
           protocol: {{ $item.protocol }}
         {{- end}}
       volumes:
