@@ -11,6 +11,7 @@ sed -i '/name:/ s/pubsubplus/pubsubplus-ha/g' pubsubplus-ha/Chart.yaml
 # no need to update solace.size and storage.size
 sed -i 's/redundancy:.*$/redundancy: true/g' pubsubplus-ha/values.yaml
 sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps an HA redundancy group deployment/g' pubsubplus-ha/README.md
+sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-ha@g' pubsubplus-ha/README.md
 sed -i '/`solace.redundancy`/ s/`false`/`true`/g' pubsubplus-ha/README.md
 helm package pubsubplus-ha
 
@@ -22,6 +23,7 @@ sed -i 's/size: prod.*$/size: dev/g' pubsubplus-dev/values.yaml
 sed -i 's/size: .*Gi/size: 10Gi/g' pubsubplus-dev/values.yaml
 sed -i 's/# Solace PubSub+ Message Broker Helm Chart/# Solace PubSub+ Message Broker Helm Chart for Developers/g' pubsubplus-dev/README.md
 sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps a minimum footprint single-node deployment/g' pubsubplus-dev/README.md
+sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-dev@g' pubsubplus-dev/README.md
 sed -i '/`solace.size`/ s/| `prod.*` |/| `dev` |/g' pubsubplus-dev/README.md
 sed -i '/`storage.size`/ s/| `.*Gi` |/| `10Gi` |/g' pubsubplus-dev/README.md
 helm package pubsubplus-dev
