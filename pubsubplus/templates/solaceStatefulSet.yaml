@@ -153,38 +153,23 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-{{- if .Values.storage }}
-  {{- if not .Values.storage.persistent }}
+{{- if not .Values.storage.persistent }}
         - name: data
-    {{- if .Values.storage.hostPath }}
-          hostPath:
-            path: {{ .Values.storage.hostPath }}
-    {{- else if .Values.storage.existingVolume }}
-      {{- if eq .Values.cloudProvider  "aws" }}
-          awsElasticBlockStore:
-            volumeID: {{ .Values.storage.existingVolume }}
-            fsType: xfs
-      {{- else if eq .Values.cloudProvider "gcp" }}
-          gcePersistentDisk:
-            pdName: {{ .Values.storage.existingVolume }}
-            fsType: ext4
-      {{- end}}
-    {{- else }}
           emptyDir: {}
-    {{- end }}
-  {{ else }} #end !persistent
+{{- else if .Values.storage.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.storage.existingClaim }}
+{{- else }}
   volumeClaimTemplates:
   - metadata:
       name: data
     spec:
   {{- if .Values.storage.useStorageClass }}
       storageClassName: {{ .Values.storage.useStorageClass }}
-  {{- else if .Values.storage.type }}
-      storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
   {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
           storage: {{ .Values.storage.size}}
-  {{- end }}
-{{- end}} #end storage
+{{- end }}

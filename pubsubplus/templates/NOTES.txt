@@ -42,39 +42,41 @@ This is a minimum footprint deployment for development purposes. For guaranteed 
 {{- else }}
 The requested connection scaling tier for this deployment is: max {{ substr 4 10 .Values.solace.size }} connections. 
 {{- end }}
-Requested resources:
-    echo `kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.containers[].resources}Minimum resources: {.requests}"`
+Required resources per PubSub+ pod:
+    echo `kubectl get statefulset --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="Minimum resources: {.spec.template.spec.containers[0].resource s.requests}"`
 
 == Services access ==
 To access services from pods within the k8s cluster, use these addresses:
 
-    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t{{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{.port}\n"`
+    echo -e "\nProtocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t{{ template "solace.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{.port}\n"`
 
-To access from outside the k8s cluster, perform the following steps:
+To access from outside the k8s cluster, perform the following steps.
 
 {{- if contains "NodePort" .Values.service.type }}
+
 Obtain the NodePort IP and service ports:
 
     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[*].status.addresses[0].address}"); echo $NODE_IP
     # Use following ports with ny of the NodeIPs
-    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t<NodeIP>:{.nodePort}\n"`
+    echo -e "\nProtocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t<NodeIP>:{.nodePort}\n"`
 
 {{- else if contains "LoadBalancer" .Values.service.type }}
-Obtain the LoadBalancer IP and the service addresses:
 
+Obtain the LoadBalancer IP and the service addresses:
 NOTE: At initial deployment it may take a few minutes for the LoadBalancer IP to be available.
       Watch the status with: 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ template "solace.fullname" . }}'
 
-    export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}"); echo $SERVICE_IP
-    # ensure until valid SERVICE_IP, then:
-    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t$SERVICE_IP:{.port}\n"`
+    export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}"); echo SERVICE_IP=$SERVICE_IP
+    # Ensure valid SERVICE_IP is returned:
+    echo -e "\nProtocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t$SERVICE_IP:{.port}\n"`
 
 {{- else if contains "ClusterIP"  .Values.service.type }}
-Note: The specified k8s service type for this deployment is "ClusterIP" and it is not exposing services externally.
+
+NOTE: The specified k8s service type for this deployment is "ClusterIP" and it is not exposing services externally.
 
 For local testing purposes you can use port-forward in a background process to map pod ports to local host, then use these service addresses:
 
     kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "solace.fullname" . }} $(echo `kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.targetPort}:{.port} "`) &
-    echo -e "Protocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t127.0.0.1:{.targetPort}\n"`
+    echo -e "\nProtocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t127.0.0.1:{.targetPort}\n"`
 
 {{- end }}

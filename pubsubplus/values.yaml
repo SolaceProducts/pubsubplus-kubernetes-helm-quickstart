@@ -104,12 +104,17 @@ storage:
   #  false is not recommended for production use
   persistent: true
 
-  # storage.useStorageClass: verify specified StorageClass exists using `kubectl get sc`.
-  # If not defined, the deployment will try to use the default storage class for the k8s cluster.
-  # useStorageClass: standard
-
   # storage.nfs=true specifies that an NFS storage is used. Default is false.
   # nfs: true
+
+  # storage.existingClaim will be used to mount a persistent volume if specified and
+  #   the rest of the parameters including StorageClass and size will be ignored
+  # Note: can only use with solace.redundancy=false, a claim can only be associated to one PubSub+ pod
+  # existingClaim: my-existing-data-pvc
+
+  # storage.useStorageClass will be used if specified, verify it exists using `kubectl get sc`.
+  # If not defined, the deployment will try to use the default storage class for the k8s cluster.
+  # useStorageClass: standard
 
   # Refer to the Solace documentation for Minimum Recommended Storage-Element Size per Scaling Tier
   size: 30Gi
