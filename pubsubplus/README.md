@@ -1,6 +1,17 @@
-# Solace PubSub+ Message Broker Helm Chart
+# Solace PubSub+ Advanced Event Broker Helm Chart
 
-This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https://solace.com/products/) software message broker on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [Advanced Event Broker](https://solace.com/products/event-broker/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+
+## TL;DR;
+
+```bash
+helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+helm install --name my-release solacecharts/pubsubplus
+```
+
+## Overview
+
+This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ software event broker](https://solace.com/products/event-broker/software/) on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/README.md) provides additional details to this Helm chart.
 
@@ -8,10 +19,10 @@ The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solac
 
 * Kubernetes 1.9 or later
 * Helm package manager installed and configured
-* If using a private Docker registry an image pull secret needs to be created before installing the chart
+* If using a private Docker registry, load the PubSub+ Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see [configuration](#configuration)):
-  * You must specify a storage class if no default class is available in your cluster
-
+  * Specify a storage class unless using a default storage class in your Kubernetes cluster
+  
 ## Create a deployment
 
 ```bash

@@ -42,8 +42,8 @@ This is a minimum footprint deployment for development purposes. For guaranteed 
 {{- else }}
 The requested connection scaling tier for this deployment is: max {{ substr 4 10 .Values.solace.size }} connections. 
 {{- end }}
-Required resources per PubSub+ pod:
-    echo `kubectl get statefulset --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="Minimum resources: {.spec.template.spec.containers[0].resource s.requests}"`
+Following resources have been requested per PubSub+ pod:
+    echo `kubectl get statefulset --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="Minimum resources: {.spec.template.spec.containers[0].resources.requests}"`
 
 == Services access ==
 To access services from pods within the k8s cluster, use these addresses:
@@ -57,7 +57,7 @@ To access from outside the k8s cluster, perform the following steps.
 Obtain the NodePort IP and service ports:
 
     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[*].status.addresses[0].address}"); echo $NODE_IP
-    # Use following ports with ny of the NodeIPs
+    # Use following ports with any of the NodeIPs
     echo -e "\nProtocol\tAddress\n"`kubectl get svc --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="{range .spec.ports[*]}{.name}\t<NodeIP>:{.nodePort}\n"`
 
 {{- else if contains "LoadBalancer" .Values.service.type }}
