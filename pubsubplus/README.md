@@ -20,15 +20,15 @@ The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solac
 
 ```bash
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
-helm install --name my-release solacecharts/pubsubplus
+helm install --name my-pubsubplus-release solacecharts/pubsubplus
 ```
 
 ## Delete a deployment
 
 ```bash
-helm delete --purge my-release
-kubectl get pvc | grep data-my-release-
-# Delete any PVCs related to my-release
+helm delete --purge my-pubsubplus-release
+kubectl get pvc | grep data-my-pubsubplus-release
+# Delete any PVCs related to my-pubsubplus-release
 ```
 
 ## Configuration
@@ -37,7 +37,7 @@ The following table lists the configurable parameters of the Solace chart and th
 
 Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
-helm install --name my-release \
+helm install --name my-pubsubplus-release \
   --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword \
   solacecharts/pubsubplus
 ```
@@ -55,8 +55,8 @@ For more ways to override default values, refer to [Customizing the Helm Chart B
 | `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | not set, meaning no ImagePullSecret used                |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
 | `service.ports`                | Use to define PubSub+ service ports exposed externally, with mapping to pod containerPort               | initial set of frequently used ports, refer to values.yaml |
-| `service.addInternalPort`      | For any matching targetport in 'service.addExternalPort', this property will expose that port at the pod-level first | not set                                    |
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
+| `storage.nfs`                  | `true` to indicate that an NFS storage is used. Additionally, specify its StorageClass in `storage.useStorageClass` | `false` |
 | `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | the default StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
