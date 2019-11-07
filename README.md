@@ -27,7 +27,7 @@ Solace PubSub+ software event brokers can be deployed in either a 3-node High-Av
 
 In this quick start we go through the steps to set up a small-size event broker as a single stand-alone instance. If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-1. Have a Kubernetes environment
+1 - Have a Kubernetes environment
 
 Follow your Kubernetes provider's instructions, or [here are some options](https://kubernetes.io/docs/setup/). [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up an environment on a local machine.
 
@@ -43,7 +43,7 @@ This deployment assumes that a default StorageClass is available in your environ
 kubectl get sc | grep default
 ```
 
-2. Install and configure Helm
+2 - Install and configure Helm
 
 Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing-the-helm-client) for your platform.
 On Linux a simple option to set up the latest stable release is to run:
@@ -61,7 +61,7 @@ helm init --wait --service-account=tiller --upgrade # this may take some time
 
 Helm is configured properly if `helm version` returns no error.
 
-3. Install Solace PubSub+
+3 - Install Solace PubSub+
 
 Create a Solace PubSub+ minimum deployment with default configuration.
 

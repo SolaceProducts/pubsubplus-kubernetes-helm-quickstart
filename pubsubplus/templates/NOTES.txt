@@ -30,7 +30,7 @@ Using persistent volumes via dynamic provisioning with the "default" StorageClas
 {{- end }}
 {{- if and ( not .Values.storage.persistent ) ( not .Values.storage.hostPath ) ( not .Values.storage.existingVolume ) }}
 *******************************************************************************
-* This deployment is using ephemeral storage.
+* This deployment is using pod-local ephemeral storage.
 * Note that any configuration and stored messages will be lost at pod restart.
 *******************************************************************************
 For production purposes it is recommended to use persistent storage.
