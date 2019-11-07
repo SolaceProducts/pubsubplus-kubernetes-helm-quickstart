@@ -27,17 +27,22 @@ Solace PubSub+ software event brokers can be deployed in either a 3-node High-Av
 
 In this quick start we go through the steps to set up a small-size event broker as a single stand-alone instance. If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-1. Have a Kubernetes environment
+1 - Have a Kubernetes environment
+
 Follow your Kubernetes provider's instructions, or [here are some options](https://kubernetes.io/docs/setup/). [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up an environment on a local machine.
+
 Also have the `kubectl` [tool installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
+
 Your Kubernetes environment is ready if you get worker nodes listed and ready when running the command `kubectl get nodes`.
 
-2. Install and configure Helm
+2 - Install and configure Helm
+
 Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing-the-helm-client) for your platform.
 On Linux a simple option to set up the latest stable release is to run:
 ```bash
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
+
 Deploy `tiller` if using default Helm v2:
 ```bash
 # Configure Helm - enables getting started on most platforms, but grants tiller cluster-admin privileges
@@ -45,10 +50,13 @@ kubectl -n kube-system create serviceaccount tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
+
 Helm is configured properly if `helm version` returns no error.
 
-3. Install Solace PubSub+
+3 - Install Solace PubSub+
+
 Create a Solace PubSub+ minimum deployment with default configuration.
+
 ```bash
 # Add Solace Helm charts to your local Helm repo
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
@@ -56,8 +64,11 @@ helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickst
 # Deploy PubSub+ Standard edition, minimum footprint developer version
 helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
 ```
+
 This will start the deployment and provide related information and notes.
+
 Wait for the deployment to complete, then [**check out the management and messaging services**](). Refer to the [**Troubleshooting guide**]() if any issues.
+
 For configuration options and delete instructions, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
 
 ## Contributing
