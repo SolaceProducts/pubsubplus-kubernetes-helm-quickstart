@@ -19,7 +19,7 @@ before_install:
 - gcloud auth activate-service-account -q $(jq -r .client_email keyfile) --key-file=./keyfile
   --project  $(jq -r .project_id keyfile)
 - rm ./keyfile
-- export DESIRED_VERSION=v2.16.0; curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get
+- export DESIRED_VERSION=v2.14.3; curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get
   | bash
 install: true
 script:
