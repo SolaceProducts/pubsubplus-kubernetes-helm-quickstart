@@ -16,7 +16,6 @@ This document is applicable to any platform supporting Kubernetes, with specific
 - [Install a Solace PubSub+ Software Event Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
 - Deploying a Solace PubSub+ Software Event Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
 
-
 ## Description of the Solace PubSub+ Software Event Broker
 
 The Solace PubSub+ software event broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The event broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
@@ -29,11 +28,20 @@ In this quick start we go through the steps to set up a small-size event broker 
 
 1 - Have a Kubernetes environment
 
-Follow your Kubernetes provider's instructions, or [here are some options](https://kubernetes.io/docs/setup/). [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up an environment on a local machine.
+Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started . [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up an environment on a local machine.
 
-Also have the `kubectl` [tool installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
+Also have the `kubectl` tool [installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
 
-Your Kubernetes environment is ready if you get worker nodes listed and ready when running the command `kubectl get nodes`.
+Check your Kubernetes environment is ready:
+```bash
+# This shall return worker nodes listed and ready
+kubectl get nodes
+
+# A default storage class must be available for default PubSub+ deployment configuration
+kubectl get storageclasses
+```
+
+Note: if there is no default storage class defined in your environment refer to the [**guide**] for other options.
 
 2 - Install and configure Helm
 
@@ -51,7 +59,7 @@ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceac
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
 
-Helm is configured properly if `helm version` returns no error.
+Helm is configured properly if the command `helm version` returns no error.
 
 3 - Install Solace PubSub+
 
