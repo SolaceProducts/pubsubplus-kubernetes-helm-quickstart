@@ -33,7 +33,7 @@ There are three Helm charts available with default small-size configurations:
 2.	`pubsubplus` - PubSub+ Standalone, supporting 100 connections
 3.	`pubsubplus-ha` - PubSub+ HA, supporting 100 connections
 
-If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+For other event broker configurations or sizes, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
 
 ### Get a Kubernetes environment
 
