@@ -35,7 +35,7 @@ There are three Helm charts available with default small-size configurations:
 
 If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
-### 1 - Have a Kubernetes environment
+### Get a Kubernetes environment
 
 Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started. Ensure to meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted PubSub+ configuration size.
 > Note: If using [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/), `minikube start` will setup Kubernetes on a VM with 2 CPUs and 2 GB memory allocated, which will may leave barely enough resources for the PubSub+ deployment. For more granular control, use the `--cpus` and `--memory` options.
@@ -53,7 +53,7 @@ kubectl get storageclasses
 
 Note: if there is no default storage class defined in your environment refer to the [**guide**] for other options.
 
-#### 2 - Install and configure Helm
+### Install and configure Helm
 
 Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing-the-helm-client) for your platform.
 On Linux a simple option to set up the latest stable release is to run:
@@ -72,7 +72,7 @@ Warning: more restricted privileges are recommended in a production environment.
 
 Helm is configured properly if the command `helm version` returns no error.
 
-### 3 - Install Solace PubSub+ with default configuration
+### Install Solace PubSub+ with default configuration
 
 Add the Solace Helm charts to your local Helm repo:
 ```bash
