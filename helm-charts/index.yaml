@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-11-08T20:17:12.416185021Z"
+    created: "2019-11-08T20:30:06.400801542Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 04b9c5155785b439934aab4564ad394410cbef92b1365637f73dfa00e55d5d05
+    digest: 0f70a410f1d9785a81b650fd497b728f9f7c2acb0b41ceac71e99da694a143e6
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 2.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-11-08T20:17:12.417823755Z"
+    created: "2019-11-08T20:30:06.402456157Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: f1adffcfa4c70b0c94a274465b881899136c7b77db54bee466e887d14de98488
+    digest: 8ee606e5932c4879dd05ae116c6f2eab31fe24ac9c5c4a9f410689ddd97ea385
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 2.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-11-08T20:17:12.418716661Z"
+    created: "2019-11-08T20:30:06.404349922Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 1fd6d3761e66cb5b642b2bce579072dbf614e0535e1a5b48571e8b93c59846de
+    digest: 33e9c10192e7908f99a913583d2310b15c53761462cbb80fef799b7427c15dcc
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-2.0.0.tgz
     version: 2.0.0
-generated: "2019-11-08T20:17:12.414123428Z"
+generated: "2019-11-08T20:30:06.398598362Z"
