@@ -79,25 +79,27 @@ Add the Solace Helm charts to your local Helm repo:
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 ```
 
-a) Create a Solace PubSub+ minimum deployment for development purposes. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
+Use one of the charts to create a deployment:
+
+a) Create a Solace PubSub+ minimum deployment for development purposes using `pubsubplus-dev`. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
 ```bash
 # Deploy PubSub+ Standard edition, minimum footprint developer version
 helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
 ```
 
-b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling. Minimum 2 CPUs and 4 GB of memory must be available to the PubSub+ event broker pod.
+b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling using `pubsubplus`. Minimum 2 CPUs and 4 GB of memory must be available to the PubSub+ event broker pod.
 ```bash
 # Deploy PubSub+ Standard edition, Standalone
 helm install --name my-pubsubplus-release solacecharts/pubsubplus
 ```
 
-c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ event broker pods.
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ event broker pods.
 ```bash
 # Deploy PubSub+ Standard edition, HA
 helm install --name my-pubsubplus-release solacecharts/pubsubplus-ha
 ```
 
-Above will start the deployment and write related information and notes to the screen.
+Above options will start the deployment and write related information and notes to the screen.
 
 Wait for the deployment to complete following the instructions, then you can [**check out the management and messaging services**](). Refer to the [**Troubleshooting guide**]() if any issues.
 
