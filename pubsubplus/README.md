@@ -20,15 +20,15 @@ The [Solace PubSub+ quickstart documentation](https://github.com/SolaceDev/solac
 
 ```bash
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
-helm install --name my-pubsubplus-release solacecharts/pubsubplus
+helm install --name my-release solacecharts/pubsubplus
 ```
 
 ## Delete a deployment
 
 ```bash
-helm delete --purge my-pubsubplus-release
-kubectl get pvc | grep data-my-pubsubplus-release
-# Delete any PVCs related to my-pubsubplus-release
+helm delete --purge my-release
+kubectl get pvc | grep data-my-release
+# Delete any PVCs related to my-release
 ```
 
 Note: ensure to delete existing PVCs if reusing the same deployment name for a new deployment.
@@ -39,7 +39,7 @@ The following table lists the configurable parameters of the Solace chart and th
 
 Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
-helm install --name my-pubsubplus-release \
+helm install --name my-release \
   --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword \
   solacecharts/pubsubplus
 ```
