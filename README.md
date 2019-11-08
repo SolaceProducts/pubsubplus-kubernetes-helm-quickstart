@@ -24,11 +24,13 @@ Solace PubSub+ software event brokers can be deployed in either a 3-node High-Av
 
 ## How to deploy the Solace PubSub+ Software Event Broker onto Kubernetes
 
-In this quick start we go through the steps to set up a small-size event broker as a single stand-alone instance. If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+In this quick start we go through the steps to set up a small-size event broker as a single stand-alone instance using the `pubsubplus-dev` Helm chart. If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 1 - Have a Kubernetes environment
 
-Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started . [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up an environment on a local machine.
+Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started . [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up Kubernetes on a local machine. The [minimum resource requirements]() is 2 CPU and 2 GB of memory available to each PubSub+ event broker pod.
+
+> Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
 
 Also have the `kubectl` tool [installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
 
@@ -53,11 +55,12 @@ curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 
 Deploy `tiller` if using default Helm v2:
 ```bash
-# Configure Helm - enables getting started on most platforms, but grants tiller cluster-admin privileges
+# This enables getting started on most platforms, but grants tiller cluster-admin privileges
 kubectl -n kube-system create serviceaccount tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
+Warning: to meet tighter security requirements e.g.: in a Production environment, `tiller` must be [**more restricted**].
 
 Helm is configured properly if the command `helm version` returns no error.
 
@@ -73,9 +76,11 @@ helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickst
 helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
 ```
 
-This will start the deployment and provide related information and notes.
+This will start the deployment and write related information and notes to the screen.
 
-Wait for the deployment to complete, then [**check out the management and messaging services**](). Refer to the [**Troubleshooting guide**]() if any issues.
+Wait for the deployment to complete following the instructions, then you can [**check out the management and messaging services**](). Refer to the [**Troubleshooting guide**]() if any issues.
+
+> Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, execute `minikube service my-pubsubplus-release` to expose the services. Services will be accessible directly using mapped ports instead of direct port access, for which the mapping can be obtained from `kubectl describe service my-pubsubplus-release`.
 
 For configuration options and delete instructions, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
 

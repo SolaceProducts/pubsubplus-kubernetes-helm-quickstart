@@ -31,6 +31,8 @@ kubectl get pvc | grep data-my-pubsubplus-release
 # Delete any PVCs related to my-pubsubplus-release
 ```
 
+Note: ensure to delete existing PVCs if reusing the same deployment name for a new deployment.
+
 ## Configuration
 
 The following table lists the configurable parameters of the Solace chart and their default values.
@@ -54,10 +56,10 @@ For more ways to override default values, refer to [Customizing the Helm Chart B
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
 | `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | not set, meaning no ImagePullSecret used                |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
-| `service.ports`                | Use to define PubSub+ service ports exposed externally, with mapping to pod containerPort               | initial set of frequently used ports, refer to values.yaml |
+| `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
 | `storage.nfs`                  | `true` to indicate that an NFS storage is used. Additionally, specify its StorageClass in `storage.useStorageClass` | `false` |
-| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | the default StorageClass for the Kubernetes cluster |
+| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | not set, meaning to use the default StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
 
