@@ -2,13 +2,17 @@
 
 # Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster
 
-## Purpose of this repository
+The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Software Event Broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
-This repository explains how to install a Solace PubSub+ Software Event Broker in various configurations onto a Kubernetes cluster. We recommend using the Helm tool for convenience, which will be described in the next sections. An [alternative method](#alternative-installation-generating-templates-for-kubernetes-kubectl-tool) using generated templates is also provided.
+## Overview
+
+This document provides a quick getting started guide to install a Solace PubSub+ Software Event Broker in various configurations onto a Kubernetes cluster.
+
+Detailed documentation is provided in the [Solace PubSub+ Event Broker on Kubernetes Deployment Guide].
 
 This guide is intended mainly for development and demo purposes. The recommended Solace PubSub+ Software Event Broker version is 9.0 or later.
 
-This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple single-node MiniKube deployment on a Linux-based machine. To view examples of other platforms see:
+This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other platforms see:
 
 - [Deploying a Solace PubSub+ Software Event Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
 - [Deploying a Solace PubSub+ Software Event Broker HA Group onto an OpenShift 3.10 or 3.11 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
@@ -16,19 +20,24 @@ This document is applicable to any platform supporting Kubernetes, with specific
 - [Install a Solace PubSub+ Software Event Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
 - Deploying a Solace PubSub+ Software Event Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
 
-## Description of the Solace PubSub+ Software Event Broker
-
-The Solace PubSub+ software event broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The event broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
-
-Solace PubSub+ software event brokers can be deployed in either a 3-node High-Availability (HA), or as a single node deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
-
 ## How to deploy the Solace PubSub+ Software Event Broker onto Kubernetes
 
-In this quick start we go through the steps to set up a small-size event broker as a single stand-alone instance using the `pubsubplus-dev` Helm chart. If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+Solace PubSub+ software event brokers can be deployed in either a 3-node High-Availability (HA), or as a single-node Standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
+
+We recommend using the Helm tool for convenience. An [alternative method](docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided.
+
+In this quick start we go through the steps to set up an event broker using [Solace PubSub+ Helm charts](insert-link-to-Solace-in-Helm-Hub).
+
+There are three charts available with default small-size configurations:
+1.	`pubsubplus-dev` - PubSub+ for Developer (Standalone)
+2.	`pubsubplus` - PubSub+ Standalone supporting 100 connections
+3.	`pubsubplus-ha` - PubSub+ HA supporting 100 connections
+
+If you are interested in other event broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
 
 ### 1 - Have a Kubernetes environment
 
-Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started . [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up Kubernetes on a local machine.
+Follow your Kubernetes provider's instructions or [here are some options](https://kubernetes.io/docs/setup/) to get started. [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/) is one of the popular choices to set up Kubernetes on a local machine.
 
 > Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
 
@@ -60,33 +69,33 @@ kubectl -n kube-system create serviceaccount tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
-Warning: to meet tighter security requirements e.g.: in a Production environment, `tiller` must be [**more restricted**].
+Warning: to meet tighter security requirements e.g.: in a production environment, `tiller` must be [**restricted**].
 
 Helm is configured properly if the command `helm version` returns no error.
 
 ### 3 - Install Solace PubSub+ with default configuration
 
-Add Solace Helm charts to your local Helm repo:
+Add the Solace Helm charts to your local Helm repo:
 ```bash
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 ```
 
-a) Create a Solace PubSub+ minimum deployment. The [minimum resource requirements]() is 2 CPU and 2 GB of memory available.
+a) Create a Solace PubSub+ minimum deployment for development purposes. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
 ```bash
 # Deploy PubSub+ Standard edition, minimum footprint developer version
 helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
 ```
 
-b) Create a Solace PubSub+ non-HA deployment supporting 100 connections scaling. The [minimum resource requirements]() is 2 CPU and 4 GB of memory available.
+b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling. Minimum 2 CPUs and 4 GB of memory must be available to the PubSub+ event broker pod.
 ```bash
 # Deploy PubSub+ Standard edition, minimum footprint developer version
-helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
+helm install --name my-pubsubplus-release solacecharts/pubsubplus
 ```
 
-c) Create a Solace PubSub+ HA deployment supporting 100 connections scaling. The [minimum resource requirements]() is 2 CPU and 4 GB of memory available to each of the three PubSub+ event broker pods.
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ event broker pods.
 ```bash
 # Deploy PubSub+ Standard edition, minimum footprint developer version
-helm install --name my-pubsubplus-release solacecharts/pubsubplus-dev
+helm install --name my-pubsubplus-release solacecharts/pubsubplus-ha
 ```
 
 Above will start the deployment and write related information and notes to the screen.
