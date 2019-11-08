@@ -1,4 +1,4 @@
-# Solace PubSub+ Event Broker on Kubernetes Deployment Guide
+# Solace PubSub+ Event Broker on Kubernetes Guide
 
 This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kubernetes.
 
@@ -341,7 +341,7 @@ This is for users not wishing to install the Helm server-side Tiller on the Kube
 
 This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
 
-### Step 1: Generate Kubernetes templates for Solace event broker deployment
+#### Step 1: Generate Kubernetes templates for Solace event broker deployment
 
 1) Clone this project:
 
@@ -350,7 +350,7 @@ git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
 cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
 ```
 
-2) [Download](//github.com/helm/helm/releases/tag/v2.9.1 ) and install the Helm client locally.
+2) [Download](//github.com/helm/helm/releases/tag/v2.15.2 ) and install the Helm client locally.
 
 We will assume that it has been installed to the `<project-root>/bin` directory.
 
@@ -386,7 +386,7 @@ mkdir generated-templates
 
 The generated set of templates are now available in the `<project-root>/solace/generated-templates` directory.
 
-### Step 2: Deploy the templates on the target system
+#### Step 2: Deploy the templates on the target system
 
 Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
 
@@ -411,7 +411,7 @@ kubectl create clusterrolebinding myname-cluster-admin-binding \
 
 Wait for the deployment to complete, which is then ready to use.
 
-4) To delete deployment, execute:
+4) To delete the deployment, execute:
 
 `kubectl delete --recursive -f ./generated-templates/solace`
 
