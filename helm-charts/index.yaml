@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-11-08T12:57:49.647850684Z"
+    created: "2019-11-08T16:52:04.833456369Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: f5aceb6cc709e8cddd675a421344a328d66486d01949589c894d929ef5059a63
+    digest: 6340ad48b81ee4d819a505b9f36abe87a51c856d6cd5e574fd96a0859355c6b4
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 2.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-11-08T12:57:49.649294217Z"
+    created: "2019-11-08T16:52:04.835027339Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: aa1546a1626261a1b31f580bb1fa17298ca32c42aa23000ed519f0fcce6978d3
+    digest: 80a6c2b6ae250d0226ad1b8e1377ac55266eda6af094edcb7ecce71cbe2ee6ce
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 2.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-11-08T12:57:49.650868943Z"
+    created: "2019-11-08T16:52:04.836560878Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 366fe62b65d79905b27b3886e16aaabe27fa25607c7d294003e1a26d0d71ca88
+    digest: e413844a4438a4044fbc72adbbc968504cc34cc6d32805ab4a6e7fea4dfa68cf
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-2.0.0.tgz
     version: 2.0.0
-generated: "2019-11-08T12:57:49.645764246Z"
+generated: "2019-11-08T16:52:04.83095529Z"
