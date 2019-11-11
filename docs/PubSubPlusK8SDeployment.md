@@ -57,26 +57,29 @@ Contents:
 
 The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Advanced Event Broker](https://solace.com/products/event-broker/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
-## Kubernetes deployment overview
+## Overview
 
-The PubSub+ Kubernetes deployment consists of multiple yaml templates with several options to customize. 
+The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as a PubSub+ [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
-The 
+There are two deployment options described in this document:
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this in current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with possibly elevated roles granted. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
+* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the deployer. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-Deployment options
+The next sections will provide details on how the PubSub+ Helm chart works.
 
-Types of Charts available
+
+
 
 
 
 #### Charts overview
 
-The [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md) is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
+The  is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
-The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
+The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "Template Relationship")
 
-#### Deployment Workflow
+#### Deployment Structure
 
 Where scripts are mounted
 Init
@@ -171,7 +174,7 @@ export DESIRED_VERSION=v2.15.2
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
 
-2. Deploy Tiller. Following script is based on [the Example: Service account with cluster-admin role](//helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role ).
+2. Deploy Tiller if using Helm v2 to manage your deployment. Following script is based on [the Example: Service account with cluster-admin role](//helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role ).
 
 **Important:** this will grant Tiller `cluster-admin` privileges to enable getting started on most platforms. This should be more secured for Production environments and may already fail in a restricted security environment. For options, see section [Security considerations](#security-considerations).
 
@@ -336,9 +339,15 @@ subjects:
 
 ## Deployment options
 
-Intro
+As discussed in the [Overview](#overview), two types of deployments will be described:
+* Deployment steps using Helm
+* Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
 ### Deployment steps using Helm
+
+Types of Charts available
+
+
 
 Refer to the quick start.
 
@@ -347,6 +356,8 @@ Refer to the quick start.
 This is for users not wishing to install the Helm server-side Tiller on the Kubernetes cluster.
 
 This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
+
+Note that later sections of this document about modifying, upgrading or deleting a Deployment using the Helm tool do not apply.
 
 #### Step 1: Generate Kubernetes templates for Solace event broker deployment
 

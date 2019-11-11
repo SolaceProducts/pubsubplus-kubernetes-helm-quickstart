@@ -61,14 +61,14 @@ On Linux a simple option to set up the latest stable release is to run:
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
 
-Deploy `tiller` if using default Helm v2:
+Deploy `tiller`, Helm's in-cluster operator if using default Helm v2:
 ```bash
 # This enables getting started on most platforms, but grants tiller cluster-admin privileges
 kubectl -n kube-system create serviceaccount tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
-Warning: more restricted privileges are recommended in a production environment.
+Warning: [more restricted privileges](/docs/PubSubPlusK8SDeployment.md#install-and-setup-the-helm-package-manager) are recommended in a production environment.
 
 Helm is configured properly if the command `helm version` returns no error.
 
