@@ -66,12 +66,12 @@ There are two deployment options described in this document:
 
 The next sections will provide details on how the PubSub+ Helm chart works, followed by deployment prerequisites and the actual deployment steps.
 
-#### Charts overview
+## The PubSub+ Helm Chart
 
 The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "Template Relationship")
 
-#### Deployment Structure
+#### Deployment Logic
 
 Where scripts are mounted
 Init
