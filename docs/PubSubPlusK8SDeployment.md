@@ -58,24 +58,24 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 ## Overview
 
-The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as a [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
+The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this in current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
-* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the deployer. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
+* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
 The next sections will provide details on the PubSub+ Helm chart and dependencies, followed by deployment prerequisites and the actual deployment steps.
 
-## The PubSub+ Helm Chart
+## The PubSub+ Helm Chart Deployment Considerations
 
 The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the PubSub+ pods deployment. It also mounts the scripts in ConfigMap and the files in Secrets, and maps PubSub+ data directories to a persistent volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is used internally so pods in a PubSub+ redundancy group can communicate in an HA setting.
+The StatefulSet template controls the PubSub+ pods deployment. It also mounts the scripts in ConfigMap and the files in Secrets, and maps PubSub+ data directories to a persistent volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is used internally so pods in a PubSub+ redundancy group can communicate with each-other in an HA setting.
 
 The `pubsubplus` chart can be customized through parameters described in the the [PubSub+ Helm Chart](/pubsubplus/README.md#configuration) reference.
 
-### Available CPU and Memory requirements
+### Available CPU and Memory Requirements
 
 Solace PubSub+ can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm).
 
@@ -88,7 +88,7 @@ The following CPU and memory requirements are summarized here from the [Solace d
 * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
 * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
 
-### Disk storage
+### Disk Storage
 
 The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes.
 
@@ -116,27 +116,29 @@ kubectl get storageclass
 
 Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
 
-### Exposing the Solace event broker services
+### Exposing the PubSub+ Event Broker Services
 
-The default way of exposing the Solace event broker services is through an external load balancer. The options are ClusterIP, NodePort and LoadBalancer (default), which are the standard [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
+The default way of exposing the [PubSub+ event broker services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) is through an external load balancer. The options are ClusterIP, NodePort and LoadBalancer (default), which are the standard [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
 
 To configure other options, adjust/override the `service.type` parameter.
 
-### Using pod label "active" to identify the active event broker node
+When using Helm to initiate a deployment, notes will be provided on the screen how to obtain the service addresses and ports.
 
-The deployment is complete if all Solace pods are running, ready and the active message broker pod's label is "active=true". The exposed `solace` service will now forward traffic to the active message broker node. Refer to section [Using pod label "active"](#using-pod-label-active-to-identify-the-active-message-broker-node) for more information about what needs to be in place for the active pod's label to become "active" and possible related issues.
+The deployment is complete if all Solace pods are running, ready and the active message broker pod's label is "active=true". The exposed `pubsubplus` service will now forward traffic to the active message broker node.
+
+#### Using pod label "active" to identify the active event broker node
 
 This section provides more information about what is required to achieve the correct label for the pod hosting the active event broker node and provides help for troubleshooting in case of possible issues because of tightened security.
 
 Use `kubectl get pods --show-labels` to check for the status of the "active" label. In a stable deployment, one of the message routing nodes with ordinal 0 or 1 shall have the label `active=true`. You can find out if there is an issue by [checking events](#viewing-events) for related ERROR reported.
 
-This label is set by the `readiness_check.sh` script in `solace/templates/solaceConfigMap.yaml`, triggered by the StatefulSet's readiness probe. For this to happen the followings are required:
+This label is set by the `readiness_check.sh` script in `pubsubplus/templates/solaceConfigMap.yaml`, triggered by the StatefulSet's readiness probe. For this to happen the followings are required:
 
 - the Solace pods must be able to communicate with each-other at port 8080
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
-## Deployment prerequisites
+## Setting up Deployment Prerequisites
 
 ### Platform and tools setup
 
