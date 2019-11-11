@@ -6,7 +6,7 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 * For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](pubsubplus).
 
 Contents:
-- [Solace PubSub+ Event Broker on Kubernetes Deployment Guide](#solace-pubsub--event-broker-on-kubernetes-deployment-guide)
+- [Solace PubSub+ Event Broker on Kubernetes Guide](#solace-pubsub--event-broker-on-kubernetes-guide)
   * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
   * [Kubernetes deployment](#kubernetes-deployment)
       - [Charts overview](#charts-overview)
@@ -32,8 +32,8 @@ Contents:
   * [Deployment options](#deployment-options)
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes--kubectl--tool)
-    + [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1--generate-kubernetes-templates-for-solace-event-broker-deployment)
-    + [Step 2: Deploy the templates on the target system](#step-2--deploy-the-templates-on-the-target-system)
+      - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1--generate-kubernetes-templates-for-solace-event-broker-deployment)
+      - [Step 2: Deploy the templates on the target system](#step-2--deploy-the-templates-on-the-target-system)
   * [Validating the Deployment](#validating-the-deployment)
     + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
       - [WebUI, SolAdmin and SEMP access](#webui--soladmin-and-semp-access)
@@ -67,7 +67,7 @@ Types of Charts available
 
 The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
-![alt text](/images/template_relationship.png "Template Relationship")
+![alt text](docs/images/template_relationship.png "Template Relationship")
 
 #### Deployment Workflow
 
