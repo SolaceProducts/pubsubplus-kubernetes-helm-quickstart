@@ -28,12 +28,12 @@ We recommend using the Helm tool for convenience. An [alternative method](docs/P
 
 In this quick start we go through the steps to set up an event broker using [Solace PubSub+ Helm charts](//hub.helm.sh/charts/solace).
 
-There are three Helm charts available with default small-size configurations:
-1.	`pubsubplus-dev` - PubSub+ for Developer (Standalone)
+There are three Helm chart variants available with default small-size configurations:
+1.	`pubsubplus-dev` - minimum footprint PubSub+ for Developers (Standalone)
 2.	`pubsubplus` - PubSub+ Standalone, supporting 100 connections
 3.	`pubsubplus-ha` - PubSub+ HA, supporting 100 connections
 
-For other event broker configurations or sizes, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
+For other event broker configurations or sizes, refer to the [PubSub+ Helm Chart documentation](/pubsubplus/README.md).
 
 ### Get a Kubernetes environment
 

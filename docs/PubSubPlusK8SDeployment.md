@@ -2,8 +2,8 @@
 
 This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kubernetes.
 
-* For a hands-on quick start, refer to the [Quick Start guide](README.md).
-* For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](pubsubplus).
+* For a hands-on quick start, refer to the [Quick Start guide](/README.md).
+* For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](/pubsubplus/README.md).
 
 Contents:
 - [Solace PubSub+ Event Broker on Kubernetes Guide](#solace-pubsub--event-broker-on-kubernetes-guide)
@@ -57,17 +57,24 @@ Contents:
 
 The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Advanced Event Broker](https://solace.com/products/event-broker/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
-## Kubernetes deployment
+## Kubernetes deployment overview
+
+The PubSub+ Kubernetes deployment consists of multiple yaml templates with several options to customize. 
+
+The 
 
 Deployment options
 
 Types of Charts available
 
+
+
 #### Charts overview
 
-The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
+The [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md) is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
-![alt text](docs/images/template_relationship.png "Template Relationship")
+The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
+![alt text](/docs/images/template_relationship.png "Template Relationship")
 
 #### Deployment Workflow
 
