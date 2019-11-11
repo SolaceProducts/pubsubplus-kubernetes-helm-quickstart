@@ -6,52 +6,51 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 * For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](/pubsubplus/README.md).
 
 Contents:
-- [Solace PubSub+ Event Broker on Kubernetes Guide](#solace-pubsub--event-broker-on-kubernetes-guide)
-  * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
-  * [Kubernetes deployment](#kubernetes-deployment)
-      - [Charts overview](#charts-overview)
-      - [Deployment Workflow](#deployment-workflow)
-      - [CPU and Memory requirements](#cpu-and-memory-requirements)
-      - [Storage requirements](#storage-requirements)
-      - [Exposing the Solace event broker services](#exposing-the-solace-event-broker-services)
-      - [Using pod label "active" to identify the active event broker node](#using-pod-label--active--to-identify-the-active-event-broker-node)
-  * [Deployment pre-requisites](#deployment-pre-requisites)
-    + [Platform and tools setup](#platform-and-tools-setup)
-      - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
-      - [Install the `kubectl` command-line tool](#install-the--kubectl--command-line-tool)
-      - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
-      - [**Restore Helm**](#--restore-helm--)
-      - [Using Helm v3](#using-helm-v3)
-    + [PubSub+ Docker image](#pubsub--docker-image)
-    + [Create and use ImagePullSecrets for signed images](#create-and-use-imagepullsecrets-for-signed-images)
-    + [Persistent Storage](#persistent-storage)
-    + [Security considerations](#security-considerations)
-      - [Privileged false](#privileged-false)
-      - [Securing Helm](#securing-helm)
-      - [Enabling pod label "active" in a tight security environment](#enabling-pod-label--active--in-a-tight-security-environment)
-  * [Deployment options](#deployment-options)
-    + [Deployment steps using Helm](#deployment-steps-using-helm)
-    + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes--kubectl--tool)
-      - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1--generate-kubernetes-templates-for-solace-event-broker-deployment)
-      - [Step 2: Deploy the templates on the target system](#step-2--deploy-the-templates-on-the-target-system)
-  * [Validating the Deployment](#validating-the-deployment)
-    + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
-      - [WebUI, SolAdmin and SEMP access](#webui--soladmin-and-semp-access)
-      - [Solace CLI access](#solace-cli-access)
-      - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
-    + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
-  * [Troubleshooting](#troubleshooting)
-    + [Viewing logs](#viewing-logs)
-    + [Viewing events](#viewing-events)
-    + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
-      - [General troubleshooting hints](#general-troubleshooting-hints)
-      - [Pods stuck not enough resources](#pods-stuck-not-enough-resources)
-      - [Pods stuck no storage](#pods-stuck-no-storage)
-      - [Pods stuck in CrashLoopBackoff or Failed](#pods-stuck-in-crashloopbackoff-or-failed)
-      - [Security constraints](#security-constraints)
-  * [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
-  * [Deleting a Deployment](#deleting-a-deployment)
-  * [Additional notes](#additional-notes)
+* [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
+* [Overview](#overview)
+    - [Charts overview](#charts-overview)
+    - [Deployment Structure](#deployment-structure)
+    - [CPU and Memory requirements](#cpu-and-memory-requirements)
+    - [Storage requirements](#storage-requirements)
+    - [Exposing the Solace event broker services](#exposing-the-solace-event-broker-services)
+    - [Using pod label "active" to identify the active event broker node](#using-pod-label--active--to-identify-the-active-event-broker-node)
+* [Deployment prerequisites](#deployment-prerequisites)
+  + [Platform and tools setup](#platform-and-tools-setup)
+    - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
+    - [Install the `kubectl` command-line tool](#install-the--kubectl--command-line-tool)
+    - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
+    - [Restore Helm](#restore-helm)
+    - [Using Helm v3](#using-helm-v3)
+  + [PubSub+ Docker image](#pubsub--docker-image)
+  + [Create and use ImagePullSecrets for signed images](#create-and-use-imagepullsecrets-for-signed-images)
+  + [Persistent Storage](#persistent-storage)
+  + [Security considerations](#security-considerations)
+    - [Privileged false](#privileged-false)
+    - [Securing Helm](#securing-helm)
+    - [Enabling pod label "active" in a tight security environment](#enabling-pod-label--active--in-a-tight-security-environment)
+* [Deployment options](#deployment-options)
+  + [Deployment steps using Helm](#deployment-steps-using-helm)
+  + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes--kubectl--tool)
+    - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1--generate-kubernetes-templates-for-solace-event-broker-deployment)
+    - [Step 2: Deploy the templates on the target system](#step-2--deploy-the-templates-on-the-target-system)
+* [Validating the Deployment](#validating-the-deployment)
+  + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
+    - [WebUI, SolAdmin and SEMP access](#webui--soladmin-and-semp-access)
+    - [Solace CLI access](#solace-cli-access)
+    - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
+  + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
+* [Troubleshooting](#troubleshooting)
+  + [Viewing logs](#viewing-logs)
+  + [Viewing events](#viewing-events)
+  + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
+    - [General troubleshooting hints](#general-troubleshooting-hints)
+    - [Pods stuck not enough resources](#pods-stuck-not-enough-resources)
+    - [Pods stuck no storage](#pods-stuck-no-storage)
+    - [Pods stuck in CrashLoopBackoff or Failed](#pods-stuck-in-crashloopbackoff-or-failed)
+    - [Security constraints](#security-constraints)
+* [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
+* [Deleting a Deployment](#deleting-a-deployment)
+* [Additional notes](#additional-notes)
 
 ## The Solace PubSub+ Software Event Broker
 
@@ -59,22 +58,15 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 ## Overview
 
-The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as a PubSub+ [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
+The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as a [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this in current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with possibly elevated roles granted. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this in current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the deployer. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-The next sections will provide details on how the PubSub+ Helm chart works.
-
-
-
-
-
+The next sections will provide details on how the PubSub+ Helm chart works, followed by deployment prerequisites and the actual deployment steps.
 
 #### Charts overview
-
-The  is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
 The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "Template Relationship")
@@ -145,7 +137,7 @@ This label is set by the `readiness_check.sh` script in `solace/templates/solace
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
 
-## Deployment pre-requisites
+## Deployment prerequisites
 
 ### Platform and tools setup
 
@@ -184,7 +176,7 @@ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceac
 helm init --wait --service-account=tiller  --upgrade
 ```
 
-#### **Restore Helm**
+#### Restore Helm
 
 Follow the [instructions to install Helm](https://helm.sh/docs/using_helm/#installing-helm ) in your environment.
 
