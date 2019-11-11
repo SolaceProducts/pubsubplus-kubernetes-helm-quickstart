@@ -6,51 +6,51 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 * For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](/pubsubplus/README.md).
 
 Contents:
-* [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
-* [Overview](#overview)
-    - [Charts overview](#charts-overview)
-    - [Deployment Structure](#deployment-structure)
-    - [CPU and Memory requirements](#cpu-and-memory-requirements)
-    - [Storage requirements](#storage-requirements)
-    - [Exposing the Solace event broker services](#exposing-the-solace-event-broker-services)
-    - [Using pod label "active" to identify the active event broker node](#using-pod-label--active--to-identify-the-active-event-broker-node)
-* [Deployment prerequisites](#deployment-prerequisites)
-  + [Platform and tools setup](#platform-and-tools-setup)
-    - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
-    - [Install the `kubectl` command-line tool](#install-the--kubectl--command-line-tool)
-    - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
-    - [Restore Helm](#restore-helm)
-    - [Using Helm v3](#using-helm-v3)
-  + [PubSub+ Docker image](#pubsub--docker-image)
-  + [Create and use ImagePullSecrets for signed images](#create-and-use-imagepullsecrets-for-signed-images)
-  + [Persistent Storage](#persistent-storage)
-  + [Security considerations](#security-considerations)
-    - [Privileged false](#privileged-false)
-    - [Securing Helm](#securing-helm)
-    - [Enabling pod label "active" in a tight security environment](#enabling-pod-label--active--in-a-tight-security-environment)
-* [Deployment options](#deployment-options)
-  + [Deployment steps using Helm](#deployment-steps-using-helm)
-  + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes--kubectl--tool)
-    - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1--generate-kubernetes-templates-for-solace-event-broker-deployment)
-    - [Step 2: Deploy the templates on the target system](#step-2--deploy-the-templates-on-the-target-system)
-* [Validating the Deployment](#validating-the-deployment)
-  + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
-    - [WebUI, SolAdmin and SEMP access](#webui--soladmin-and-semp-access)
-    - [Solace CLI access](#solace-cli-access)
-    - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
-  + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
-* [Troubleshooting](#troubleshooting)
-  + [Viewing logs](#viewing-logs)
-  + [Viewing events](#viewing-events)
-  + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
-    - [General troubleshooting hints](#general-troubleshooting-hints)
-    - [Pods stuck not enough resources](#pods-stuck-not-enough-resources)
-    - [Pods stuck no storage](#pods-stuck-no-storage)
-    - [Pods stuck in CrashLoopBackoff or Failed](#pods-stuck-in-crashloopbackoff-or-failed)
-    - [Security constraints](#security-constraints)
-* [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
-* [Deleting a Deployment](#deleting-a-deployment)
-* [Additional notes](#additional-notes)
+  * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
+  * [Overview](#overview)
+  * [The PubSub+ Helm Chart Deployment Considerations](#the-pubsub-helm-chart-deployment-considerations)
+    + [Available CPU and Memory Requirements](#available-cpu-and-memory-requirements)
+    + [Disk Storage](#disk-storage)
+      - [Using NFS](#using-nfs)
+    + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services)
+      - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
+  * [Setting up Deployment Prerequisites](#setting-up-deployment-prerequisites)
+    + [Platform and tools setup](#platform-and-tools-setup)
+      - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
+      - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
+      - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
+      - [Restore Helm](#restore-helm)
+      - [Using Helm v3](#using-helm-v3)
+    + [PubSub+ Docker image](#pubsub-docker-image)
+    + [Create and use ImagePullSecrets for signed images](#create-and-use-imagepullsecrets-for-signed-images)
+    + [Persistent Storage](#persistent-storage)
+    + [Security considerations](#security-considerations)
+      - [Privileged false](#privileged-false)
+      - [Securing Helm](#securing-helm)
+      - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
+  * [Deployment options](#deployment-options)
+    + [Deployment steps using Helm](#deployment-steps-using-helm)
+    + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
+      - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1-generate-kubernetes-templates-for-solace-event-broker-deployment)
+      - [Step 2: Deploy the templates on the target system](#step-2-deploy-the-templates-on-the-target-system)
+  * [Validating the Deployment](#validating-the-deployment)
+    + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
+      - [WebUI, SolAdmin and SEMP access](#webui-soladmin-and-semp-access)
+      - [Solace CLI access](#solace-cli-access)
+      - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
+    + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
+  * [Troubleshooting](#troubleshooting)
+    + [Viewing logs](#viewing-logs)
+    + [Viewing events](#viewing-events)
+    + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
+      - [General troubleshooting hints](#general-troubleshooting-hints)
+      - [Pods stuck not enough resources](#pods-stuck-not-enough-resources)
+      - [Pods stuck no storage](#pods-stuck-no-storage)
+      - [Pods stuck in CrashLoopBackoff or Failed](#pods-stuck-in-crashloopbackoff-or-failed)
+      - [Security constraints](#security-constraints)
+  * [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
+  * [Deleting a Deployment](#deleting-a-deployment)
+  * [Additional notes](#additional-notes)
 
 ## The Solace PubSub+ Software Event Broker
 
@@ -101,7 +101,7 @@ Storage size requirements summary for the scaling tiers:
 * `prod100k`: up to 100,000 connections, 30GB
 * `prod200k`: up to 200,000 connections, 34GB
 
-The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set by default.
+The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set to `true` by default.
 
 This quickstart is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
 * awsElasticBlockStore (when specifying `aws` as cloud provider  in `values.yaml`); and
@@ -115,6 +115,14 @@ kubectl get storageclass
 ```
 
 Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
+
+#### Using NFS
+
+NFS is currently supported for development and demo purposes.
+
+Specify a StorageClass as part of creating an [NFS-based persistent volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), then provide this in the `storage.useStorageClass` parameter.
+
+Additionally, set the `storage.nfs` parameter to `true`. 
 
 ### Exposing the PubSub+ Event Broker Services
 
