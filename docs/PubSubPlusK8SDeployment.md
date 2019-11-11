@@ -64,24 +64,22 @@ There are two deployment options described in this document:
 * The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this in current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the deployer. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-The next sections will provide details on how the PubSub+ Helm chart works, followed by deployment prerequisites and the actual deployment steps.
+The next sections will provide details on the PubSub+ Helm chart and dependencies, followed by deployment prerequisites and the actual deployment steps.
 
 ## The PubSub+ Helm Chart
 
 The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
-![alt text](/docs/images/template_relationship.png "Template Relationship")
+![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-#### Deployment Logic
+The StatefulSet template controls the PubSub+ pods deployment. It also mounts the scripts in ConfigMap and the files in Secrets, and maps PubSub+ data directories to a persistent volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is used internally so pods in a PubSub+ redundancy group can communicate in an HA setting.
 
-Where scripts are mounted
-Init
-Config-sync 
-Readiness check
+The `pubsubplus` chart can be customized through parameters described in the the [PubSub+ Helm Chart](/pubsubplus/README.md#configuration) reference.
 
+### Available CPU and Memory requirements
 
-#### CPU and Memory requirements
+Solace PubSub+ can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm).
 
-Configure the event broker deployment with different CPU and memory resources to support more connections per event broker:
+The following CPU and memory requirements are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm#Cloud), for the possible `solace.size` parameter values:
 
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 1 GB memory
 * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
@@ -90,39 +88,41 @@ Configure the event broker deployment with different CPU and memory resources to
 * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
 * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
 
-#### Storage requirements
+### Disk storage
 
-**Storage as a function of scaling tier.**
+The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes.
 
-This quickstart is expected to work with all [Types of Volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
+Storage size requirements summary for the scaling tiers:
+
+* `dev`: no guaranteed performance: 5GB
+* `prod100`: up to 100 connections, 7GB
+* `prod1k`: up to 1,000 connections, 14GB
+* `prod10k`: up to 10,000 connections, 18GB
+* `prod100k`: up to 100,000 connections, 30GB
+* `prod200k`: up to 200,000 connections, 34GB
+
+The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set by default.
+
+This quickstart is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
 * awsElasticBlockStore (when specifying `aws` as cloud provider  in `values.yaml`); and
 * gcePersistentDisk (`aws` cloud provider)
 
-
-The Solace deployment uses disk storage for logging, configuration, guaranteed messaging and other purposes. The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod.
-
-A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain a persistent storage that is external to the pod.
+A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain a persistent storage that is external to the pod. It is expected that there is at least one StorageClass available in your environment. By default the `pubsubplus` chart `storage.useStorageClass` parameter is not set and the deployment will try to use the "default" StorageClass in your environment. Adjust the value to a specific StorageClass name if necessary.
 
 For a list of of available StorageClasses, execute
 ```sh
 kubectl get storageclass
 ```
 
-It is expected that there is at least one StorageClass available. By default the `pubsubplus` chart is configured to use the default StorageClass in your environment, adjust the `storage.useStorageClass` value if necessary.
-
 Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
 
-
-
-#### Exposing the Solace event broker services
-
-Service ports.
+### Exposing the Solace event broker services
 
 The default way of exposing the Solace event broker services is through an external load balancer. The options are ClusterIP, NodePort and LoadBalancer (default), which are the standard [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
 
-To configure other options, adjust/override the `service.type` parameter in `values.yaml`.
+To configure other options, adjust/override the `service.type` parameter.
 
-#### Using pod label "active" to identify the active event broker node
+### Using pod label "active" to identify the active event broker node
 
 The deployment is complete if all Solace pods are running, ready and the active message broker pod's label is "active=true". The exposed `solace` service will now forward traffic to the active message broker node. Refer to section [Using pod label "active"](#using-pod-label-active-to-identify-the-active-message-broker-node) for more information about what needs to be in place for the active pod's label to become "active" and possible related issues.
 
@@ -135,7 +135,6 @@ This label is set by the `readiness_check.sh` script in `solace/templates/solace
 - the Solace pods must be able to communicate with each-other at port 8080
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
-
 
 ## Deployment prerequisites
 
