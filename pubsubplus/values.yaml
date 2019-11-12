@@ -23,16 +23,19 @@ image:
   # Specify if not using default IfNotPresent
   # pullPolicy: IfNotPresent
 
-  # Provide secret name if using secure image repo
+  # Provide an existing ImagePullSecret's name if using secure image repo.
   # pullSecretName:
 
 service:
-  # specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
+  # service.type specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer
 
-  #  List here all ports to be exposed as external service.
+  # service.annotations allows to add provider-specific service annotations, see example below
+  # annotations: cloud.google.com/load-balancer-type: "internal"
+
+  # List here all ports to be exposed as external service.
   #    "containerPorts" (from the PubSub+ container) will be exposed as external "servicePorts",
-  #  Refer to the Solace documentation of Default Port Numbers for the containerPorts.
+  # Refer to the Solace documentation of Default Port Numbers for the containerPorts.
   ports:
       - servicePort: 22
         containerPort: 2222
@@ -100,9 +103,16 @@ service:
   #     name: resttls
 
 storage:
-  # Persistence set to false will use ephemeral storage and the rest of the storage params will be ignored
+  # storage.persistent set to false will use ephemeral storage and the rest of the storage params will be ignored
   #  false is not recommended for production use
   persistent: true
+
+  # storage.customVolumeMount enables specifying a yaml snippet how the data volume should be mounted.
+  #   If customVolumeMount is defined the rest of the storage params will be ignored
+  #   This example shows how to mount the PubSub+ data volume from an existing pvc "test-claim"
+  # customVolumeMount: |
+  # persistentVolumeClaim:
+  #   claimName: test-claim
 
   # storage.nfs=true specifies that an NFS storage is used. Default is false. Also provide storage.useStorageClass
   # nfs: true

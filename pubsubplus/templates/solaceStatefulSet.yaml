@@ -156,10 +156,11 @@ spec:
 {{- if not .Values.storage.persistent }}
         - name: data
           emptyDir: {}
-{{- else if .Values.storage.existingClaim }}
+{{- else if .Values.storage.customVolumeMount }}
         - name: data
-          persistentVolumeClaim:
-            claimName: {{ .Values.storage.existingClaim }}
+          {{- with .Values.storage.customVolumeMount }}
+          {{ tpl . $ | indent 10 }}
+          {{- end }}
 {{- else }}
   volumeClaimTemplates:
   - metadata:

@@ -44,6 +44,17 @@ helm install --name my-release \
   solacecharts/pubsubplus
 ```
 
+Another option is to create a file containing the values to override and pass that to Helm:
+
+```bash
+echo "# Overrides:
+solace:
+  redundancy: true
+  usernameAdminPassword: secretpassword" > my-values.yaml
+# Now use the file:
+helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
+```
+
 For more ways to override default values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
 
 | Parameter                      | Description                                                                                             | Default                                                 |
