@@ -130,12 +130,12 @@ spec:
         - name: data
           mountPath: /var/lib/solace/diags
           subPath: diags
-{{- if not .Values.storage.nfs }}
-        # only mount when not using nfs
+        {{- if and (not .Values.storage.slow) (not .Values.storage.nfs) }}
+        # only mount when not using slow storage
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
-{{- end }} #end !nfs
+        {{- end }}
         ports:
         {{- range $item := .Values.service.ports }}
         - containerPort: {{ $item.containerPort }}
@@ -159,7 +159,7 @@ spec:
 {{- else if .Values.storage.customVolumeMount }}
         - name: data
           {{- with .Values.storage.customVolumeMount }}
-          {{ tpl . $ | indent 10 }}
+{{ tpl . $ | indent 10 }}
           {{- end }}
 {{- else }}
   volumeClaimTemplates:
