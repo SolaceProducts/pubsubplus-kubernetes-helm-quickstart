@@ -1,4 +1,4 @@
-# Solace PubSub+ Event Broker on Kubernetes Guide
+# Solace PubSub+ Event Broker on Kubernetes Deployment Guide
 
 This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kubernetes.
 
@@ -8,7 +8,7 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 Contents:
   * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
   * [Overview](#overview)
-  * [The PubSub+ Helm Chart Deployment Considerations](#the-pubsub-helm-chart-deployment-considerations)
+  * [The PubSub+ Helm Chart Deployment Considerations](#pubsub-helm-chart-deployment-considerations)
     + [Available CPU and Memory Requirements](#available-cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
       - [Using NFS](#using-nfs)
@@ -71,7 +71,7 @@ The next sections will provide details on the PubSub+ Helm chart, dependencies a
 The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the pods of a PubSub+ deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets, and maps PubSub+ data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is used internally so pods in a PubSub+ redundancy group can communicate with each-other in an HA setting.
+The StatefulSet template controls the pods of a PubSub+ deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets, and maps PubSub+ data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally so pods in a PubSub+ redundancy group can communicate with each-other in an HA setting.
 
 All the `pubsubplus` chart parameters are documented in the [PubSub+ Helm Chart](/pubsubplus/README.md#configuration) reference.
 
@@ -111,7 +111,7 @@ The `pubsubplus` chart supports allocation of new storage volumes or mounting vo
 
 The recommended default allocation is to use Kubernetes [Storage Classes]((//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name and when deleting PubSub+ pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or a deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
 
-Instead of using a storage class, the `pubsubplus` chart also allows to describe how to assign storage by adding your own `yaml` fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
+Instead of using a storage class, the `pubsubplus` chart also allows to describe how to assign storage by adding your own YAML fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
 
 Followings are examples of how to specify parameter values in common use cases:
 
@@ -169,7 +169,7 @@ Note: NFS is currently supported for development and demo purposes. If using NFS
 
 It is possible to use an existing PVC with its associated PV for storage, but it must be taken into account that the deployment will try to use any existing, potentially incompatible, configuration data on that volume.
 
-Provide this custom yaml fragment in `storage.customVolumeMount`:
+Provide this custom YAML fragment in `storage.customVolumeMount`:
 
 ```yaml
   customVolumeMount: |
@@ -179,7 +179,7 @@ Provide this custom yaml fragment in `storage.customVolumeMount`:
 
 #### Using a pre-created provider-specific volume
 
-This quickstart is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. In this case provide the specifics on mounting it in a custom yaml fragment in `storage.customVolumeMount`.
+The PubSub+ Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
 
 Following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk), note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
 ```yaml
@@ -202,23 +202,29 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 
 ### Exposing the PubSub+ Event Broker Services
 
-The default way of exposing the [PubSub+ event broker services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) is through an external load balancer. The options are ClusterIP, NodePort and LoadBalancer (default), which are the standard [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types).
+[PubSub+ event broker services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
 
-To configure other options, adjust/override the `service.type` parameter.
+* LoadBalancer - an external load balancer (default)
+* NodePort
+* ClusterIP
 
-When using Helm to initiate a deployment, notes will be provided on the screen how to obtain the service addresses and ports.
+To support [Internal load balancers](//kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer), provider-specific service annotation may be added through defining the `service.annotations` parameter.
 
-The deployment is complete if all Solace pods are running, ready and the active message broker pod's label is "active=true". The exposed `pubsubplus` service will now forward traffic to the active message broker node.
+The `service.ports` parameter defines the services exposed. It specifies the event broker `containerPort` which actually provides the service, and the mapping to the `servicePort` at which the service can be accessed when using LoadBalancer or ClusterIP. Note that there is no control to which port services are mapped when using NodePort.
+
+When using Helm to initiate a deployment, notes will be provided on the screen how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
+
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true". The exposed `pubsubplus` service will forward traffic to that active message broker node. 
 
 #### Using pod label "active" to identify the active event broker node
 
-This section provides more information about what is required to achieve the correct label for the pod hosting the active event broker node and provides help for troubleshooting in case of possible issues because of tightened security.
+This section provides more information about what is required to achieve the correct label for the pod hosting the active event broker node.
 
 Use `kubectl get pods --show-labels` to check for the status of the "active" label. In a stable deployment, one of the message routing nodes with ordinal 0 or 1 shall have the label `active=true`. You can find out if there is an issue by [checking events](#viewing-events) for related ERROR reported.
 
 This label is set by the `readiness_check.sh` script in `pubsubplus/templates/solaceConfigMap.yaml`, triggered by the StatefulSet's readiness probe. For this to happen the followings are required:
 
-- the Solace pods must be able to communicate with each-other at port 8080
+- the Solace pods must be able to communicate with each-other at port 8080 and internal ports using the Service-Discovery service.
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
@@ -330,48 +336,9 @@ kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private
 
 Then set the `image.pullSecretName` value to `<pull-secret-name>`.
 
-
 ### Persistent Storage
 
-Use NFS (from dev100-persist-ha-nfs.yaml)
-
-Mount an existing volume with a StorageClass
-
-Use an existing PersistentVolumeClaim
-
-First create volume for example "gcloud compute disks create --size 30GB solace-disk" (prod1k-direct-noha-existingVolume)
-
-The built-in support creates a StorageClass when specifying `type`. Example:
-
-```yaml
-storage:
-  persistent: true
-  type: standard    # use type for a faster but more expensive storage type
-  size: 30Gi
-```
-
-If using a different provider, create a [StorageClass](//kubernetes.io/docs/concepts/storage/storage-classes/ ) <My-Storage-Class> and provide its name in `values.yaml`. Example:
-
-```yaml
-# Create your storage class
-#  or query existing ones using "kubectl get storageclasses"
-storage:
-  persistent: true
-  useStorageClass: <My-Storage-Class>
-  size: 30Gi
-```
-
-If no `type` or `useStorageClass` parameters are configured the deployment will attempt to use the provider's default storage class.
-
-For a list of of available StorageClasses, execute
-```sh
-kubectl get storageclass
-```
-
-It is expected that there is at least one StorageClass available. By default the `pubsubplus` chart is configured to use the default StorageClass in your environment, adjust the `storage.useStorageClass` value if necessary.
-
-Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
-
+Ensure to have a way of assigning a storage volume to PubSub+ data directories, follow section [Disk Storage](#disk-storage).
 
 ### Security considerations
 
@@ -385,9 +352,9 @@ Refer to [...]
 
 #### Enabling pod label "active" in a tight security environment
 
-In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable required communication.
+* In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
 
-The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
+* The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
 is used to associate "patch label" rights. For simplicity, by default this opens up cluster-wide access of patching pod labels for all service accounts. For label update to work in a restricted security environment, adjust `podtagupdater` to be a `Role` and use a `RoleBinding` only to the specific service account in the specific namespace:
 
 ```yaml

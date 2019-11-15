@@ -6,7 +6,7 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ software event broker](https://solace.com/products/event-broker/software/) on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-Detailed documentation is available from the [Solace PubSub+ Event Broker on Kubernetes Guide](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+Additional documentation is available from the [Solace PubSub+ Event Broker on Kubernetes Deployment Guide](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
@@ -34,7 +34,7 @@ Note: ensure to delete existing PVCs if reusing the same deployment name for a c
 
 ## Configuration
 
-The following table lists the configurable parameters of the Solace chart and their default values.
+The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Guide](/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations).
 
 Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
@@ -43,7 +43,7 @@ helm install --name my-release \
   solacecharts/pubsubplus
 ```
 
-Another option is to create a file containing the values to override and pass that to Helm:
+Another option is to create a YAML file containing the values to override and pass that to Helm:
 
 ```bash
 echo "# Overrides:
@@ -54,7 +54,7 @@ solace:
 helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
 ```
 
-For more ways to override default values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
+For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
 
 | Parameter                      | Description                                                                                             | Default                                                 |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -64,12 +64,14 @@ For more ways to override default values, refer to [Customizing the Helm Chart B
 | `image.repository`             | The docker repo name and path to the Solace Docker image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
 | `image.tag`                    | The Solace Docker image tag. It is recommended to specify an explicit tag for production use            | `latest`                                                |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
-| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | not set, meaning no ImagePullSecret used                |
+| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | undefined, meaning no ImagePullSecret used                |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
+| `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | undefined  |
 | `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
 | `storage.slow`                 | `true` to indicate slow storage used, e.g. for NFS.                                                    | `false` |
-| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | not set, meaning to use the default StorageClass for the Kubernetes cluster |
+| `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | undefined |
+| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
 
