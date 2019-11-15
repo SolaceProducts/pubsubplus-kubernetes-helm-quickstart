@@ -417,16 +417,40 @@ subjects:
 ## Deployment options
 
 As discussed in the [Overview](#overview), two types of deployments will be described:
-* Deployment steps using Helm
+* Deployment steps using Helm, as package manager
 * Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
 ### Deployment steps using Helm
 
-Types of Charts available
+The recommended way is to make use of published pre-packaged PubSub+ charts from Solace' public repo with customizing your deployment through [available chart parameters](/pubsubplus/README.md).
 
+Add or refresh a local Solace `solacecharts` repo:
+```bash
+# Add new
+helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+# Refresh if needed, e.g.: to use a recently published chart version
+helm repo update solacecharts
+# Install from the repo
+helm install solacecharts/pubsubplus
+```
 
+There are three Helm chart variants available from the repo with default small-size configurations:
+1.	`pubsubplus-dev` - minimum footprint PubSub+ for Developers (Standalone)
+2.	`pubsubplus` - PubSub+ Standalone, supporting 100 connections
+3.	`pubsubplus-ha` - PubSub+ HA, supporting 100 connections
 
-Refer to the quick start.
+Refer to the [quick start](/README.md) for additional deployment details.
+
+**More customization**
+
+If more customization than just using Helm parameters is required, it is possible to create your own fork so templates can be edited:
+```bash
+# This creates a local directory with the published templates
+helm fetch solacecharts/pubsubplus --untar
+# Use the Helm chart from this directory
+helm install ./pubsubplus
+```
+Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
 
 ### Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 

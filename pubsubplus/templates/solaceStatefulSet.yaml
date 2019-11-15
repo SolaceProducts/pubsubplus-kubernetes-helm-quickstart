@@ -153,10 +153,10 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-{{- if and ({{ if .Values.storage }}) (not .Values.storage.persistent) }}
+{{- if and (.Values.storage) (not .Values.storage.persistent) }}
         - name: data
           emptyDir: {}
-{{- else if and ({{ if .Values.storage }}) (.Values.storage.customVolumeMount) }}
+{{- else if and (.Values.storage) (.Values.storage.customVolumeMount) }}
         - name: data
           {{- with .Values.storage.customVolumeMount }}
 {{ tpl . $ | indent 10 }}
