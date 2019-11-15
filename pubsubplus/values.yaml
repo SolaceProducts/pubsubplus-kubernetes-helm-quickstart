@@ -112,7 +112,7 @@ storage:
   #   This example shows how to mount the PubSub+ data volume from an existing pvc "test-claim". Ensure to preserve indentation.
   # customVolumeMount: |
   #   persistentVolumeClaim:
-  #     claimName: test-claim
+  #     claimName: existing-pvc-name
 
   # storage.slow=true to indicate slow storage used, must be set for NFS. Default is false.
   # slow: true

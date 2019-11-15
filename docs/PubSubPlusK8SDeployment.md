@@ -61,21 +61,21 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully in strict security environments.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-The next sections will provide details on the PubSub+ Helm chart and dependencies, followed by deployment prerequisites and the actual deployment steps.
+The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by deployment prerequisites and the actual deployment steps.
 
-## The PubSub+ Helm Chart Deployment Considerations
+## PubSub+ Helm Chart Deployment Considerations
 
-The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
+The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
 The StatefulSet template controls the pods of a PubSub+ deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets, and maps PubSub+ data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is used internally so pods in a PubSub+ redundancy group can communicate with each-other in an HA setting.
 
 All the `pubsubplus` chart parameters are documented in the [PubSub+ Helm Chart](/pubsubplus/README.md#configuration) reference.
 
-### Deployment size
+### Deployment scaling
 
 Solace PubSub+ event broker can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm), controlled by the `solace.size` chart parameter.
 
@@ -85,7 +85,7 @@ Horizontal scaling is possible through [connecting multiple deployments](//docs.
 
 ### CPU and Memory Requirements
 
-The following CPU and memory requirements are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm#Cloud) for the possible `pubsubplus` chart `solace.size` parameter values:
+The following CPU and memory requirements (for each pod) are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm#Cloud) for the possible `pubsubplus` chart `solace.size` parameter values:
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 1 GB memory
 * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
 * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 4 GB memory
@@ -109,20 +109,24 @@ The use of a persistent storage is recommended, otherwise if a pod-local storage
 
 The `pubsubplus` chart supports allocation of new storage volumes or mounting volumes with existing data. To avoid data corruption ensure to allocate clean new volumes for new deployments.
 
-The default allocation uses Kubernetes [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name and when deleting PubSub+ pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or a deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
+The recommended default allocation is to use Kubernetes [Storage Classes]((//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name and when deleting PubSub+ pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or a deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
 
-**Using an existing storage class**
+Instead of using a storage class, the `pubsubplus` chart also allows to describe how to assign storage by adding your own `yaml` fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
+
+Followings are examples of how to specify parameter values in common use cases:
+
+#### Using the default or an existing storage class
 
 Set the `storage.useStorageClass` parameter to use a particular storage class or leave this parameter to default undefined to allocate from your platform's "default" storage class - ensure it exists.
 ```bash
-# Query existing storage classes
+# Check existing storage classes
 kubectl get storageclass
 ```
 <br/>
 
-**Creating a storage class**
+#### Creating a storage class
 
-Create a [specific storage class](//kubernetes.io/docs/concepts/storage/storage-classes/#provisioner) if no existing storage class meets your needs, for example:
+Create a [specific storage class](//kubernetes.io/docs/concepts/storage/storage-classes/#provisioner) if no existing storage class meets your needs. Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options. Example:
 ```yaml
 # AWS fast storage class example
 apiVersion: storage.k8s.io/v1
@@ -136,7 +140,7 @@ parameters:
 ```
 <br/>
 
-If allocating from a defined Kubernetes [Persistent Volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), specify a `storageClassName` in the PV manifest as in this NFS example, then set the `storage.useStorageClass` parameter to the same:
+When using NFS, or generally if allocating from a defined Kubernetes [Persistent Volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), specify a `storageClassName` in the PV manifest as in this NFS example, then set the `storage.useStorageClass` parameter to the same:
 ```yaml
 # Persistent Volume example
 apiVersion: v1
@@ -161,56 +165,40 @@ spec:
 Note: NFS is currently supported for development and demo purposes. If using NFS also set the `storage.slow` parameter to 'true'.
 <br/>
 
-**Using a pre-created provider-specific volume**
+#### Use an existing PVC
 
+It is possible to use an existing PVC with its associated PV for storage, but it must be taken into account that the deployment will try to use any existing, potentially incompatible, configuration data on that volume.
 
+Provide this custom yaml fragment in `storage.customVolumeMount`:
 
-**Reusing storage with existing data**
+```yaml
+  customVolumeMount: |
+    persistentVolumeClaim:
+      claimName: existing-pvc-name
+```
 
-Under which circumstances can existing data be used?
+#### Using a pre-created provider-specific volume
 
+This quickstart is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. In this case provide the specifics on mounting it in a custom yaml fragment in `storage.customVolumeMount`.
 
-There are several options available to assign persistent storage volume to the PubSub+ directories.
+Following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk), note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
+```yaml
+  customVolumeMount: |
+    gcePersistentDisk:
+      pdName: my-data-disk
+      fsType: ext4
+```
+<br/>
 
-- The default way is to dynamically acquire a persistent volume from the "default" StorageClass of the Kubernetes platform.
-This is the simplest solution but the "default" storage class may not be adequate.
-
-- It is possible to ensure that a volume is dynamically acquired from a particular storage class. One or more storage classes may already exist or may need to be [created with desired properties](https://kubernetes.io/docs/concepts/storage/storage-classes/).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-This quickstart is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your Kubernetes environment supports. It has been specifically tested and has built-in support for:
-* awsElasticBlockStore (when specifying `aws` as cloud provider  in `values.yaml`); and
-* gcePersistentDisk (`aws` cloud provider)
-
-A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain a persistent storage that is external to the pod. It is expected that there is at least one StorageClass available in your environment. By default the `pubsubplus` chart `storage.useStorageClass` parameter is not set and the deployment will try to use the "default" StorageClass in your environment. Adjust the value to a specific StorageClass name if necessary.
-
-For a list of of available StorageClasses, execute
-
-Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
-
-#### Using NFS
-
-NFS is currently supported for development and demo purposes.
-
-Specify a StorageClass as part of creating an [NFS-based persistent volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), then provide this in the `storage.useStorageClass` parameter.
-
-Additionally, set the `storage.nfs` parameter to `true`. 
+Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volumes/#hostpath):
+```yaml
+  customVolumeMount: |
+    hostPath:
+      # directory location on host
+      path: /data
+      # this field is optional
+      type: Directory
+```
 
 ### Exposing the PubSub+ Event Broker Services
 

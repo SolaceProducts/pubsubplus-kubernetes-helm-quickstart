@@ -153,15 +153,16 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-{{- if not .Values.storage.persistent }}
+{{- if and ({{ if .Values.storage }}) (not .Values.storage.persistent) }}
         - name: data
           emptyDir: {}
-{{- else if .Values.storage.customVolumeMount }}
+{{- else if and ({{ if .Values.storage }}) (.Values.storage.customVolumeMount) }}
         - name: data
           {{- with .Values.storage.customVolumeMount }}
 {{ tpl . $ | indent 10 }}
           {{- end }}
 {{- else }}
+  # This is the default way to acquire volume for the data mount
   volumeClaimTemplates:
   - metadata:
       name: data
