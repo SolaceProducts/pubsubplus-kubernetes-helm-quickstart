@@ -55,8 +55,14 @@ Note: if there is no default storage class defined in your environment refer to 
 
 ### Install and configure Helm
 
+Helm is transitioning from v2 to v3. Most deployments still use v2.
+
 Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing-the-helm-client) for your platform.
+
 On Linux a simple option to set up the latest stable release is to run:
+
+<details open=true><summary>**Helm v2 setup**</summary>
+<p>
 ```bash
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
@@ -69,6 +75,17 @@ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceac
 helm init --wait --service-account=tiller --upgrade # this may take some time
 ```
 Warning: [more restricted Tiller privileges](/docs/PubSubPlusK8SDeployment.md#install-and-setup-the-helm-package-manager) are recommended in a production environment.
+</p>
+</details>
+
+<details><summary>**Helm v3 setup**</summary>
+<p>
+```bash
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+```
+</p>
+</details>
+
 
 Helm is configured properly if the command `helm version` returns no error.
 
