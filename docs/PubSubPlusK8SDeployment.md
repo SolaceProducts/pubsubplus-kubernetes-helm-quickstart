@@ -5,16 +5,22 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
 * For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](/pubsubplus/README.md).
 
+This document is applicable to any platform supporting Kubernetes.
+
 Contents:
-  * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub--software-event-broker)
+  * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub-software-event-broker)
   * [Overview](#overview)
-  * [The PubSub+ Helm Chart Deployment Considerations](#pubsub-helm-chart-deployment-considerations)
-    + [Available CPU and Memory Requirements](#available-cpu-and-memory-requirements)
+  * [PubSub+ Helm Chart Deployment Considerations](#pubsub-helm-chart-deployment-considerations)
+    + [Deployment scaling](#deployment-scaling)
+    + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
-      - [Using NFS](#using-nfs)
+      - [Using the default or an existing storage class](#using-the-default-or-an-existing-storage-class)
+      - [Creating a storage class](#creating-a-storage-class)
+      - [Using an existing PVC](#using-an-existing-pvc)
+      - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
-  * [Setting up Deployment Prerequisites](#setting-up-deployment-prerequisites)
+  * [Deployment Prerequisites](#deployment-prerequisites)
     + [Platform and tools setup](#platform-and-tools-setup)
       - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
       - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
@@ -124,7 +130,7 @@ kubectl get storageclass
 ```
 <br/>
 
-#### Creating a storage class
+#### Creating a new storage class
 
 Create a [specific storage class](//kubernetes.io/docs/concepts/storage/storage-classes/#provisioner) if no existing storage class meets your needs. Refer to your Kubernetes environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options. Example:
 ```yaml
@@ -165,7 +171,7 @@ spec:
 Note: NFS is currently supported for development and demo purposes. If using NFS also set the `storage.slow` parameter to 'true'.
 <br/>
 
-#### Use an existing PVC
+#### Using an existing PVC
 
 It is possible to use an existing PVC with its associated PV for storage, but it must be taken into account that the deployment will try to use any existing, potentially incompatible, configuration data on that volume.
 
@@ -228,32 +234,81 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
-## Setting up Deployment Prerequisites
+### PubSub+ Docker image
+
+The `image.repository` and `image.tag` parameters specify the PubSub+ Docker image to be used for the deployment. They can either point to an image in a public or private Docker repo.
+
+The default image location is the latest from the Solace [public Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is recommended to specify `image.tag` for traceability purposs.
+
+
+Decide which PubSub+ image to use.
+
+
+**Hint:** You may skip the rest of this step if not using a private Docker image registry (e.g.: GCR, ECR or Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
+
+To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
+
+| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
+| :---: | :---: |
+| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
+| [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
+
+To load the Solace Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+
+* Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
+* Login to the private registry:
+```sh
+sudo docker login <private-registry> ...
+```
+* First, load the image to the local docker registry:
+```sh
+# Option a): If you have a local tar.gz Docker image file
+sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
+# Option b): You can use the public Solace Docker image from Docker Hub
+sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
+
+# Verify the image has been loaded and note the associated "IMAGE ID"
+sudo docker images
+```
+* Tag the image with a name specific to the private registry and tag:
+```sh
+sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
+```
+* Push the image to the private registry
+```sh
+sudo docker push <private-registry>/<path>/<image-name>:<tag>
+```
+
+Following additional step may be required if using signed images:
+
+## Deployment Prerequisites
 
 ### Platform and tools setup
 
-#### Perform any necessary platform-specific setup
-
-- Amazon EKS
-- Azure AKS
-- GCP
-- OpenShift
-- Minikube
-- VMWare PKS
-
 #### Install the `kubectl` command-line tool
 
-Refer to [these instructions](//kubernetes.io/docs/tasks/tools/install-kubectl/) to install `kubectl` if your Kubernetes platform does not already provide this tool or equivalent (like `oc` in OpenShift).
+Refer to [these instructions](//kubernetes.io/docs/tasks/tools/install-kubectl/) to install `kubectl` if your environment does not already provide this tool or equivalent (like `oc` in OpenShift).
+
+#### Perform any necessary Kubernetes platform-specific setup
+
+This refers to getting your platform ready either by creating a new one or getting access to an existing one. Supported platforms include but are not restricted to:
+* Amazon EKS
+* Azure AKS
+* Google GCP
+* OpenShift
+* Minikube
+* VMWare PKS
+
+Check your platform running the `kubectl get nodes` command from your command-line client.
 
 #### Install and setup the Helm package manager
 
 The Solace PubSub+ event broker can be deployed using both Helm v2 (stable) and Helm v3 (about to be released). Most deployments currently use Helm v2.
 
-If `helm version` fails on your command-line client then this involves installing Helm and if using Helm v2 (default for now) then also deploying Tiller, its in-cluster operator.
+If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 (default for now) then also deploying Tiller, its in-cluster operator.
 
 1. Install the Helm client following [your platform-specific instructions](//helm.sh/docs/using_helm/#installing-the-helm-client ). For Linux, you can use:
 ```shell
-export DESIRED_VERSION=v2.15.2
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
 
@@ -267,7 +322,7 @@ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceac
 helm init --wait --service-account=tiller  --upgrade
 ```
 
-#### Restore Helm
+#### Restoring access to Helm
 
 Follow the [instructions to install Helm](https://helm.sh/docs/using_helm/#installing-helm ) in your environment.
 
@@ -281,46 +336,7 @@ It is also possible to [**use Helm v2 as a templating engine only, with no Tille
 
 #### Using Helm v3
 
-The Helm 3 executable is available at https://github.com/helm/helm/releases. Installation of Tiller is no longer required. Ensure that your v3 installation does not conflict with an existing Helm v2 installation. Further (at this time draft) documentation is available from https://v3.helm.sh/.
-
-### PubSub+ Docker image
-
-**Hint:** You may skip the rest of this step if not using a private Docker image registry (e.g.: GCR, ECR or Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
-
-To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
-
-| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
-| :---: | :---: |
-| Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
-| [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
-
-To load the Solace Docker image into other private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
-
-* Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
-* First load the image to the local docker registry:
-```sh
-# Option a): If you have a local tar.gz Docker image file
-sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
-# Option b): You can use the public Solace Docker image from Docker Hub
-sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
-
-# Verify the image has been loaded and note the associated "IMAGE ID"
-sudo docker images
-```
-* Login to the private registry:
-```sh
-sudo docker login <private-registry> ...
-```
-* Tag the image with the desired name and tag:
-```sh
-sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
-```
-* Push the image to the private registry
-```sh
-sudo docker push <private-registry>/<path>/<image-name>:<tag>
-```
-
-Note that additional steps may be required if using signed images.
+The Helm 3 executable is available from https://github.com/helm/helm/releases. Installation of Tiller is no longer required. Ensure that your v3 installation does not conflict with an existing Helm v2 installation. Further (at this time draft) documentation is available from https://v3.helm.sh/.
 
 ### Create and use ImagePullSecrets for signed images
 
