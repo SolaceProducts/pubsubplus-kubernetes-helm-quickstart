@@ -60,11 +60,11 @@ Contents:
 
 ## The Solace PubSub+ Software Event Broker
 
-The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Advanced Event Broker](https://solace.com/products/event-broker/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [PubSub+ Advanced Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premise, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premise environments, and brokers in multiple locations can be linked together in an [Event Mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-The PubSub+ Kubernetes deployment is defined by multiple yaml templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
+The PubSub+ Kubernetes deployment is defined by multiple YAML templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](https://helm.sh/docs/developing_charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
 * The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
@@ -234,17 +234,17 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
-### PubSub+ Docker image
+### Specifying the PubSub+ Docker image for the deployment
 
-The `image.repository` and `image.tag` parameters specify the PubSub+ Docker image to be used for the deployment. They can either point to an image in a public or private Docker repo.
+#### Source container registry
 
-The default image location is the latest from the Solace [public Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is recommended to specify `image.tag` for traceability purposs.
+The `image.repository` and `image.tag` parameters specify the PubSub+ Docker image to be used for the deployment. They can either point to an image in a public or in a private Docker container registry.
 
+The default parameters point to the latest release of the free PubSub+ Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
 
-Decide which PubSub+ image to use.
-
-
-**Hint:** You may skip the rest of this step if not using a private Docker image registry (e.g.: GCR, ECR or Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
+The following steps are applicable if using a private Docker container registry (e.g.: GCR, ECR or Harbor):
+1. Get the Solace PubSub+ event broker Docker image tar.gz archive
+2. Load the image into the private Docker registry 
 
 To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
 
@@ -262,11 +262,11 @@ sudo docker login <private-registry> ...
 ```
 * First, load the image to the local docker registry:
 ```sh
-# Option a): If you have a local tar.gz Docker image file
+# Options a or b depending on your Docker image source:
+## Option a): If you have a local tar.gz Docker image file
 sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
-# Option b): You can use the public Solace Docker image from Docker Hub
+## Option b): You can use the public Solace Docker image, such as from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
-
 # Verify the image has been loaded and note the associated "IMAGE ID"
 sudo docker images
 ```
@@ -280,6 +280,61 @@ sudo docker push <private-registry>/<path>/<image-name>:<tag>
 ```
 
 Following additional step may be required if using signed images:
+
+#### Using ImagePullSecrets for signed images
+
+ImagePullSecrets may be required if using signed images from a private Docker registry, e.g.: Harbor.
+
+Here is an example of creating an ImagePullSecret. Refer to your registry's documentation for the specific details of use.
+
+```sh
+kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private-registry-server> \
+  --docker-username=<registry-user-name> --docker-password=<registry-user-password> \
+  --docker-email=<registry-user-email>
+```
+
+Then set the `image.pullSecretName` value to `<pull-secret-name>`.
+
+### Security considerations
+
+#### Privileged false
+
+The PubSub+ container already runs in non-privileged mode.
+
+#### Securing Helm 
+
+Refer to [...]
+
+#### Enabling pod label "active" in a tight security environment
+
+Services require [pod label "active"](#using-pod-label-active-to-identify-the-active-event-broker-node) of the serving event broker.
+* In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
+* The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
+is used to associate "patch label" rights. For simplicity, by default this opens up cluster-wide access of patching pod labels for all service accounts. For label update to work in a restricted security environment, adjust `podtagupdater` to be a `Role` and use a `RoleBinding` only to the specific service account in the specific namespace:
+
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "solace.fullname" . }}-podtagupdater
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ template "solace.fullname" . }}-serviceaccounts-to-podtagupdater
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "solace.fullname" . }}-podtagupdater
+subjects:
+- kind: ServiceAccount
+  name: <My-Service-Account>
+  namespace: <My-Namespace>
+```
 
 ## Deployment Prerequisites
 
@@ -338,64 +393,9 @@ It is also possible to [**use Helm v2 as a templating engine only, with no Tille
 
 The Helm 3 executable is available from https://github.com/helm/helm/releases. Installation of Tiller is no longer required. Ensure that your v3 installation does not conflict with an existing Helm v2 installation. Further (at this time draft) documentation is available from https://v3.helm.sh/.
 
-### Create and use ImagePullSecrets for signed images
-
-ImagePullSecrets may be required if using signed images from a private Docker registry, e.g.: Harbor.
-
-Here is an example of creating an ImagePullSecret. Refer to your registry's documentation for the specific details of use.
-
-```sh
-kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private-registry-server> \
-  --docker-username=<registry-user-name> --docker-password=<registry-user-password> \
-  --docker-email=<registry-user-email>
-```
-
-Then set the `image.pullSecretName` value to `<pull-secret-name>`.
-
 ### Persistent Storage
 
 Ensure to have a way of assigning a storage volume to PubSub+ data directories, follow section [Disk Storage](#disk-storage).
-
-### Security considerations
-
-#### Privileged false
-
-The PubSub+ container already runs in non-privileged mode.
-
-#### Securing Helm 
-
-Refer to [...]
-
-#### Enabling pod label "active" in a tight security environment
-
-* In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
-
-* The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
-is used to associate "patch label" rights. For simplicity, by default this opens up cluster-wide access of patching pod labels for all service accounts. For label update to work in a restricted security environment, adjust `podtagupdater` to be a `Role` and use a `RoleBinding` only to the specific service account in the specific namespace:
-
-```yaml
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{ template "solace.fullname" . }}-podtagupdater
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["pods"]
-  verbs: ["patch"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: {{ template "solace.fullname" . }}-serviceaccounts-to-podtagupdater
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: {{ template "solace.fullname" . }}-podtagupdater
-subjects:
-- kind: ServiceAccount
-  name: <My-Service-Account>
-  namespace: <My-Namespace>
-```
 
 ## Deployment options
 
