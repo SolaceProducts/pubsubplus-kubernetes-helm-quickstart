@@ -61,10 +61,7 @@ Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing
 
 On Linux a simple option to set up the latest stable release is to run:
 
-<details open=true>
-<summary>
-**Instructions for Helm v2 setup**
-</summary>
+<details open=true><summary><b>Instructions for Helm v2 setup</b></summary>
 <p>
 
 ```bash
@@ -82,10 +79,7 @@ Warning: [more restricted Tiller privileges](/docs/PubSubPlusK8SDeployment.md#in
 </p>
 </details>
 
-<details>
-<summary>
-**Instructions for Helm v3 setup**
-</summary>
+<details open=true><summary><b>Instructions for Helm v3 setup</b></summary>
 <p>
 
 ```bash
