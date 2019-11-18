@@ -90,39 +90,6 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 
 Helm is configured properly if the command `helm version` returns no error.
 
-<div class="container">
-  <h2>Dynamic Tabs</h2>
-  <p>To make the tabs toggleable, add the data-toggle="tab" attribute to each link. Then add a .tab-pane class with a unique ID for every tab and wrap them inside a div element with class .tab-content.</p>
-
-  <ul class="nav nav-tabs">
-    <li class="active"><a data-toggle="tab" href="#home">Home</a></li>
-    <li><a data-toggle="tab" href="#menu1">Menu 1</a></li>
-    <li><a data-toggle="tab" href="#menu2">Menu 2</a></li>
-    <li><a data-toggle="tab" href="#menu3">Menu 3</a></li>
-  </ul>
-
-  <div class="tab-content">
-    <div id="home" class="tab-pane fade in active">
-      <h3>HOME</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-    </div>
-    <div id="menu1" class="tab-pane fade">
-      <h3>Menu 1</h3>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-    </div>
-    <div id="menu2" class="tab-pane fade">
-      <h3>Menu 2</h3>
-      <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
-    </div>
-    <div id="menu3" class="tab-pane fade">
-      <h3>Menu 3</h3>
-      <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
-    </div>
-  </div>
-</div>
-
-
-
 
 ### Install Solace PubSub+ with default configuration
 
@@ -132,6 +99,9 @@ helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickst
 ```
 
 Use one of the chart variants to create a deployment. For configuration options and delete instructions, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
+
+<details open=true><summary><b>Instructions for Helm v2 setup</b></summary>
+<p>
 
 a) Create a Solace PubSub+ minimum deployment for development purposes using `pubsubplus-dev`. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
 ```bash
@@ -150,7 +120,31 @@ c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling usi
 # Deploy PubSub+ Standard edition, HA
 helm install --name my-release solacecharts/pubsubplus-ha
 ```
+</p>
+</details>
 
+<details><summary><b>Instructions for Helm v3 setup</b></summary>
+<p>
+
+a) Create a Solace PubSub+ minimum deployment for development purposes using `pubsubplus-dev`. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
+```bash
+# Deploy PubSub+ Standard edition, minimum footprint developer version
+helm install my-release solacecharts/pubsubplus-dev
+```
+
+b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling using `pubsubplus`. Minimum 2 CPUs and 4 GB of memory must be available to the PubSub+ event broker pod.
+```bash
+# Deploy PubSub+ Standard edition, Standalone
+helm install my-release solacecharts/pubsubplus
+```
+
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ event broker pods.
+```bash
+# Deploy PubSub+ Standard edition, HA
+helm install my-release solacecharts/pubsubplus-ha
+```
+</p>
+</details>
 Above options will start the deployment and write related information and notes to the screen.
 
 Wait for the deployment to complete following the instructions, then you can [try out the management and messaging services](docs/PubSubPlusK8SDeployment.md#validating-the-deployment). Refer to the [Troubleshooting guide](docs/PubSubPlusK8SDeployment.md#troubleshooting) if any issues.
