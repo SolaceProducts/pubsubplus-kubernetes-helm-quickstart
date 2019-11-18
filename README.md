@@ -100,7 +100,7 @@ helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickst
 
 Use one of the chart variants to create a deployment. For configuration options and delete instructions, refer to the [PubSub+ Helm Chart documentation](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
 
-<details open=true><summary><b>Instructions for Helm v2 setup</b></summary>
+<details open=true><summary><b>Instructions using Helm v2</b></summary>
 <p>
 
 a) Create a Solace PubSub+ minimum deployment for development purposes using `pubsubplus-dev`. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
@@ -123,7 +123,7 @@ helm install --name my-release solacecharts/pubsubplus-ha
 </p>
 </details>
 
-<details><summary><b>Instructions for Helm v3 setup</b></summary>
+<details><summary><b>Instructions using Helm v3</b></summary>
 <p>
 
 a) Create a Solace PubSub+ minimum deployment for development purposes using `pubsubplus-dev`. It requires minimum 1 CPU and 2 GB of memory available to the PubSub+ event broker pod.
