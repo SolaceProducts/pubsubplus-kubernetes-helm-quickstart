@@ -15,25 +15,26 @@ Contents:
     + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
       - [Using the default or an existing storage class](#using-the-default-or-an-existing-storage-class)
-      - [Creating a storage class](#creating-a-storage-class)
+      - [Creating a new storage class](#creating-a-new-storage-class)
       - [Using an existing PVC](#using-an-existing-pvc)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
-  * [Deployment Prerequisites](#deployment-prerequisites)
-    + [Platform and tools setup](#platform-and-tools-setup)
-      - [Perform any necessary platform-specific setup](#perform-any-necessary-platform-specific-setup)
-      - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
-      - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
-      - [Restore Helm](#restore-helm)
-      - [Using Helm v3](#using-helm-v3)
-    + [PubSub+ Docker image](#pubsub-docker-image)
-    + [Create and use ImagePullSecrets for signed images](#create-and-use-imagepullsecrets-for-signed-images)
-    + [Persistent Storage](#persistent-storage)
+    + [The PubSub+ Docker image](#the-pubsub-docker-image)
+      - [Source container registry](#source-container-registry)
+      - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
     + [Security considerations](#security-considerations)
       - [Privileged false](#privileged-false)
       - [Securing Helm](#securing-helm)
       - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
+  * [Deployment Prerequisites](#deployment-prerequisites)
+    + [Platform and tools setup](#platform-and-tools-setup)
+      - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
+      - [Perform any necessary Kubernetes platform-specific setup](#perform-any-necessary-kubernetes-platform-specific-setup)
+      - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
+      - [Restoring access to Helm](#restoring-access-to-helm)
+      - [Using Helm v3](#using-helm-v3)
+    + [Persistent Storage](#persistent-storage)
   * [Deployment options](#deployment-options)
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
@@ -57,6 +58,7 @@ Contents:
   * [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
   * [Deleting a Deployment](#deleting-a-deployment)
   * [Additional notes](#additional-notes)
+
 
 ## The Solace PubSub+ Software Event Broker
 
@@ -128,7 +130,6 @@ Set the `storage.useStorageClass` parameter to use a particular storage class or
 # Check existing storage classes
 kubectl get storageclass
 ```
-<br/>
 
 #### Creating a new storage class
 
@@ -144,9 +145,8 @@ parameters:
   type: io1
   fsType: xsf
 ```
-<br/>
 
-When using NFS, or generally if allocating from a defined Kubernetes [Persistent Volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), specify a `storageClassName` in the PV manifest as in this NFS example, then set the `storage.useStorageClass` parameter to the same:
+If using NFS, or generally if allocating from a defined Kubernetes [Persistent Volume](//kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes), specify a `storageClassName` in the PV manifest as in this NFS example, then set the `storage.useStorageClass` parameter to the same:
 ```yaml
 # Persistent Volume example
 apiVersion: v1
@@ -171,7 +171,7 @@ spec:
 Note: NFS is currently supported for development and demo purposes. If using NFS also set the `storage.slow` parameter to 'true'.
 <br/>
 
-#### Using an existing PVC
+#### Using an existing PVC (Persistent Volume Claim)
 
 It is possible to use an existing PVC with its associated PV for storage, but it must be taken into account that the deployment will try to use any existing, potentially incompatible, configuration data on that volume.
 
@@ -234,13 +234,15 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
-### Specifying the PubSub+ Docker image for the deployment
+### The PubSub+ Docker image
 
-#### Source container registry
+The `image.repository` and `image.tag` parameters combined specify the PubSub+ Docker image to be used for the deployment. They can either point to an image in a public or in a private Docker container registry. 
 
-The `image.repository` and `image.tag` parameters specify the PubSub+ Docker image to be used for the deployment. They can either point to an image in a public or in a private Docker container registry.
+#### Using a public registry
 
-The default parameters point to the latest release of the free PubSub+ Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
+The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free PubSub+ Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
+
+#### Using private registries
 
 The following steps are applicable if using a private Docker container registry (e.g.: GCR, ECR or Harbor):
 1. Get the Solace PubSub+ event broker Docker image tar.gz archive
@@ -279,11 +281,9 @@ sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
 sudo docker push <private-registry>/<path>/<image-name>:<tag>
 ```
 
-Following additional step may be required if using signed images:
-
 #### Using ImagePullSecrets for signed images
 
-ImagePullSecrets may be required if using signed images from a private Docker registry, e.g.: Harbor.
+An additional ImagePullSecret may be required if using signed images from a private Docker registry, e.g.: Harbor.
 
 Here is an example of creating an ImagePullSecret. Refer to your registry's documentation for the specific details of use.
 
@@ -293,7 +293,7 @@ kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private
   --docker-email=<registry-user-email>
 ```
 
-Then set the `image.pullSecretName` value to `<pull-secret-name>`.
+Then set the `image.pullSecretName` chart value to `<pull-secret-name>`.
 
 ### Security considerations
 

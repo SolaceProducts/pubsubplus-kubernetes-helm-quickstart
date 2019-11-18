@@ -10,7 +10,7 @@ Additional documentation is available from the [Solace PubSub+ Event Broker on K
 
 ## Prerequisites
 
-* Kubernetes 1.9 or later platform with adequate [CPU and memory](/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](/docs/PubSubPlusK8SDeployment.md#storage-requirements) for the targeted scaling tier requirements
+* Kubernetes 1.9 or later platform with adequate [CPU and memory](/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager installed and configured with Tiller deployed if using Helm v2
 * If using a private Docker registry, load the PubSub+ Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#configuration)):
