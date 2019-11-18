@@ -35,12 +35,9 @@ Contents:
       - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
         * [Helm v2](#helm-v2)
         * [Helm v3](#helm-v3)
-    + [Persistent Storage](#persistent-storage)
-  * [Deployment options](#deployment-options)
+  * [Deployment steps](#deployment-steps)
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
-      - [Step 1: Generate Kubernetes templates for Solace event broker deployment](#step-1-generate-kubernetes-templates-for-solace-event-broker-deployment)
-      - [Step 2: Deploy the templates on the target system](#step-2-deploy-the-templates-on-the-target-system)
   * [Validating the Deployment](#validating-the-deployment)
     + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
       - [WebUI, SolAdmin and SEMP access](#webui-soladmin-and-semp-access)
@@ -71,10 +68,10 @@ The [PubSub+ Advanced Event Broker](https://solace.com/products/event-broker/) o
 The PubSub+ Kubernetes deployment is defined by multiple YAML templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization through only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete. To enable this using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by deployment prerequisites and the actual deployment steps.
+The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
 ## PubSub+ Helm Chart Deployment Considerations
 
@@ -306,12 +303,11 @@ The PubSub+ container already runs in non-privileged mode.
 
 #### Securing Helm v2
 
-By default Tiller is deployed in a permissive configuration.
+Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
 
 [Securing your Helm Installation](//v2.helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
 
 Particularly, the [Role-based Access Control section of the Helm documentation](//v2.helm.sh/docs/using_helm/#role-based-access-control) provides options that should be used in RBAC-enabled Kubernetes environments (v1.6+).
-
 
 #### Enabling pod label "active" in a tight security environment
 
@@ -400,11 +396,7 @@ The Helm v3 executable is available from https://github.com/helm/helm/releases .
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 ```
 
-### Persistent Storage
-
-Ensure to have a way of assigning a storage volume to PubSub+ data directories, follow section [Disk Storage](#disk-storage).
-
-## Deployment options
+## Deployment steps
 
 As discussed in the [Overview](#overview), two types of deployments will be described:
 * Deployment steps using Helm, as package manager
@@ -454,7 +446,7 @@ This method will first generate installable Kubernetes templates from this proje
 
 Note that later sections of this document about modifying, upgrading or deleting a Deployment using the Helm tool do not apply.
 
-#### Step 1: Generate Kubernetes templates for Solace event broker deployment
+**Step 1: Generate Kubernetes templates for Solace event broker deployment**
 
 1) Clone this project:
 
@@ -499,7 +491,7 @@ mkdir generated-templates
 
 The generated set of templates are now available in the `<project-root>/solace/generated-templates` directory.
 
-#### Step 2: Deploy the templates on the target system
+**Step 2: Deploy the templates on the target system**
 
 Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
 
@@ -532,7 +524,7 @@ Wait for the deployment to complete, which is then ready to use.
 
 ## Validating the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA configuration is deployed with pod/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that Helm dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA configuration is deployed with pod/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -598,14 +590,14 @@ $ssh -p 22 admin@35.202.131.158
 Solace PubSub+ Standard
 Password:
 
-Solace PubSub+ Standard Version 8.10.0.1057
+Solace PubSub+ Standard Version 9.3.0.105
 
 The Solace PubSub+ Standard is proprietary software of
 Solace Corporation. By accessing the Solace PubSub+ Standard
 you are agreeing to the license terms and conditions located at
 //www.solace.com/license-software
 
-Copyright 2004-2018 Solace Corporation. All rights reserved.
+Copyright 2004-2019 Solace Corporation. All rights reserved.
 
 To purchase product support, please contact Solace at:
 //dev.solace.com/contact-us/
@@ -650,9 +642,9 @@ kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
 
 ### Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](//dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal [APIs & Protocols](https://docs.solace.com/APIs.htm). Under each option there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
-Use the external Public IP to access the deployment. If a port required for a protocol is not opened, refer to the next section on how to open it up.
+Use the external Public IP to access the deployment. If a port required for a protocol is not opened, refer to the [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services) section.
 
 ## Troubleshooting
 
