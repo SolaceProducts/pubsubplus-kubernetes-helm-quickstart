@@ -61,8 +61,13 @@ Follow the [Helm installation guide](https://helm.sh/docs/using_helm/#installing
 
 On Linux a simple option to set up the latest stable release is to run:
 
-<details open=true><summary>**Helm v2 setup**</summary>
+<details open=true>
+<summary>
+
+**Helm v2 setup**
+</summary>
 <p>
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 ```
@@ -78,8 +83,13 @@ Warning: [more restricted Tiller privileges](/docs/PubSubPlusK8SDeployment.md#in
 </p>
 </details>
 
-<details><summary>**Helm v3 setup**</summary>
+<details>
+<summary>
+
+**Helm v3 setup**
+</summary>
 <p>
+
 ```bash
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 ```
