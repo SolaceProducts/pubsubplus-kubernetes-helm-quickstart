@@ -269,6 +269,7 @@ sudo docker login <private-registry> ...
 sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
 ## Option b): You can use the public Solace Docker image, such as from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
+#
 # Verify the image has been loaded and note the associated "IMAGE ID"
 sudo docker images
 ```
