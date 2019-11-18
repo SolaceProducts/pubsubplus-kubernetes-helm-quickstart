@@ -63,8 +63,7 @@ On Linux a simple option to set up the latest stable release is to run:
 
 <details open=true>
 <summary>
-
-**Helm v2 setup**
+**Instructions for Helm v2 setup**
 </summary>
 <p>
 
@@ -85,8 +84,7 @@ Warning: [more restricted Tiller privileges](/docs/PubSubPlusK8SDeployment.md#in
 
 <details>
 <summary>
-
-**Helm v3 setup**
+**Instructions for Helm v3 setup**
 </summary>
 <p>
 
