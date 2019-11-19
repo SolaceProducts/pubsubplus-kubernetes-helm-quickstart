@@ -699,21 +699,18 @@ To upgrade/modify the message broker deployment, make the required modifications
 
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
-- Add the new version of the message broker to your container registry.
+- Add the new version of the message broker to your container registry, then
 - Either:
-  - Set the new image in the upgrade command: 
-  
-```sh
+  - Set the new image in the Helm upgrade command: 
+```bash
 helm upgrade my-release solacecharts/pubsubplus \
   --set image.repository=<repo>/<project>/solace-pubsub-standard \
         image.tag=NEW.VERSION.XXXXX \
         image.pullPolicy=IfNotPresent
 ```
-  
   - Or create a simple `upgrade.yaml` file and use that to upgrade the release:
-
 ```bash
-tee ./upgrade.yaml <<-EOF   # create update file with following contents:
+tee ./upgrade.yaml <<-EOF   # create upgrade file with following contents:
 image:
   repository: <repo>/<project>/solace-pubsub-standard
   tag: NEW.VERSION.XXXXX
@@ -733,7 +730,6 @@ service:
       containerPort: 5671
       protocol: TCP
       name: amqptls
-
 EOF
 helm upgrade my-release solacecharts/pubsubplus --values port-update.yaml
 ```
