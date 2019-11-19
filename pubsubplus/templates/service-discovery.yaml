@@ -1,12 +1,13 @@
+{{- if .Values.solace.redundancy }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "solace.fullname" . }}-discovery
   labels:
-    heritage: {{ .Release.Service }}
-    release: {{ .Release.Name }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app: {{ template "solace.name" . }}
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
@@ -23,6 +24,7 @@ spec:
     name: ha-conf-sync2
   clusterIP: None
   selector:
-    app: {{ template "solace.name" . }}
-    release: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
   publishNotReadyAddresses: true
+{{- end }}

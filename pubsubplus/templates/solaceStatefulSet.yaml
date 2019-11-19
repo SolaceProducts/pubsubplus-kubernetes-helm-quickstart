@@ -4,15 +4,15 @@ kind: StatefulSet
 metadata:
   name: {{ template "solace.fullname" . }}
   labels:
-    app: {{ template "solace.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   selector:
     matchLabels:
-      app: {{ template "solace.name" . }}
-      release: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ template "solace.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
   podManagementPolicy: Parallel
@@ -21,8 +21,8 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "solace.name" . }}
-        release: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ template "solace.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
 {{- if .Values.image.pullSecretName }}
       imagePullSecrets:
