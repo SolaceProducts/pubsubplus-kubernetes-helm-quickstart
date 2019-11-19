@@ -48,14 +48,16 @@ Contents:
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
     + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
-      - [General troubleshooting hints](#general-troubleshooting-hints)
-      - [Pods stuck not enough resources](#pods-stuck-not-enough-resources)
-      - [Pods stuck no storage](#pods-stuck-no-storage)
-      - [Pods stuck in CrashLoopBackoff or Failed](#pods-stuck-in-crashloopbackoff-or-failed)
+      - [General Kubernetes troubleshooting hints](#general-kubernetes-troubleshooting-hints)
+      - [Pods stuck in not enough resources](#pods-stuck-in-not-enough-resources)
+      - [Pods stuck in no storage](#pods-stuck-in-no-storage)
+      - [Pods stuck in CrashLoopBackoff, Failed or Not Ready](#pods-stuck-in-crashloopbackoff-failed-or-not-ready)
       - [Security constraints](#security-constraints)
   * [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
+      - [Upgrade example](#upgrade-example)
+      - [Modification example](#modification-example)
   * [Deleting a Deployment](#deleting-a-deployment)
-  * [Additional notes](#additional-notes)
+
 
 
 
@@ -677,17 +679,17 @@ kubectl get events  # use -w to watch live
 #### General Kubernetes troubleshooting hints
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
 
-#### Pods stuck not enough resources
+#### Pods stuck in not enough resources
 
 If pods stay in pending state and `kubectl describe pods` reveals there are not enough memory or CPU resources, check the [resource requirements of the targeted scaling tier](#cpu-and-memory-requirements) of your deployment and ensure adequate node resources are available.
 
-#### Pods stuck no storage
+#### Pods stuck in no storage
 
 Pods may also stay in pending state because [storage requirements](#storage) cannot be met. Check `kubectl get pv,pvc`. PVCs and PVs should be in bound state and if not then use `kubectl describe pvc` for any issues.
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the PubSub+ container start. Try to recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
+For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
 
 #### Security constraints
 
@@ -757,7 +759,6 @@ service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            
 
 > Note: Helm will not clean up all the deployment artifacts, e.g.: pvc/ and pv/. Use `kubectl delete` to delete those.
 
-## Additional notes
 
 
 
