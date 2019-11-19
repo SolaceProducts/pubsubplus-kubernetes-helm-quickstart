@@ -695,20 +695,22 @@ Your Kubernetes environment's security constraints may also impact successful de
 
 ## Modifying or upgrading a Deployment
 
-To upgrade/modify the message broker deployment, make the required modifications to the chart in setting the different parameters or creating an upgrade `<values-file>` YAML file. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+Use the `helm upgrade` command to upgrade/modify the message broker deployment: request the required modifications to the chart in passing the the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+
+#### Upgrade example
 
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry, then
 - Either:
-  - Set the new image in the Helm upgrade command: 
+  * Set the new image in the Helm upgrade command: 
 ```bash
 helm upgrade my-release solacecharts/pubsubplus \
   --set image.repository=<repo>/<project>/solace-pubsub-standard \
         image.tag=NEW.VERSION.XXXXX \
         image.pullPolicy=IfNotPresent
 ```
-  - Or create a simple `upgrade.yaml` file and use that to upgrade the release:
+  * Or create a simple `upgrade.yaml` file and use that to upgrade the release:
 ```bash
 tee ./upgrade.yaml <<-EOF   # create upgrade file with following contents:
 image:
@@ -720,7 +722,9 @@ helm upgrade my-release solacecharts/pubsubplus -f upgrade.yaml
 ```
 Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, Backup, Primary) taken down for upgrade in an HA deployment. This will affect running message broker instances, result in potentially multiple failovers and requires connection retries configured in the client.
 
-Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT TLS port to the loadbalancer.
+#### Modification example
+
+Similarly, to **modify** deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT TLS port, that is not included by default, to the loadbalancer.
 
 ```bash
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
