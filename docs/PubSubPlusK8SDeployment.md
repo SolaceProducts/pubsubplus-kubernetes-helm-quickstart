@@ -412,7 +412,7 @@ Add or refresh a local Solace `solacecharts` repo:
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
-#
+
 # Install from the repo
 ## Using Helm v2:
 helm install  --name my-release solacecharts/pubsubplus
@@ -431,7 +431,7 @@ Refer to the [quick start](/README.md) for additional deployment details.
 
 If more customization than just using Helm parameters is required, it is possible to create your own fork so templates can be edited:
 ```bash
-# This creates a local directory with the published templates
+# This creates a local directory from the published templates
 helm fetch solacecharts/pubsubplus --untar
 # Use the Helm chart from this directory
 helm install ./pubsubplus
@@ -666,7 +666,7 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace message broker deployment.
 
-It is recommeded to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
+It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 
 ```sh
 kubectl get events  # use -w to watch live
@@ -674,105 +674,68 @@ kubectl get events  # use -w to watch live
 
 ### Solace event broker troubleshooting
 
-#### General troubleshooting hints
+#### General Kubernetes troubleshooting hints
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
 
 #### Pods stuck not enough resources
 
--> Increase K8S resources
+If pods stay in pending state and `kubectl describe pods` reveals there are not enough memory or CPU resources, check the [resource requirements of the targeted scaling tier](#cpu-and-memory-requirements) of your deployment and ensure adequate node resources are available.
 
 #### Pods stuck no storage
 
-=> have a storage or use ephemeral (not for Production!)
+Pods may also stay in pending state because [storage requirements](#storage) cannot be met. Check `kubectl get pv,pvc`. PVCs and PVs should be in bound state and if not then use `kubectl describe pvc` for any issues.
 
-#### Pods stuck in CrashLoopBackoff or Failed
+#### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-=> increase the Liveliness probe timeout and retry
+For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the PubSub+ container start. Try to recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
 
 #### Security constraints
 
-=> ensure adequate RBAC for your roles
-=> open up network access to the k8s aAPI
-
-
+Your Kubernetes environment's security constraints may also impact successful deployment. Review the [Security considerations](#security-considerations) section.
 
 ## Modifying or upgrading a Deployment
 
-To upgrade/modify the message broker deployment, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+To upgrade/modify the message broker deployment, make the required modifications to the chart in setting the different parameters or creating an upgrade `<values-file>` YAML file. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 To **upgrade** the version of the message broker running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry.
-- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
-
+- Either:
+  - Set the new image in the upgrade command: 
+  
 ```sh
+helm upgrade my-release solacecharts/pubsubplus \
+  --set image.repository=<repo>/<project>/solace-pubsub-standard \
+        image.tag=NEW.VERSION.XXXXX \
+        image.pullPolicy=IfNotPresent
+```
+  
+  - Or create a simple `upgrade.yaml` file and use that to upgrade the release:
+
+```bash
+tee ./upgrade.yaml <<-EOF   # create update file with following contents:
 image:
   repository: <repo>/<project>/solace-pubsub-standard
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
+EOF
+helm upgrade my-release solacecharts/pubsubplus -f upgrade.yaml
 ```
-- Upgrade the Kubernetes release.
-
 Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, Backup, Primary) taken down for upgrade in an HA deployment. This will affect running message broker instances, result in potentially multiple failovers and requires connection retries configured in the client.
 
-```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
-helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
-```
+Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT TLS port to the loadbalancer.
 
-
-Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
-
-```
-cd ~/workspace/solace-kubernetes-quickstart/solace
+```bash
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
-  internal: false
-  type: LoadBalancer
-  externalPort:
-    - port: 1883
+  ports:
+    - servicePort: 5671
+      containerPort: 5671
       protocol: TCP
-      name: mqtt
-      targetport: 1883
-    - port: 22
-      protocol: TCP
-      name: ssh
-      targetport: 2222
-    - port: 8080
-      protocol: TCP
-      name: semp
-    - port: 55555
-      protocol: TCP
-      name: smf
-    - port: 943
-      protocol: TCP
-      name: semptls
-      targetport: 60943
-    - port: 80
-      protocol: TCP
-      name: web
-      targetport: 60080
-    - port: 443
-      protocol: TCP
-      name: webtls
-      targetport: 60443
-  internalPort:
-    - port: 2222
-      protocol: TCP
-    - port: 8080
-      protocol: TCP
-    - port: 55555
-      protocol: TCP
-    - port: 60943
-      protocol: TCP
-    - port: 60080
-      protocol: TCP
-    - port: 60443
-      protocol: TCP
-    - port: 1883
-      protocol: TCP
+      name: amqptls
+
 EOF
-helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
+helm upgrade my-release solacecharts/pubsubplus --values port-update.yaml
 ```
 
 
@@ -781,7 +744,7 @@ helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 Use Helm to delete a deployment, also called a release:
 
 ```
-helm delete XXX-XXX
+helm delete my-release
 ```
 
 Check what has remained from the deployment, which should only return a single line with svc/kubernetes:
