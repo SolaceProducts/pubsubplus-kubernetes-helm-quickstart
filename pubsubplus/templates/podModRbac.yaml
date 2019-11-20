@@ -1,5 +1,5 @@
 # Deployment requires the capability of patching the pod to indicate active state for load balancing
-kind: ClusterRole
+kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "solace.fullname" . }}-podtagupdater
@@ -8,13 +8,13 @@ rules:
   resources: ["pods"]
   verbs: ["patch"]
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "solace.fullname" . }}-serviceaccounts-to-podtagupdater
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: {{ template "solace.fullname" . }}-podtagupdater
 subjects:
 - kind: Group

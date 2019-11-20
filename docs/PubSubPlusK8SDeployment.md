@@ -315,32 +315,7 @@ Particularly, the [Role-based Access Control section of the Helm documentation](
 
 Services require [pod label "active"](#using-pod-label-active-to-identify-the-active-event-broker-node) of the serving event broker.
 * In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
-* The template [podModRbac.yaml](//github.com/SolaceProducts/solace-kubernetes-quickstart/blob/master/solace/templates/podModRbac.yaml )
-is used to associate "patch label" rights. For simplicity, by default this opens up cluster-wide access of patching pod labels for all service accounts. For label update to work in a restricted security environment, adjust `podtagupdater` to be a `Role` and use a `RoleBinding` only to the specific service account in the specific namespace:
 
-```yaml
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{ template "solace.fullname" . }}-podtagupdater
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["pods"]
-  verbs: ["patch"]
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: {{ template "solace.fullname" . }}-serviceaccounts-to-podtagupdater
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: {{ template "solace.fullname" . }}-podtagupdater
-subjects:
-- kind: ServiceAccount
-  name: <My-Service-Account>
-  namespace: <My-Namespace>
-```
 
 ## Deployment Prerequisites
 
