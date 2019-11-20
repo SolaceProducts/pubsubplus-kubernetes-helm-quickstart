@@ -2,41 +2,6 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-11-20T14:36:22.654456021Z"
-    description: Deploy a single-node non-HA Solace PubSub+ software event broker
-      onto a Kubernetes Cluster
-    digest: 845a63a6cba2e7af9e19b6d7ce61744315f3b7fb2b172634558d01bb37acb8e7
-    home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
-    keywords:
-    - solace
-    - pubsubplus
-    - pubsub+
-    - advanced event broker
-    - event broker
-    - event mesh
-    - event portal
-    - event-driven integration
-    - event streaming
-    - event management
-    - message broker
-    - message queue
-    maintainers:
-    - email: balazs.czoma@solace.com
-      name: Balazs Czoma
-    - email: ken.barr@solace.com
-      name: Ken Barr
-    - email: philippe.khalife@solace.com
-      name: Philippe Khalife
-    - email: support@solace.com
-      name: Solace Support
-    name: pubsubplus
-    sources:
-    - https://github.com/SolaceProducts/solace-kubernetes-quickstart
-    urls:
-    - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-2.0.0.tgz
-    version: 2.0.0
-  - apiVersion: v1
     created: "2019-11-20T14:36:22.652930525Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
@@ -73,41 +38,6 @@ entries:
     version: 1.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-11-20T14:36:22.657009847Z"
-    description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
-      event broker onto a Kubernetes Cluster for development purposes
-    digest: 471c3d5eec74ea1962ee21a1cea8e66926c3034d8a81f8b30b40d911cc55fadc
-    home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
-    keywords:
-    - solace
-    - pubsubplus
-    - pubsub+
-    - advanced event broker
-    - event broker
-    - event mesh
-    - event portal
-    - event-driven integration
-    - event streaming
-    - event management
-    - message broker
-    - message queue
-    maintainers:
-    - email: balazs.czoma@solace.com
-      name: Balazs Czoma
-    - email: ken.barr@solace.com
-      name: Ken Barr
-    - email: philippe.khalife@solace.com
-      name: Philippe Khalife
-    - email: support@solace.com
-      name: Solace Support
-    name: pubsubplus-dev
-    sources:
-    - https://github.com/SolaceProducts/solace-kubernetes-quickstart
-    urls:
-    - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-dev-2.0.0.tgz
-    version: 2.0.0
-  - apiVersion: v1
     created: "2019-11-20T14:36:22.656112566Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
@@ -143,41 +73,6 @@ entries:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-dev-1.0.0.tgz
     version: 1.0.0
   pubsubplus-ha:
-  - apiVersion: v1
-    created: "2019-11-20T14:36:22.658747579Z"
-    description: Deploy an HA redundancy group of Solace PubSub+ software event broker
-      onto a Kubernetes Cluster
-    digest: c85486020c42a795640cc22364a5427aa12665e1619d5d9c1f865b511fb83d3e
-    home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
-    keywords:
-    - solace
-    - pubsubplus
-    - pubsub+
-    - advanced event broker
-    - event broker
-    - event mesh
-    - event portal
-    - event-driven integration
-    - event streaming
-    - event management
-    - message broker
-    - message queue
-    maintainers:
-    - email: balazs.czoma@solace.com
-      name: Balazs Czoma
-    - email: ken.barr@solace.com
-      name: Ken Barr
-    - email: philippe.khalife@solace.com
-      name: Philippe Khalife
-    - email: support@solace.com
-      name: Solace Support
-    name: pubsubplus-ha
-    sources:
-    - https://github.com/SolaceProducts/solace-kubernetes-quickstart
-    urls:
-    - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-2.0.0.tgz
-    version: 2.0.0
   - apiVersion: v1
     created: "2019-11-20T14:36:22.657838496Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
