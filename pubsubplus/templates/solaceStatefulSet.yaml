@@ -86,10 +86,13 @@ spec:
             - /mnt/disks/solace/readiness_check.sh
         securityContext:
           privileged: false
+{{- if semverCompare "<9.4" (default "9.3" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
+          # need capabilities opened up is PubSub+ version is lower than 9.4
           capabilities:
             add:
               - IPC_LOCK
               - SYS_NICE
+{{- end }}
         env:
         - name: STATEFULSET_NAME
           value: {{ template "solace.fullname" . }}
