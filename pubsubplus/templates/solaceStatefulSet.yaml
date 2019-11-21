@@ -28,6 +28,46 @@ spec:
       imagePullSecrets:
       - name: {{ .Values.image.pullSecretName}}
 {{- end}}
+{{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- if and (.Values.securityContext.runAsUser) }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+      {{- end }}
+{{- end }}
+{{- if and (.Values.storage.setVolumePermissions) (.Values.storage.persistent) (.Values.securityContext.enabled) (.Values.securityContext.runAsUser) }}
+      initContainers:
+      - name: volume-permissions
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        command:
+         - bash
+         - "-ec"
+         - |
+           /bin/chown -R {{ .Values.securityContext.runAsUser }} /usr/sw/
+           /bin/chown -R {{ .Values.securityContext.runAsUser }} /var/lib/solace
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: data
+          mountPath: "/usr/sw/internalSpool"
+          subPath: internalSpool
+        - name: data
+          mountPath: "/usr/sw/internalSpool/softAdb"
+          subPath: softAdb
+        - name: data
+          mountPath: "/usr/sw/adb"
+          subPath: adb
+        - name: data
+          mountPath: "/usr/sw/jail"
+          subPath: jail
+        - name: data
+          mountPath: "/usr/sw/var"
+          subPath: var
+        - name: data
+          mountPath: "/var/lib/solace/diags"
+          subPath: diags
+{{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -87,7 +127,8 @@ spec:
         securityContext:
           privileged: false
 {{- if semverCompare "<9.4" (default "9.3" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
-          # need capabilities opened up is PubSub+ version is lower than 9.4
+          # need capabilities opened up if PubSub+ version is lower than 9.4
+          # default "9.3" to be changed to 9.4 after 9.4 released
           capabilities:
             add:
               - IPC_LOCK

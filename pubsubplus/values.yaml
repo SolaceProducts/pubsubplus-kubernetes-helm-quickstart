@@ -26,6 +26,14 @@ image:
   # Provide an existing ImagePullSecret's name if using secure image repo.
   # pullSecretName:
 
+securityContext:
+  # securityContext.enabled=true sets the pod security context
+  #   to defined securityContext.fsGroup (required) and runAsUser (optional)
+  #   ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  enabled: true
+  fsGroup: 1000001
+  runAsUser: 1000001
+
 service:
   # service.type specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer
@@ -106,6 +114,10 @@ storage:
   # storage.persistent set to false will use ephemeral storage and the rest of the storage params will be ignored
   #  false is not recommended for production use
   persistent: true
+
+  # setVolumePermissions: if true then change the owner of the persistent volume mount point to
+  #   securityContext.runAsUser. securityContext.enabled must be true
+  # setVolumePermissions: true
 
   # storage.customVolumeMount enables specifying a YAML fragment how the data volume should be mounted.
   #   If customVolumeMount is defined the rest of the storage params will be ignored

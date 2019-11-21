@@ -664,7 +664,7 @@ Pods may also stay in pending state because [storage requirements](#storage) can
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
+For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
 
 #### Security constraints
 
