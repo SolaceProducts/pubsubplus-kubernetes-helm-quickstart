@@ -8,9 +8,9 @@ This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kub
 This document is applicable to any platform supporting Kubernetes.
 
 Contents:
-  * [The Solace PubSub+ Software Event Broker](#the-solace-pubsub-software-event-broker)
-  * [Overview](#overview)
-  * [PubSub+ Helm Chart Deployment Considerations](#pubsub-helm-chart-deployment-considerations)
+  * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
+  * [**Overview**](#overview)
+  * [**PubSub+ Helm Chart Deployment Considerations**](#pubsub-helm-chart-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
     + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
@@ -28,23 +28,23 @@ Contents:
       - [Privileged false](#privileged-false)
       - [Securing Helm v2](#securing-helm-v2)
       - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
-  * [Deployment Prerequisites](#deployment-prerequisites)
+  * [**Deployment Prerequisites**](#deployment-prerequisites)
     + [Platform and tools setup](#platform-and-tools-setup)
       - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
       - [Perform any necessary Kubernetes platform-specific setup](#perform-any-necessary-kubernetes-platform-specific-setup)
       - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
         * [Helm v2](#helm-v2)
         * [Helm v3](#helm-v3)
-  * [Deployment steps](#deployment-steps)
+  * [**Deployment steps**](#deployment-steps)
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
-  * [Validating the Deployment](#validating-the-deployment)
+  * [**Validating the Deployment**](#validating-the-deployment)
     + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
       - [WebUI, SolAdmin and SEMP access](#webui-soladmin-and-semp-access)
       - [Solace CLI access](#solace-cli-access)
       - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
     + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
-  * [Troubleshooting](#troubleshooting)
+  * [**Troubleshooting**](#troubleshooting)
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
     + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
@@ -53,10 +53,10 @@ Contents:
       - [Pods stuck in no storage](#pods-stuck-in-no-storage)
       - [Pods stuck in CrashLoopBackoff, Failed or Not Ready](#pods-stuck-in-crashloopbackoff-failed-or-not-ready)
       - [Security constraints](#security-constraints)
-  * [Modifying or upgrading a Deployment](#modifying-or-upgrading-a-deployment)
+  * [**Modifying or upgrading a Deployment**](#modifying-or-upgrading-a-deployment)
       - [Upgrade example](#upgrade-example)
       - [Modification example](#modification-example)
-  * [Deleting a Deployment](#deleting-a-deployment)
+  * [**Deleting a Deployment**](#deleting-a-deployment)
 
 
 
@@ -302,6 +302,10 @@ Then set the `image.pullSecretName` chart value to `<pull-secret-name>`.
 #### Privileged false
 
 The PubSub+ container already runs in non-privileged mode.
+
+If `securityContext.enabled` is `true` (default) then the `securityContext.fsGroup` and `securityContext.runAsUser` settings define [the pod security context](//kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecurityPolicy](//kubernetes.io/docs/concepts/policy/pod-security-policy/) or an Openshift "restricted" SCC, `securityContext.enabled` shall be set to `false` or ensure specified values do not conflict with the policy settings.
 
 #### Securing Helm v2
 

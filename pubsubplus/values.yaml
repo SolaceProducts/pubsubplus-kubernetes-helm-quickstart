@@ -1,3 +1,10 @@
+# If defined Kubernetes object names will be <release-name>-nameOverride
+#   Default is <release-name>-<chart-name>
+# nameOverride:
+
+# If defined "fullnameOverride" will fully override Kubernetes object names
+# fullnameOverride:
+
 solace:
   # solace.redundancy=false will create a single-node non-HA deployment;
   #  true will create an HA deployment with Primary, Backup and Monitor nodes.
