@@ -51,7 +51,7 @@ kubectl get nodes
 kubectl get storageclasses
 ```
 
-Note: if there is no default storage class defined in your environment refer to the [guide](/docs/PubSubPlusK8SDeployment.md#disk-storage) for other options.
+Note: if there is no default storage class defined in your environment refer to the [Solace PubSub+ Event Broker on Kubernetes Guide](/docs/PubSubPlusK8SDeployment.md#disk-storage) for other options.
 
 ### Install and configure Helm
 

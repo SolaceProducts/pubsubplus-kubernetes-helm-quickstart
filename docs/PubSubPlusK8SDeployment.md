@@ -705,7 +705,14 @@ Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, B
 
 #### Modification example
 
-Similarly, to **modify** deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT TLS port, that is not included by default, to the loadbalancer.
+Similarly, to **modify** deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports.
+
+Tip: to get the current value overrides, use:
+```bash
+helm get my-release | sed '/^HOOKS/,$d'
+```
+
+In this example we will add the MQTT TLS port, that is not included by default, to the loadbalancer.
 
 ```bash
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
