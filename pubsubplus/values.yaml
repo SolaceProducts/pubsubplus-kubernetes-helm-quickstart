@@ -38,7 +38,9 @@ securityContext:
   #   to defined securityContext.fsGroup (required) and runAsUser (optional)
   #   ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   enabled: true
-  fsGroup: 1000001
+  # fsGroup: expecting a number
+  fsGroup: 1000002
+  # runAsUser: expecting a number
   runAsUser: 1000001
 
 service:
@@ -122,8 +124,8 @@ storage:
   #  false is not recommended for production use
   persistent: true
 
-  # setVolumePermissions: if true then change the owner of the persistent volume mount point to
-  #   securityContext.runAsUser. securityContext.enabled must be true
+  # setVolumePermissions: if true then change the owner of the PubSub+ directories under the persistent volume mount point to
+  #   securityContext.runAsUser (must be set). securityContext.enabled must be true
   # setVolumePermissions: true
 
   # storage.customVolumeMount enables specifying a YAML fragment how the data volume should be mounted.

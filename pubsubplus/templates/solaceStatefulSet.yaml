@@ -30,12 +30,12 @@ spec:
 {{- end}}
 {{- if .Values.securityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup | int64 }}
       {{- if and (.Values.securityContext.runAsUser) }}
-        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
       {{- end }}
 {{- end }}
-{{- if and (.Values.storage.setVolumePermissions) (.Values.storage.persistent) (.Values.securityContext.enabled) (.Values.securityContext.runAsUser) }}
+{{- if and (.Values.storage.persistent) (.Values.storage.setVolumePermissions) (.Values.securityContext.enabled) (.Values.securityContext.runAsUser) }}
       initContainers:
       - name: volume-permissions
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -44,8 +44,8 @@ spec:
          - bash
          - "-ec"
          - |
-           /bin/chown -R {{ .Values.securityContext.runAsUser }} /usr/sw/
-           /bin/chown -R {{ .Values.securityContext.runAsUser }} /var/lib/solace
+           /bin/chown -R {{ .Values.securityContext.runAsUser | int64 }} /usr/sw/
+           /bin/chown -R {{ .Values.securityContext.runAsUser | int64 }} /var/lib/solace
         securityContext:
           runAsUser: 0
         volumeMounts:

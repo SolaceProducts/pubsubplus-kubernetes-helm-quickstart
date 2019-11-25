@@ -68,8 +68,8 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
 | `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | undefined, meaning no ImagePullSecret used                |
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used |
-| `securityContext.fsGroup`      | Specifies `fsGroup` in pod security contex                                                              | set to default non-zero id |
-| `securityContext.runAsUser`    | Specifies `runAsUser` in pod security contex                                                            | set to default PubSub+ appuser id |
+| `securityContext.fsGroup`      | Specifies `fsGroup` in pod security contex                                                              | set to default non-zero id 1000002 |
+| `securityContext.runAsUser`    | Specifies `runAsUser` in pod security contex                                                            | set to default PubSub+ appuser id 1000001 |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
 | `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | undefined  |
 | `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |
