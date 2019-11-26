@@ -21,6 +21,9 @@ solace:
   #   kubectl get secret <release-name>-solace-secrets -o jsonpath="{.data.username_admin_password}" | base64 --decode
   usernameAdminPassword:
 
+  # timezone setting for the PubSub+ container, if undefined default is UTC. Valid values are tz database time zone names.
+  # timezone: UTC
+
 image:
   # Default repository is the public Solace DockerHub repo
   repository: solace/solace-pubsub-standard

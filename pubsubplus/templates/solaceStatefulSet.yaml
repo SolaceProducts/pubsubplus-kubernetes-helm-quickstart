@@ -141,16 +141,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: TZ
+          value: {{ printf "%s/%s" ":/usr/share/zoneinfo" (default "UTC" .Values.solace.timezone) }}
+        - name: UMASK
+          value: "0022"
         command:
          - bash
          - "-ec"
          - |
            source /mnt/disks/solace/init.sh
            # not using postinstall hooks because of order dependencies
-           # launch config check then Solace so VCMR can provide return code
+           # launch config check - readiness check script will be launched by readinessProbe
            nohup /mnt/disks/solace/config-sync-check.sh &
            /usr/sbin/boot.sh
-
         volumeMounts:
         - name: config-map
           mountPath: /mnt/disks/solace
