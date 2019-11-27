@@ -58,26 +58,26 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 
 | Parameter                      | Description                                                                                             | Default                                                 |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `nameOverride`                 | Kubernetes objects will be named as `<release-name>-nameOverride`                                       | undefined, default naming is `<release-name>-<chart-name>` |
-| `fullnameOverride`             | Kubernetes objects will be named as `fullnameOverride`                                                  | undefined, default naming is `<release-name>-<chart-name>` |
+| `nameOverride`                 | Kubernetes objects will be named as `<release-name>-nameOverride`                                       | Undefined, default naming is `<release-name>-<chart-name>` |
+| `fullnameOverride`             | Kubernetes objects will be named as `fullnameOverride`                                                  | Undefined, default naming is `<release-name>-<chart-name>` |
 | `solace.redundancy`            | `false` will create a single-node non-HA deployment; `true` will create an HA deployment with Primary, Backup and Monitor nodes | `false` |
 | `solace.size`                  | Event broker connection scaling. Options: `dev` (requires minimum resources but no guaranteed performance), `prod100`, `prod1k`, `prod10k`, `prod100k`, `prod200k` | `prod100` | `prod100` |
 | `solace.usernameAdminPassword` | The password for the "admin" management user. Will autogenerate it if not provided. **Important:** refer to the #documentation# how to retrieve it and use it for `helm upgrade`. | Autogenerate |
-| `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | undefined, default is UTC |
+| `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | Undefined, default is UTC |
 | `image.repository`             | The docker repo name and path to the Solace Docker image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
 | `image.tag`                    | The Solace Docker image tag. It is recommended to specify an explicit tag for production use            | `latest`                                                |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
-| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | undefined, meaning no ImagePullSecret used                |
+| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | Undefined, meaning no ImagePullSecret used                |
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used |
 | `securityContext.fsGroup`      | Specifies `fsGroup` in pod security context                                                             | set to default non-zero id 1000002 |
 | `securityContext.runAsUser`    | Specifies `runAsUser` in pod security context                                                           | set to default PubSub+ appuser id 1000001 |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
-| `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | undefined  |
+| `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | Undefined  |
 | `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
 | `storage.slow`                 | `true` to indicate slow storage used, e.g. for NFS.                                                    | `false` |
-| `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | undefined |
-| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
+| `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | Undefined |
+| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
 
