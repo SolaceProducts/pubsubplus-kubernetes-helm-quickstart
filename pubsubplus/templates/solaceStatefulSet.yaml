@@ -68,6 +68,7 @@ spec:
           mountPath: "/var/lib/solace/diags"
           subPath: diags
 {{- end }}
+      terminationGracePeriodSeconds: 600
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -154,6 +155,16 @@ spec:
            # launch config check - readiness check script will be launched by readinessProbe
            nohup /mnt/disks/solace/config-sync-check.sh &
            /usr/sbin/boot.sh
+        lifecycle:
+          preStop:
+            exec:
+              command:
+               - bash
+               - "-ec"
+               - |
+                 while ! pgrep solacedaemon ; do sleep 1; done
+                 killall solacedaemon; 
+                 while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
         volumeMounts:
         - name: config-map
           mountPath: /mnt/disks/solace
