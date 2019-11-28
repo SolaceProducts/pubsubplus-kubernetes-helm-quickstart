@@ -35,7 +35,7 @@ spec:
         runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
       {{- end }}
 {{- end }}
-{{- if and (.Values.storage.persistent) (.Values.storage.setVolumePermissions) (.Values.securityContext.enabled) (.Values.securityContext.runAsUser) }}
+{{- if and (.Values.storage.persistent) (.Values.storage.setVolumePermissions) (.Values.securityContext.runAsUser) }}
       initContainers:
       - name: volume-permissions
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -68,7 +68,7 @@ spec:
           mountPath: "/var/lib/solace/diags"
           subPath: diags
 {{- end }}
-      terminationGracePeriodSeconds: 600
+      terminationGracePeriodSeconds: 1200
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
