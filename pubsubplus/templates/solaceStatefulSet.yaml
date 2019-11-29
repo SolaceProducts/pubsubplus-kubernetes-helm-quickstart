@@ -35,39 +35,6 @@ spec:
         runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
       {{- end }}
 {{- end }}
-{{- if and (.Values.storage.persistent) (.Values.storage.setVolumePermissions) (.Values.securityContext.runAsUser) }}
-      initContainers:
-      - name: volume-permissions
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-        command:
-         - bash
-         - "-ec"
-         - |
-           /bin/chown -R {{ .Values.securityContext.runAsUser | int64 }} /usr/sw/
-           /bin/chown -R {{ .Values.securityContext.runAsUser | int64 }} /var/lib/solace
-        securityContext:
-          runAsUser: 0
-        volumeMounts:
-        - name: data
-          mountPath: "/usr/sw/internalSpool"
-          subPath: internalSpool
-        - name: data
-          mountPath: "/usr/sw/internalSpool/softAdb"
-          subPath: softAdb
-        - name: data
-          mountPath: "/usr/sw/adb"
-          subPath: adb
-        - name: data
-          mountPath: "/usr/sw/jail"
-          subPath: jail
-        - name: data
-          mountPath: "/usr/sw/var"
-          subPath: var
-        - name: data
-          mountPath: "/var/lib/solace/diags"
-          subPath: diags
-{{- end }}
       terminationGracePeriodSeconds: 1200
       containers:
       - name: {{ .Chart.Name }}
