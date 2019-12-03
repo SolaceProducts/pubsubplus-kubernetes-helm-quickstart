@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-11-29T17:38:30.53431208Z"
+    created: "2019-12-03T14:59:37.49997282Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 64c8223619aebb047955eb1c520d3adff55ba15ef7035ccc4f511d399bd35a1a
+    digest: e191583e74989da43b043710a58961ffe28b88502f58ca81d8d16e5100f11af1
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 1.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-11-29T17:38:30.535937931Z"
+    created: "2019-12-03T14:59:37.501407962Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: 4cb6f14cb3269adbdd2f707dcfd9ab01e38b2a7592bf424698fd38d4d4969947
+    digest: 6069699be70ea44f293b8bbedb88335e4632f5ea613fd16ab77d7012e447f688
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 1.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-11-29T17:38:30.536880964Z"
+    created: "2019-12-03T14:59:37.502322192Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 18a8f6171ca6675c04e4d13e66101af845f93f7e0386d06e5b6b041e93f522a3
+    digest: c11cca6ad9c3c36e4ce5e144d0dcc1161d670798781b52a9ea5724015fe47cc9
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-1.0.0.tgz
     version: 1.0.0
-generated: "2019-11-29T17:38:30.532018357Z"
+generated: "2019-12-03T14:59:37.497826464Z"
