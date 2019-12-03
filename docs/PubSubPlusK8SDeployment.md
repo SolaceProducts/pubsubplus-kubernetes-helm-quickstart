@@ -25,7 +25,7 @@ Contents:
       - [Using private registries](#using-private-registries)
       - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
     + [Security considerations](#security-considerations)
-      - [Privileged false](#privileged-false)
+      - [Using Security Context](#using-security-context)
       - [Securing Helm v2](#securing-helm-v2)
       - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
   * [**Deployment Prerequisites**](#deployment-prerequisites)
@@ -39,11 +39,11 @@ Contents:
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
   * [**Validating the Deployment**](#validating-the-deployment)
-    + [Gaining admin access to the message broker](#gaining-admin-access-to-the-message-broker)
+    + [Gaining admin access to the event broker](#gaining-admin-access-to-the-event-broker)
       - [WebUI, SolAdmin and SEMP access](#webui-soladmin-and-semp-access)
       - [Solace CLI access](#solace-cli-access)
-      - [SSH access to individual message brokers](#ssh-access-to-individual-message-brokers)
-    + [Testing data access to the message broker](#testing-data-access-to-the-message-broker)
+      - [SSH access to individual event brokers](#ssh-access-to-individual-event-brokers)
+    + [Testing data access to the event broker](#testing-data-access-to-the-event-broker)
   * [**Troubleshooting**](#troubleshooting)
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
@@ -52,6 +52,7 @@ Contents:
       - [Pods stuck in not enough resources](#pods-stuck-in-not-enough-resources)
       - [Pods stuck in no storage](#pods-stuck-in-no-storage)
       - [Pods stuck in CrashLoopBackoff, Failed or Not Ready](#pods-stuck-in-crashloopbackoff-failed-or-not-ready)
+      - [No Pods listed](#no-pods-listed)
       - [Security constraints](#security-constraints)
   * [**Modifying or upgrading a Deployment**](#modifying-or-upgrading-a-deployment)
       - [Upgrade example](#upgrade-example)
@@ -169,7 +170,7 @@ spec:
     path: /tmp
     server: 172.17.0.2
 ```
-Note: NFS is currently supported for development and demo purposes. If using NFS also set the `storage.slow` parameter to 'true'.
+> Note: NFS is currently supported for development and demo purposes. If using NFS also set the `storage.slow` parameter to 'true'.
 <br/>
 
 #### Using an existing PVC (Persistent Volume Claim)
@@ -221,7 +222,7 @@ The `service.ports` parameter defines the services exposed. It specifies the eve
 
 When using Helm to initiate a deployment, notes will be provided on the screen how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
-A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true". The exposed `pubsubplus` service will forward traffic to that active message broker node. 
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true". The exposed `pubsubplus` service will forward traffic to that active event broker node. 
 
 #### Using pod label "active" to identify the active event broker node
 
@@ -299,7 +300,7 @@ Then set the `image.pullSecretName` chart value to `<pull-secret-name>`.
 
 ### Security considerations
 
-#### Privileged false
+#### Using Security Context
 
 The PubSub+ container already runs in non-privileged mode.
 
@@ -364,7 +365,7 @@ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceac
 helm init --wait --service-account=tiller  --upgrade
 ```
 
-If you are connecting to an environment where Helm was already installed from a new command line client, just re-run the install part:
+If you are connecting to an environment where Helm was already installed from another command line client, just re-run the init part:
  ```shell
 helm init --wait --service-account=tiller  --upgrade
 ```
@@ -389,7 +390,7 @@ The recommended way is to make use of published pre-packaged PubSub+ charts from
 
 Add or refresh a local Solace `solacecharts` repo:
 ```bash
-# Add new
+# Add new "solacecharts" repo
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
@@ -406,9 +407,11 @@ There are three Helm chart variants available from the repo with default small-s
 2.	`pubsubplus` - PubSub+ Standalone, supporting 100 connections
 3.	`pubsubplus-ha` - PubSub+ HA, supporting 100 connections
 
-Refer to the [quick start](/README.md) for additional deployment details.
+Customization options are described in the [PubSub+ Helm Chart](/pubsubplus/README.md#configuration) reference.
 
-**More customization**
+Also, refer to the [quick start](/README.md) for additional deployment details.
+
+**More customization options**
 
 If more customization than just using Helm parameters is required, it is possible to create your own fork so templates can be edited:
 ```bash
@@ -417,11 +420,11 @@ helm fetch solacecharts/pubsubplus --untar
 # Use the Helm chart from this directory
 helm install ./pubsubplus
 ```
-Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
+> Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
 
 ### Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
-This is for users not wishing to install the Helm server-side Tiller on the Kubernetes cluster.
+This is for users not wishing to install the Helm v2 server-side Tiller on the Kubernetes cluster.
 
 This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
 
@@ -429,48 +432,26 @@ Note that later sections of this document about modifying, upgrading or deleting
 
 **Step 1: Generate Kubernetes templates for Solace event broker deployment**
 
-1) Clone this project:
+1) Ensure [Helm v2] i(#helm-v2) is locally installed. Note that this is the local client only, no server-side deployment of Tiller is necessary.
 
-```sh
-git clone https://github.com/SolaceProducts/solace-kubernetes-quickstart.git
-cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
+2) Add or refresh a local Solace `solacecharts` repo:
+```bash
+# Add new "solacecharts" repo
+helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+# Refresh if needed, e.g.: to use a recently published chart version
+helm repo update solacecharts
 ```
 
-2) [Download](//github.com/helm/helm/releases/tag/v2.15.2 ) and install the Helm client locally.
-
-We will assume that it has been installed to the `<project-root>/bin` directory.
-
-3) Customize the Solace chart for your deployment
-
-The Solace chart includes raw Kubernetes templates and a "values.yaml" file to customize them when the templates are generated.
-
-The chart is located in the `solace` directory:
-
-`cd <project-root>/solace`
-
-a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations) in this document.
-
-b) Then edit `<project-root>/solace/values.yaml` and replace following parameters:
-
-SOLOS_CLOUD_PROVIDER: Current options are "gcp" or "aws" or leave it unchanged for unknown (note: specifying the provider will optimize volume provisioning for supported providers).
-<br/>
-SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ event broker docker image section](#step-3-optional) in this document. 
-
-c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
-
-SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](//docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
-
-4) Generate the templates
-
+3) Generate the templates: 
 ```sh
-cd <project-root>/solace
+# Create local copy - in Helm v2 "helm template" only works with local repositories.
+helm fetch solacecharts/pubsubplus --untar
 # Create location for the generated templates
 mkdir generated-templates
-# In next command replace myrelease to the desired release name
-<project-root>/bin/helm template --name myrelease --values values.yaml --output-dir ./generated-templates .
+# In next command replace my-release to the desired release name
+helm template --name my-release --output-dir ./generated-templates ./pubsubplus
 ```
-
-The generated set of templates are now available in the `<project-root>/solace/generated-templates` directory.
+The generated set of templates are now available in the `generated-templates` directory.
 
 **Step 2: Deploy the templates on the target system**
 
@@ -478,84 +459,75 @@ Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cl
 
 1) Optionally copy the `generated-templates` directory with contents if this is on a different host
 
-2) Assign rights to current user to modify cluster-wide RBAC (required for creating clusterrole binding when deploying the Solace template podModRbac.yaml)
-
-Example:
-
-```sh
-# Get current user - GCP example. Returns e.g.: myname@example.org
-gcloud info | grep Account  
-# Assign rigths - replace user
-kubectl create clusterrolebinding myname-cluster-admin-binding \
-  --clusterrole=cluster-admin \
-  --user=myname@example.org
+2) Initiate the deployment:
+```bash
+kubectl apply --recursive -f ./generated-templates/pubsubplus
 ```
-
-3) Initiate the deployment:
-
-`kubectl apply --recursive -f ./generated-templates/solace`
-
 Wait for the deployment to complete, which is then ready to use.
 
-4) To delete the deployment, execute:
-
-`kubectl delete --recursive -f ./generated-templates/solace`
+3) To delete the deployment, execute:
+```bash
+kubectl delete --recursive -f ./generated-templates/pubsubplus
+```
 
 
 
 ## Validating the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA configuration is deployed with pod/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-release".
+Now you can validate your deployment on the command line. In this example an HA configuration is deployed with pod/XXX-XXX-pubsubplus-0 being the active event broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
-NAME                                 DESIRED   CURRENT   AGE
-statefulsets/XXX-XXX-solace   3         3         3m
-NAME                                  TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
-svc/XXX-XXX-solace             LoadBalancer   10.15.249.186   35.202.131.158   22:32656/TCP,8080:32394/TCP,55555:31766/TCP   3m
-svc/XXX-XXX-solace-discovery   ClusterIP      None            <none>           8080/TCP                                      3m
-svc/kubernetes                        ClusterIP      10.15.240.1     <none>           443/TCP                                       6d
-NAME                         READY     STATUS    RESTARTS   AGE
-po/XXX-XXX-solace-0   1/1       Running   0          3m
-po/XXX-XXX-solace-1   1/1       Running   0          3m
-po/XXX-XXX-solace-2   1/1       Running   0          3m
-NAME                               STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS              AGE
-pvc/data-XXX-XXX-solace-0   Bound     pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-pvc/data-XXX-XXX-solace-1   Bound     pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-pvc/data-XXX-XXX-solace-2   Bound     pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-NAME                                          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                                  STORAGECLASS              REASON    AGE
-pv/pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-0   XXX-XXX-standard             3m
-pv/pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-1   XXX-XXX-standard             3m
-pv/pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-2   XXX-XXX-standard             3m
+NAME                                     READY   AGE
+statefulset.apps/my-release-pubsubplus   3/3     5m47s
+
+NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                                                                                                                                             AGE
+service/my-release-pubsubplus             LoadBalancer   10.100.200.41   35.232.199.171   22:31777/TCP,8080:31431/TCP,943:30518/TCP,55555:30220/TCP,55003:32416/TCP,55443:31735/TCP,80:30498/TCP,443:30250/TCP,5672:30555/TCP,1883:30503/TCP,9000:30433/TCP   5m47s
+service/my-release-pubsubplus-discovery   ClusterIP      None            <none>           8080/TCP,8741/TCP,8300/TCP,8301/TCP,8302/TCP                                                                                                                        5m47s
+
+NAME                          READY   STATUS    RESTARTS   AGE     LABELS
+pod/my-release-pubsubplus-0   1/1     Running   0          7m11s   active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-0
+pod/my-release-pubsubplus-1   1/1     Running   0          7m11s   active=false,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-1
+pod/my-release-pubsubplus-2   1/1     Running   0          7m11s   app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-2
+
+NAME                                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/data-my-release-pubsubplus-0      Bound    pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
+persistentvolumeclaim/data-my-release-pubsubplus-1      Bound    pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
+persistentvolumeclaim/data-my-release-pubsubplus-2      Bound    pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
+
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                   STORAGECLASS   REASON   AGE
+persistentvolume/pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-0      standard                7m11s
+persistentvolume/pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-1      standard                7m11s
+persistentvolume/pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-2      standard                7m11s
 
 
-prompt:~$ kubectl describe service XXX-XX-solace
-Name:                     XXX-XXX-solace
-Namespace:                default
-Labels:                   app=solace
-                          chart=solace-0.3.0
-                          heritage=Tiller
-                          release=XXX-XXX
+prompt:~$ kubectl describe service my-release-pubsubplus
+Name:                     my-release-pubsubplus
+Namespace:                test
+Labels:                   app.kubernetes.io/instance=my-release
+                          app.kubernetes.io/managed-by=Tiller
+                          app.kubernetes.io/name=pubsubplus
+                          helm.sh/chart=pubsubplus-1.0.0
 Annotations:              <none>
-Selector:                 active=true,app=solace,release=XXX-XXX
+Selector:                 active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus
 Type:                     LoadBalancer
-IP:                       10.55.246.5
-LoadBalancer Ingress:     35.202.131.158
+IP:                       10.100.200.41
+LoadBalancer Ingress:     35.232.199.171
 Port:                     ssh  22/TCP
 TargetPort:               2222/TCP
-NodePort:                 ssh  30828/TCP
-Endpoints:                10.52.2.6:2222
+NodePort:                 ssh  31777/TCP
+Endpoints:                10.200.29.186:2222
 :
 :
 ```
 
-Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
+Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.232.199.171` is the Load Balancer's external Public IP to use.
 
 > Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, execute `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports instead of direct port access, for which the mapping can be obtained from `kubectl describe service XXX-XX-solace`.
 
-### Gaining admin access to the message broker
+### Gaining admin access to the event broker
 
-Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+There are [multiple management tools](//docs.solace.com/Management-Tools.htm ) available. The WebUI is the recommended simplest way to administer the event broker for common tasks.
 
 #### WebUI, SolAdmin and SEMP access
 
@@ -563,7 +535,7 @@ Use the Load Balancer's external Public IP at port 8080 to access these services
 
 #### Solace CLI access
 
-If you are using a single message broker and are used to working with a CLI message broker console access, you can SSH into the message broker as the `admin` user using the Load Balancer's external Public IP:
+If you are using a single event broker and are used to working with a CLI event broker console access, you can SSH into the event broker as the `admin` user using the Load Balancer's external Public IP:
 
 ```sh
 
@@ -571,7 +543,7 @@ $ssh -p 22 admin@35.202.131.158
 Solace PubSub+ Standard
 Password:
 
-Solace PubSub+ Standard Version 9.3.0.105
+Solace PubSub+ Standard Version 9.4.0.105
 
 The Solace PubSub+ Standard is proprietary software of
 Solace Corporation. By accessing the Solace PubSub+ Standard
@@ -585,47 +557,47 @@ To purchase product support, please contact Solace at:
 
 Operating Mode: Message Routing Node
 
-XXX-XXX-solace-0>
+XXX-XXX-pubsubplus-0>
 ```
 
 If you are using an HA deployment, it is better to access the CLI through the Kubernets pod and not directly via SSH.
 
-Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
+> Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
 
 * Loopback to SSH directly on the pod
 
 ```sh
-kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh -p 2222 admin@localhost"
+kubectl exec -it XXX-XXX-pubsubplus-0  -- bash -c "ssh -p 2222 admin@localhost"
 ```
 
 * Loopback to SSH on your host with a port-forward map
 
 ```sh
-kubectl port-forward XXX-XXX-solace-0 62222:2222 &
+kubectl port-forward XXX-XXX-pubsubplus-0 62222:2222 &
 ssh -p 62222 admin@localhost
 ```
 
-This can also be mapped to individual message brokers in the deployment via port-forward:
+This can also be mapped to individual event brokers in the deployment via port-forward:
 
 ```
-kubectl port-forward XXX-XXX-solace-0 8081:8080 &
-kubectl port-forward XXX-XXX-solace-1 8082:8080 &
-kubectl port-forward XXX-XXX-solace-2 8083:8080 &
+kubectl port-forward XXX-XXX-pubsubplus-0 8081:8080 &
+kubectl port-forward XXX-XXX-pubsubplus-1 8082:8080 &
+kubectl port-forward XXX-XXX-pubsubplus-2 8083:8080 &
 ```
 
-#### SSH access to individual message brokers
+#### SSH access to individual event brokers
 
 For direct access, use:
 
 ```sh
-kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
+kubectl exec -it XXX-XXX-pubsubplus-<pod-ordinal> -- bash
 ```
 
-### Testing data access to the message broker
+### Testing data access to the event broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal [APIs & Protocols](https://docs.solace.com/APIs.htm). Under each option there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created event broker instance, visit the Solace Developer Portal [APIs & Protocols](//www.solace.dev/ ). Under each option there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
-Use the external Public IP to access the deployment. If a port required for a protocol is not opened, refer to the [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services) section.
+Use the external Public IP to access the deployment. If a port required for a protocol is not opened, refer to the [Modification example](#modification-example) how to open it up.
 
 ## Troubleshooting
 
@@ -634,18 +606,18 @@ Use the external Public IP to access the deployment. If a port required for a pr
 Logs from the currently running container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace  # use -f to follow live
+kubectl logs XXX-XXX-pubsubplus-0 -c solace  # use -f to follow live
 ```
 
 Logs from the previously terminated container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace -p
+kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
 ```
 
 ### Viewing events
 
-Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace message broker deployment.
+Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace event broker deployment.
 
 It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 
@@ -668,7 +640,14 @@ Pods may also stay in pending state because [storage requirements](#storage) can
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-For pods stuck in CrashLoopBackoff or Failed or Running but not Ready/"active" state usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+
+#### No Pods listed
+
+If no pods are listed related to your deployment check the StatefulSet for any clues:
+```
+kubectl describe statefulset.apps/test1-solace
+```
 
 #### Security constraints
 
@@ -676,46 +655,66 @@ Your Kubernetes environment's security constraints may also impact successful de
 
 ## Modifying or upgrading a Deployment
 
-Use the `helm upgrade` command to upgrade/modify the message broker deployment: request the required modifications to the chart in passing the the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+
+Tip: to get the current value-overrides, check the `USER-SUPPLIED VALUES`:
+```bash
+helm get my-release | sed '/^HOOKS/,$d'
+```
+
+For the next examples, assume a deployment has been created with some initial overrides for a develoment HA cluster:
+```bash
+helm install  --name my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true
+```
+
+This will generate following value-overrides in the `USER-SUPPLIED VALUES`:
+```
+solace:
+  redundancy: true
+  size: dev
+  usernameAdminPassword: jMzKoW39zz
+```
+Note that `usernameAdminPassword` has been generated at the initial deployment because it was not specified and must be used henceforth for all upgrades to keep the same.
 
 #### Upgrade example
 
-To **upgrade** the version of the message broker running within a Kubernetes cluster:
+To **upgrade** the version of the event broker running within a Kubernetes cluster:
 
-- Add the new version of the message broker to your container registry, then
+- Add the new version of the event broker to your container registry, then
 - Either:
-  * Set the new image in the Helm upgrade command: 
+  * Set the new image in the Helm upgrade command, also ensure to include the original overrides: 
 ```bash
 helm upgrade my-release solacecharts/pubsubplus \
-  --set image.repository=<repo>/<project>/solace-pubsub-standard \
-        image.tag=NEW.VERSION.XXXXX \
-        image.pullPolicy=IfNotPresent
+  --set solace.size=dev,solace.redundancy=true,usernameAdminPassword: jMzKoW39zz \
+  --set image.repository=<repo>/<project>/solace-pubsub-standard,image.tag=NEW.VERSION.XXXXX,image.pullPolicy=IfNotPresent
 ```
-  * Or create a simple `upgrade.yaml` file and use that to upgrade the release:
+  * Or create a simple `version-upgrade.yaml` file and use that to upgrade the release:
 ```bash
-tee ./upgrade.yaml <<-EOF   # create upgrade file with following contents:
+tee ./version-upgrade.yaml <<-EOF   # include original and new overrides
+solace:
+  redundancy: true
+  size: dev
+  usernameAdminPassword: jMzKoW39zz
 image:
   repository: <repo>/<project>/solace-pubsub-standard
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 EOF
-helm upgrade my-release solacecharts/pubsubplus -f upgrade.yaml
+helm upgrade my-release solacecharts/pubsubplus -f version-upgrade.yaml
 ```
-Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, Backup, Primary) taken down for upgrade in an HA deployment. This will affect running message broker instances, result in potentially multiple failovers and requires connection retries configured in the client.
+> Note: upgrade will begin immediately, in the order of pod 2, 1 and 0 (Monitor, Backup, Primary) taken down for upgrade in an HA deployment. This will affect running event broker instances, result in potentially multiple failovers and requires connection-retries configured in the client.
 
 #### Modification example
 
-Similarly, to **modify** deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports.
+Similarly, to **modify** deployment parameters, you need pass modified value-overrides. Passing the same value-overrides to upgrade will result in no change.
 
-Tip: to get the current value overrides, use:
+In this example we will add the AMQP encrypted (TLS) port to the loadbalancer - it is not included by default.
+
+First [look up](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) the port number for MQTT TLS: the required port is 5671.
+
+Next, create an update file with the additional contents:
 ```bash
-helm get my-release | sed '/^HOOKS/,$d'
-```
-
-In this example we will add the MQTT TLS port, that is not included by default, to the loadbalancer.
-
-```bash
-tee ./port-update.yaml <<-EOF   # create update file with following contents:
+tee ./port-update.yaml <<-EOF   # :
 service:
   ports:
     - servicePort: 5671
@@ -723,27 +722,28 @@ service:
       protocol: TCP
       name: amqptls
 EOF
-helm upgrade my-release solacecharts/pubsubplus --values port-update.yaml
 ```
 
+Now upgrade the deployment, passing the changes. This time the original `--set` value-overrides are combined with the override file:
+```bash
+helm upgrade my-release solacecharts/pubsubplus \
+  --set solace.size=dev,solace.redundancy=true,usernameAdminPassword: jMzKoW39zz \
+  --values port-update.yaml
+```
 
 ## Deleting a Deployment
 
 Use Helm to delete a deployment, also called a release:
-
 ```
 helm delete my-release
 ```
 
-Check what has remained from the deployment, which should only return a single line with svc/kubernetes:
-
+Check what has remained from the deployment:
 ```
 kubectl get statefulsets,services,pods,pvc,pv
-NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)         AGE
-service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            443/TCP         XX
 ```
 
-> Note: Helm will not clean up all the deployment artifacts, e.g.: pvc/ and pv/. Use `kubectl delete` to delete those.
+> Note: Helm will not clean up PVCs and related PVs. Use `kubectl delete` to delete PVCs is associated data is no longer required.
 
 
 
