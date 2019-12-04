@@ -11,7 +11,7 @@ Additional documentation is available from the [Solace PubSub+ Event Broker on K
 ## Prerequisites
 
 * Kubernetes 1.9 or later platform with adequate [CPU and memory](/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
-* Helm package manager installed and configured with Tiller deployed if using Helm v2
+* Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2
 * If using a private Docker registry, load the PubSub+ Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#configuration)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
@@ -36,15 +36,16 @@ Note: ensure to delete existing PVCs if reusing the same deployment name for a c
 
 The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Guide](/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations).
 
-Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
+There are several options to customize the deployment:
+
+- Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
 helm install --name my-release \
   --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword \
   solacecharts/pubsubplus
 ```
 
-Another option is to create a YAML file containing the values to override and pass that to Helm:
-
+- Another option is to create a YAML file containing the values to override and pass that to Helm:
 ```bash
 echo "# Overrides:
 solace:
