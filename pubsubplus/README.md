@@ -55,7 +55,7 @@ solace:
 helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
 ```
 
-For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/using_helm/#customizing-the-chart-before-installing).
+For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
 
 | Parameter                      | Description                                                                                             | Default                                                 |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |

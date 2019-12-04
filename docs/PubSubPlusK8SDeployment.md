@@ -638,6 +638,11 @@ If pods stay in pending state and `kubectl describe pods` reveals there are not 
 
 Pods may also stay in pending state because [storage requirements](#storage) cannot be met. Check `kubectl get pv,pvc`. PVCs and PVs should be in bound state and if not then use `kubectl describe pvc` for any issues.
 
+Unless otherwise specified, a default storage class must be available for default PubSub+ deployment configuration.
+```bash
+kubectl get storageclasses
+```
+
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
 Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or PubSub+ process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).

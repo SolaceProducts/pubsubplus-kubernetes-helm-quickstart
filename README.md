@@ -46,17 +46,12 @@ Check your Kubernetes environment is ready:
 ```bash
 # This shall return worker nodes listed and ready
 kubectl get nodes
-
-# A default storage class must be available for default PubSub+ deployment configuration
-kubectl get storageclasses
 ```
-
-Note: if there is no default storage class defined in your environment refer to the [Solace PubSub+ Event Broker on Kubernetes Guide](/docs/PubSubPlusK8SDeployment.md#disk-storage) for other options.
 
 ### 2. Install and configure Helm
 
 Follow the [Helm Installation notes of your target release](https://github.com/helm/helm/releases) for your platform.
-Note that Helm is transitioning from v2 to v3. Most deployments still use v2.
+Note that Helm is transitioning from v2 to v3. Many deployments still use v2.
 
 On Linux a simple option to set up the latest stable release is to run:
 
@@ -91,7 +86,7 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 Helm is configured properly if the command `helm version` returns no error.
 
 
-### 3. Install Solace PubSub+ with default configuration
+### 3. Install the Solace PubSub+ event broker with default configuration
 
 Add the Solace Helm charts to your local Helm repo:
 ```bash
