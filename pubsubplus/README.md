@@ -16,12 +16,27 @@ Additional documentation is available from the [Solace PubSub+ Event Broker on K
 * With persistent storage enabled (see in [Configuration](#configuration)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
+Also consult additional [deployment considerations](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations).
+
 ## Create a deployment
 
 ```bash
 helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 helm install --name my-release solacecharts/pubsubplus
 ```
+
+## Use a deployment
+
+Obtain information about the deployment and services:
+
+```bash
+helm status my-release
+```
+
+Refer to the detailed PubSub+ Kubernetes Deployment Guide for:
+* [Validating the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
 
 ## Delete a deployment
 
