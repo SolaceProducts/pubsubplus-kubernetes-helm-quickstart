@@ -284,6 +284,8 @@ sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
 sudo docker push <private-registry>/<path>/<image-name>:<tag>
 ```
 
+Note that additional steps may be required if using signed images.
+
 #### Using ImagePullSecrets for signed images
 
 An additional ImagePullSecret may be required if using signed images from a private Docker registry, e.g.: Harbor.
