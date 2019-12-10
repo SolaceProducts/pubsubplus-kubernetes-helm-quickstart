@@ -51,7 +51,7 @@ kubectl get nodes
 ### 2. Install and configure Helm
 
 Follow the [Helm Installation notes of your target release](https://github.com/helm/helm/releases) for your platform.
-Note that Helm is transitioning from v2 to v3. Many deployments still use v2.
+Note that Helm is transitioning from v2 to v3. Many deployments still use v2. The PubSub+ event broker can be deployed using either version, however concurrent use of v2 and v3 from the same command-line environment is not supported.
 
 On Linux a simple option to set up the latest stable release is to run:
 

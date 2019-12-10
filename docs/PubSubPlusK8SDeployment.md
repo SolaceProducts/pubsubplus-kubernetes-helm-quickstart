@@ -10,7 +10,7 @@ This document is applicable to any platform supporting Kubernetes.
 Contents:
   * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
   * [**Overview**](#overview)
-  * [**PubSub+ Helm Chart Deployment Considerations**](#pubsub-helm-chart-deployment-considerations)
+  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
     + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
@@ -76,7 +76,7 @@ There are two deployment options described in this document:
 
 The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
-## PubSub+ Helm Chart Deployment Considerations
+## PubSub+ Event Broker Deployment Considerations
 
 The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
@@ -679,7 +679,7 @@ solace:
   size: dev
   usernameAdminPassword: jMzKoW39zz
 ```
-Note that `usernameAdminPassword` has been generated at the initial deployment because it was not specified and must be used henceforth for all upgrades to keep the same.
+Note that `usernameAdminPassword` has been generated at the initial deployment because it was not specified and must be used henceforth for all change requests to keep the same.
 
 #### Upgrade example
 
