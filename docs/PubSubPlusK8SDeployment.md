@@ -1,4 +1,4 @@
-# Solace PubSub+ Event Broker on Kubernetes Deployment Guide
+# Solace PubSub+ Event Broker on Kubernetes Deployment Documentation
 
 This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kubernetes.
 
