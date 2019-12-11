@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-12-10T21:20:39.829663022Z"
+    created: "2019-12-11T16:47:02.129294822Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: f5d60680225814de5381cf8d9743bdd9f6739f44d4eddbf8ffc37584eb7b8862
+    digest: 9f34eaa6a11633130d604fc684e0d5f86ef8c5de712fab51cf25b494c17fdfe4
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 1.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-12-10T21:20:39.831531027Z"
+    created: "2019-12-11T16:47:02.130859514Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: 5d69d5f421a2e9941afb73398e2b9bf69b785b1477008bfbad0528b49cff4322
+    digest: b35105da6f0d841085010ceab5aa0056caf08886f9ac1ba31046945ce485b7fa
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 1.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-12-10T21:20:39.833410777Z"
+    created: "2019-12-11T16:47:02.132118881Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 476910ada9d80f96d3f44198c1df7a36b277899aa90662020fb588583d5250df
+    digest: 914ff4754650b31208001628b3683a5e5542d1f123258018ddb393da4a871bd1
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-1.0.0.tgz
     version: 1.0.0
-generated: "2019-12-10T21:20:39.827267758Z"
+generated: "2019-12-11T16:47:02.127078219Z"
