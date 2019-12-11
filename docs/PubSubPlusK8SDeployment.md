@@ -3,7 +3,7 @@
 This is a detailed documentation of deploying Solace PubSub+ Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
-* For the `pubsubplus` Helm chart configuration reference, refer to the [PubSub+ Helm Chart](/pubsubplus/README.md).
+* For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Helm Chart Reference](/pubsubplus/README.md).
 
 This document is applicable to any platform supporting Kubernetes.
 
