@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-12-11T18:26:41.549470231Z"
+    created: "2019-12-13T16:41:02.357022473Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 08d059d23d56b4925b5ff6430a51592b81a3b0ccb6a87dc84a94c093af9851be
+    digest: 88f23bf333418d20aafdf1c913c96c8086519cd20a1e82f3be2799b013b0bbe4
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 1.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-12-11T18:26:41.551353815Z"
+    created: "2019-12-13T16:41:02.35890185Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: c57342d58dbbc2908d94a27f511032a6d755fd421a5c69e1e8f1b587207012c2
+    digest: 71eb0f9d072ec1f6ffb5f9127a411b3e6246cc7db46b84f1c87a199a09e36b7c
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 1.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-12-11T18:26:41.553208962Z"
+    created: "2019-12-13T16:41:02.3601645Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: af5bc3055385977766a28cc955ab206519d19015429e232dce3dcab2d93d1300
+    digest: 37ca59bfdf0ebf69b7376b9b4d5b563f46c11260374e115198e41be7e9c87547
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-1.0.0.tgz
     version: 1.0.0
-generated: "2019-12-11T18:26:41.54709892Z"
+generated: "2019-12-13T16:41:02.35437772Z"
