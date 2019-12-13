@@ -6,7 +6,7 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 ## Overview
 
-This document provides a quick getting started guide to install a Solace PubSub+ Software Event Broker in various configurations onto a Kubernetes cluster. The recommended Solace PubSub+ Software Event Broker version is 9.4 or later.
+This document provides a quick getting started guide to install a Solace PubSub+ Software Event Broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster. The recommended Solace PubSub+ Software Event Broker version is 9.4 or later.
 
 Detailed documentation is provided in the [Solace PubSub+ Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md).
 
