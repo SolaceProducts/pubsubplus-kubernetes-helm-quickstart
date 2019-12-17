@@ -78,7 +78,7 @@ script:
 - helm install pubsubplus-ha --dry-run
 - helm lint pubsubplus-dev
 - helm install pubsubplus-dev --dry-run
-- # Publishto gh-pages and test
+- # Publish to gh-pages and test
 - >
   if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "HelmReorg" ]; then
     git config --global user.email "travis@travis-ci.org";
@@ -94,6 +94,7 @@ script:
     git push --quiet --set-upstream origin-pages gh-pages;
     echo "Updated and pushed GH pages!";
     popd;
+    sleep 60; # Ensure pages updated
     bash docs/helm-charts/test-chart-variants-from-gh-pages.sh https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
   fi
 
