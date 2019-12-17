@@ -5,3 +5,4 @@
 #   $1: the published location of the Solace URL
 # Assumes being run on a Kubernetes environment with enough resources for HA dev deployment
 #   - kubectl configured
+echo "Tested published charts from ${1}"
