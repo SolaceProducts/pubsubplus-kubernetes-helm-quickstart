@@ -93,7 +93,7 @@ Helm is configured properly if the command `helm version` returns no error.
   helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
 ```
 
-- By default the publicly available [latest Docker image of PubSub+ Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a different image, add the `image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the `--set` commands below, comma-separated.
+- By default the publicly available [latest Docker image of PubSub+ EBS Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a different image, add the `image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the `--set` commands below, comma-separated.
 
 - Use one of the following chart variants to create a deployment. For configuration options and delete instructions, consult the [PubSub+ EBS Helm Chart Reference](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
 
@@ -102,19 +102,19 @@ Helm is configured properly if the command `helm version` returns no error.
 
 a) Create a Solace PubSub+ EBS minimum deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory be available to the PubSub+ EBS pod.
 ```bash
-# Deploy PubSub+ Standard edition, minimum footprint developer version
+# Deploy PubSub+ EBS Standard edition, minimum footprint developer version
 helm install --name my-release solacecharts/pubsubplus-dev
 ```
 
 b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 4 GB of memory must be available to the PubSub+ EBS pod.
 ```bash
-# Deploy PubSub+ Standard edition, Standalone
+# Deploy PubSub+ EBS Standard edition, Standalone
 helm install --name my-release solacecharts/pubsubplus
 ```
 
 c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ EBS pods.
 ```bash
-# Deploy PubSub+ Standard edition, HA
+# Deploy PubSub+ EBS Standard edition, HA
 helm install --name my-release solacecharts/pubsubplus-ha
 ```
 </p>
@@ -125,19 +125,19 @@ helm install --name my-release solacecharts/pubsubplus-ha
 
 a) Create a Solace PubSub+ EBS minimum deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the PubSub+ EBS pod.
 ```bash
-# Deploy PubSub+ Standard edition, minimum footprint developer version
+# Deploy PubSub+ EBS Standard edition, minimum footprint developer version
 helm install my-release solacecharts/pubsubplus-dev
 ```
 
 b) Create a Solace PubSub+ Standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 4 GB of memory must be available to the PubSub+ EBS pod.
 ```bash
-# Deploy PubSub+ Standard edition, Standalone
+# Deploy PubSub+ EBS Standard edition, Standalone
 helm install my-release solacecharts/pubsubplus
 ```
 
-c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three PubSub+ EBS pods.
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three event broker pods.
 ```bash
-# Deploy PubSub+ Standard edition, HA
+# Deploy PubSub+ EBS Standard edition, HA
 helm install my-release solacecharts/pubsubplus-ha
 ```
 </p>
@@ -171,6 +171,6 @@ This project is licensed under the Apache License, Version 2.0. - See the [LICEN
 
 For more information about Solace technology in general please visit these resources:
 
-- The Solace Developer Portal website at: [solace.dev/](//solace.dev/)
+- The Solace Developer Portal website at: [solace.dev](//solace.dev/)
 - Understanding [Solace technology](//solace.com/products/platform/)
 - Ask the [Solace community](//dev.solace.com/community/).
