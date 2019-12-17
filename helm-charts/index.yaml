@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2019-12-17T14:38:12.5892353Z"
+    created: "2019-12-17T16:07:25.39094974Z"
     description: Deploy a single-node non-HA Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 64c42414d42149f18930c2047f4a89b2dd6ac5362e3f5aaae6814e709fb46263
+    digest: 28cdaeb65ef837e43260856fffc198a43167b32dd72faa512299c4062e1f9afd
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -38,10 +38,10 @@ entries:
     version: 1.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2019-12-17T14:38:12.590979436Z"
+    created: "2019-12-17T16:07:25.392016338Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ software
       event broker onto a Kubernetes Cluster for development purposes
-    digest: 121bfc1cce17b1bbadb1008ba058999feec2149151e82b597d787e0997f9d95c
+    digest: 67d7b70938f0547911b111124effdd0e624479af41748d48e843168816d733ff
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -74,10 +74,10 @@ entries:
     version: 1.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2019-12-17T14:38:12.592401603Z"
+    created: "2019-12-17T16:07:25.39271017Z"
     description: Deploy an HA redundancy group of Solace PubSub+ software event broker
       onto a Kubernetes Cluster
-    digest: 87b1723a8284da05e0b41ed310e8b77de10666780b2d837eec98a916e1ea9274
+    digest: d6a78b3eb19c605b6b6bff17db3a1e59b4f93a9ce63450c50abc92421bdd907c
     home: https://dev.solace.com
     icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
     keywords:
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts/pubsubplus-ha-1.0.0.tgz
     version: 1.0.0
-generated: "2019-12-17T14:38:12.5866221Z"
+generated: "2019-12-17T16:07:25.389137458Z"
