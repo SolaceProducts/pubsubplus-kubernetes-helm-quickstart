@@ -62,6 +62,7 @@ helm install --name my-release \
 
 - Another option is to create a YAML file containing the values to override and pass that to Helm:
 ```bash
+# Create file
 echo "# Overrides:
 solace:
   redundancy: true
@@ -69,6 +70,7 @@ solace:
 # Now use the file:
 helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
 ```
+> Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceDev/solace-kubernetes-quickstart/HelmReorg/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
 
 For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
 

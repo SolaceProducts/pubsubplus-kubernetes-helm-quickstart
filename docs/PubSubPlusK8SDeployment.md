@@ -449,13 +449,27 @@ helm repo update solacecharts
 ```
 
 3) Generate the templates: 
+
+First, consider if any [configurations](/pubsubplus/README.md#configuration) are required.
+If this is the case then you can add overrides as additional `--set ...` parameters to the `helm template` command, or use an override YAML file.
+
 ```sh
 # Create local copy - in Helm v2 "helm template" only works with local repositories.
 helm fetch solacecharts/pubsubplus --untar
 # Create location for the generated templates
 mkdir generated-templates
-# In next command replace my-release to the desired release name
+# In one of next sample commands replace my-release to the desired release name
+#   a) Using all defaults:
 helm template --name my-release --output-dir ./generated-templates ./pubsubplus
+#   b) Example with configuration using --set
+helm template --name my-release --output-dir ./generated-templates \
+  --set solace.redundancy=true \
+  ./pubsubplus
+#   c) Example with configuration using --set
+helm template --name my-release --output-dir ./generated-templates \
+  -f my-values.yaml \
+  ./pubsubplus
+
 ```
 The generated set of templates are now available in the `generated-templates` directory.
 

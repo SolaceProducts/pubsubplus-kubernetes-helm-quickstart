@@ -94,8 +94,8 @@ script:
     git push --quiet --set-upstream origin-pages gh-pages;
     echo "Updated and pushed GH pages!";
     popd;
-    sleep 60; # Ensure pages updated
-    bash docs/helm-charts/test-chart-variants-from-gh-pages.sh https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
+    # sleep 60; # Ensure pages updated
+    # bash docs/helm-charts/test-chart-variants-from-gh-pages.sh https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts;
   fi
 
 after_success:
