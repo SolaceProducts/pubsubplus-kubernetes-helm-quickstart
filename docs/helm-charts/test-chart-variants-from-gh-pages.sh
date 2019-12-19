@@ -40,6 +40,11 @@ testDeployHelmv3 () {
   echo "PASSED: Tested chart $1 using Helm v3"
 }
 
+# reset Helm
+helm reset --force || echo "Tried helm reset"
+rm -rf ~/.helm || echo "Tried rm .helm"
+sudo rm /usr/local/bin/helm
+
 
 # install Helm v2
 curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
