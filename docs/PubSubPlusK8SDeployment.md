@@ -70,7 +70,7 @@ The [PubSub+ Event Broker: Software](https://solace.com/products/event-broker/) 
 
 This document assumes basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
 
-For an example deployment diagram check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceDev/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
+For an example deployment diagram check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
 
 The PubSub+ Kubernetes deployment is defined by multiple YAML templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
 
@@ -397,7 +397,7 @@ The recommended way is to make use of published pre-packaged PubSub+ EBS charts 
 Add or refresh a local Solace `solacecharts` repo:
 ```bash
 # Add new "solacecharts" repo
-helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
 
@@ -426,7 +426,7 @@ helm fetch solacecharts/pubsubplus --untar
 # Use the Helm chart from this directory
 helm install ./pubsubplus
 ```
-> Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/solace-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
+> Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
 
 ### Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
@@ -443,7 +443,7 @@ Note that later sections of this document about modifying, upgrading or deleting
 2) Add or refresh a local Solace `solacecharts` repo:
 ```bash
 # Add new "solacecharts" repo
-helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
 ```

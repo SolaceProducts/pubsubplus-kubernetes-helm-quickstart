@@ -6,22 +6,22 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Event Broker: Software](//solace.com/products/event-broker/software/) (PubSub+ EBS) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace PubSub+ Event Broker: Software on Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace PubSub+ Event Broker: Software on Kubernetes Documentation](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
-* Kubernetes 1.9 or later platform with adequate [CPU and memory](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
+* Kubernetes 1.9 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2
 * If using a private Docker registry, load the PubSub+ EBS Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#configuration)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
-Also consult additional [deployment considerations](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations).
+Also consult additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations).
 
 ## Create a deployment
 
 ```bash
-helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
 helm install --name my-release solacecharts/pubsubplus
 ```
 
@@ -34,9 +34,9 @@ helm status my-release
 ```
 
 Refer to the detailed PubSub+ EBS Kubernetes documentation for:
-* [Validating the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
-* [Troubleshooting](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#troubleshooting)
-* [Modifying or Upgrading](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
+* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
 
 ## Delete a deployment
 
@@ -49,7 +49,7 @@ Note: ensure to delete existing PVCs if reusing the same deployment name for a c
 
 ## Configuration
 
-The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ EBS Kubernetes documentation.
+The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ EBS Kubernetes documentation.
 
 There are several ways to customize the deployment:
 
@@ -70,7 +70,7 @@ solace:
 # Now use the file:
 helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
 ```
-> Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceDev/solace-kubernetes-quickstart/HelmReorg/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
+> Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceProducts/pubsubplus-kubernetes-quickstart/master/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
 
 For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
 

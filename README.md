@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart.svg?branch=master)](https://travis-ci.org/SolaceProducts/solace-kubernetes-quickstart)
+[![Build Status](https://travis-ci.org/SolaceProducts/pubsubplus-kubernetes-quickstart.svg?branch=master)](https://travis-ci.org/SolaceProducts/pubsubplus-kubernetes-quickstart)
 
 # Install a Solace PubSub+ Event Broker: Software onto a Kubernetes cluster
 
@@ -10,7 +10,7 @@ This document provides a quick getting started guide to install a Solace PubSub+
 
 Detailed documentation is provided in the [Solace PubSub+ Event Broker: Software on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md).
 
-This quick start is intended mainly for development and demo purposes. Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
+This quick start is intended mainly for development and demo purposes. Consult the [Deployment Considerations](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other Kubernetes platforms see:
 
@@ -90,12 +90,12 @@ Helm is configured properly if the command `helm version` returns no error.
 
 - Add the Solace Helm charts to your local Helm repo:
 ```bash
-  helm repo add solacecharts https://solacedev.github.io/solace-kubernetes-quickstart/helm-charts
+  helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
 ```
 
 - By default the publicly available [latest Docker image of PubSub+ EBS Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a different image, add the `image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the `--set` commands below, comma-separated.
 
-- Use one of the following chart variants to create a deployment. For configuration options and delete instructions, consult the [PubSub+ EBS Helm Chart Reference](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg/pubsubplus).
+- Use one of the following chart variants to create a deployment. For configuration options and delete instructions, consult the [PubSub+ EBS Helm Chart Reference](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/tree/master/pubsubplus).
 
 <details open=true><summary><b>Instructions using Helm v2</b></summary>
 <p>
@@ -150,10 +150,10 @@ The above options will start the deployment and write related information and no
 Wait for the deployment to complete following the information printed on the console.
 
 Refer to the detailed PubSub+ EBS Kubernetes documentation for:
-* [Validating the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
-* [Troubleshooting](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#troubleshooting)
-* [Modifying or Upgrading](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
-* [Deleting the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
+* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
+* [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
 
 ## Contributing
 
@@ -161,7 +161,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Authors
 
-See the list of [contributors](//github.com/SolaceProducts/solace-kubernetes-quickstart/graphs/contributors) who participated in this project.
+See the list of [contributors](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/graphs/contributors) who participated in this project.
 
 ## License
 
