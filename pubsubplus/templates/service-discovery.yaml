@@ -1,0 +1,30 @@
+{{- if .Values.solace.redundancy }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "solace.fullname" . }}-discovery
+  labels:
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  ports:
+  - port: 8080
+    name: semp
+  - port: 8741
+    name: ha-mate-link
+  - port: 8300
+    name: ha-conf-sync0
+  - port: 8301
+    name: ha-conf-sync1
+  - port: 8302
+    name: ha-conf-sync2
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  publishNotReadyAddresses: true
+{{- end }}
