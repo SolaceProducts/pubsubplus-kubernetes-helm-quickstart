@@ -84,18 +84,18 @@ script:
     git config --global user.email "travis@travis-ci.org";
     git config --global user.name "travis-ci";
     mkdir gh-pages; # Now update gh-pages
-    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceProducts/solace-kubernetes-quickstart gh-pages > /dev/null 2>&1;
+    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1;
     mv pubsubplus-*.tgz gh-pages/helm-charts/;
-    helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/solace-kubernetes-quickstart/helm-charts;
+    helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts;
     pushd gh-pages;
     git add -f .;
     git commit -m "Latest helm chart updates on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
-    git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceProducts/solace-kubernetes-quickstart.git > /dev/null 2>&1;
+    git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart.git > /dev/null 2>&1;
     git push --quiet --set-upstream origin-pages gh-pages;
     echo "Updated and pushed GH pages!";
     popd;
     # sleep 60; # Ensure pages updated
-    # bash docs/helm-charts/test-chart-variants-from-gh-pages.sh https://solaceproducts.github.io/solace-kubernetes-quickstart/helm-charts;
+    # bash docs/helm-charts/test-chart-variants-from-gh-pages.sh https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts;
   fi
 
 after_success:
