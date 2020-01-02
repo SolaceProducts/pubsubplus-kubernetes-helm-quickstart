@@ -1,18 +1,18 @@
-# Solace PubSub+ Event Broker: Software - Helm Chart
+# Solace PubSub+ Software Event Broker - Helm Chart
 
-The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Event Broker: Software](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Software Event Broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Event Broker: Software](//solace.com/products/event-broker/software/) (PubSub+ EBS) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
+This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace PubSub+ Event Broker: Software on Kubernetes Documentation](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
 * Kubernetes 1.9 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2
-* If using a private Docker registry, load the PubSub+ EBS Docker image and for signed images create an image pull secret
+* If using a private Docker registry, load the PubSub+ Software Event Broker Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#configuration)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
@@ -33,7 +33,7 @@ Obtain information about the deployment and services:
 helm status my-release
 ```
 
-Refer to the detailed PubSub+ EBS Kubernetes documentation for:
+Refer to the detailed PubSub+ Kubernetes documentation for:
 * [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
 * [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
 * [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
@@ -49,7 +49,7 @@ Note: ensure to delete existing PVCs if reusing the same deployment name for a c
 
 ## Configuration
 
-The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ EBS Kubernetes documentation.
+The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ Kubernetes documentation.
 
 There are several ways to customize the deployment:
 
