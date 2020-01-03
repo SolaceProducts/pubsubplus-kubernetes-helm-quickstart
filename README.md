@@ -24,7 +24,7 @@ This document is applicable to any platform supporting Kubernetes, with specific
 
 Solace PubSub+ Software Event Broker can be deployed in either a three-node High-Availability (HA) group or as a single-node standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
-We recommend using the Helm tool for convenience. An [alternative method](docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided in the detailed Documentation.
+We recommend using the Helm tool for convenience. An [alternative method](/docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided.
 
 In this quick start we go through the steps to set up a PubSub+ Software Event Broker using [Solace PubSub+ Helm charts](//hub.helm.sh/charts/solace).
 
