@@ -1,6 +1,6 @@
 # Solace PubSub+ Software Event Broker on Kubernetes Deployment Documentation
 
-This is the detailed documentation for deploying Solace PubSub+ Software Event Broker on Kubernetes.
+This document provide detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
 * For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
@@ -64,19 +64,19 @@ Contents:
 
 ## The Solace PubSub+ Software Event Broker
 
-The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/), efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This document assumes basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
+This document assumes a basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
 
-For an example deployment diagram check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
+For an example deployment diagram, check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
 
-The PubSub+ Kubernetes deployment is defined by multiple YAML templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
+Multiple YAML templates define the PubSub+ Kubernetes deployment with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete.
-* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can also manage your deployment's lifecycle, including upgrade and delete.
+* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
 The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
@@ -85,7 +85,7 @@ The next sections will provide details on the PubSub+ Helm chart, dependencies a
 The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the pods of a PubSub+ Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets, and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally so pods in a PubSub+ event broker redundancy group can communicate with each-other in an HA setting.
+The StatefulSet template controls the pods of a PubSub+ Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a PubSub+ event broker redundancy group can communicate with each other in an HA setting.
 
 All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
@@ -123,7 +123,7 @@ Using a persistent storage is recommended, otherwise if pod-local storage is use
 
 The `pubsubplus` chart supports allocation of new storage volumes or mounting volumes with existing data. To avoid data corruption ensure to allocate clean new volumes for new deployments.
 
-The recommended default allocation is to use Kubernetes [Storage Classes]((//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name and when deleting the event broker pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or a deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
+The recommended default allocation is to use Kubernetes [Storage Classes]((//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name. When deleting the event broker pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted, so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
 
 Instead of using a storage class, the `pubsubplus` chart also allows you describe how to assign storage by adding your own YAML fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
 
@@ -193,7 +193,7 @@ Provide this custom YAML fragment in `storage.customVolumeMount`:
 
 The PubSub+ Software Event Broker Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
 
-Following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk), note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
+The following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk); note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
 ```yaml
   customVolumeMount: |
     gcePersistentDisk:
@@ -222,11 +222,11 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 
 To support [Internal load balancers](//kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer), provider-specific service annotation may be added through defining the `service.annotations` parameter.
 
-The `service.ports` parameter defines the services exposed. It specifies the event broker `containerPort` that actually provides the service, and the mapping to the `servicePort` where the service can be accessed when using LoadBalancer or ClusterIP. Note that there is no control over which port services are mapped when using NodePort.
+The `service.ports` parameter defines the services exposed. It specifies the event broker `containerPort` that provides the service and the mapping to the `servicePort` where the service can be accessed when using LoadBalancer or ClusterIP. Note that there is no control over which port services are mapped when using NodePort.
 
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
-A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true". The exposed `pubsubplus` service will forward traffic to that active event broker node. 
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. 
 
 #### Using pod label "active" to identify the active event broker node
 
@@ -242,7 +242,7 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 
 ### The PubSub+ Software Event Broker Docker image
 
-The `image.repository` and `image.tag` parameters combined specify the PubSub+ Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or in a private Docker container registry. 
+The `image.repository` and `image.tag` parameters combined specify the PubSub+ Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
 
 #### Using a public registry
 
@@ -316,7 +316,7 @@ If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecur
 
 #### Securing Helm v2
 
-Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
+Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default, Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller, and they need to be applied carefully if strict security is required; for example, in a production environment.
 
 [Securing your Helm Installation](//v2.helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
 
@@ -477,7 +477,7 @@ The generated set of templates are now available in the `generated-templates` di
 
 Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
 
-1) Optionally copy the `generated-templates` directory with contents if this is on a different host
+1) Optionally, copy the `generated-templates` directory with contents if this is on a different host
 
 2) Initiate the deployment:
 ```bash
@@ -680,7 +680,7 @@ Your Kubernetes environment's security constraints may also impact successful de
 
 ## Modifying or upgrading a Deployment
 
-Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 Tip: to get the current value-overrides, check the `USER-SUPPLIED VALUES`:
 ```bash

@@ -2,11 +2,11 @@
 
 # Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster
 
-The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Software Event Broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This document provides a quick getting started guide to install a Solace PubSub+ Software Event Broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster. The recommended PubSub+ Software Event Broker version is 9.4 or later.
+This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster. The recommended software event broker version is 9.4 or later.
 
 Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md).
 
@@ -22,7 +22,7 @@ This document is applicable to any platform supporting Kubernetes, with specific
 
 ## How to deploy the Solace PubSub+ Software Event Broker onto Kubernetes
 
-Solace PubSub+ Software Event Broker can be deployed in either a three-node High-Availability (HA) group, or as a single-node standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
+Solace PubSub+ Software Event Broker can be deployed in either a three-node High-Availability (HA) group or as a single-node standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
 We recommend using the Helm tool for convenience. An [alternative method](docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided in the detailed Documentation.
 
