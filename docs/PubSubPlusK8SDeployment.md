@@ -499,26 +499,27 @@ Now you can validate your deployment on the command line. In this example an HA 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
 NAME                                     READY   AGE
-statefulset.apps/my-release-pubsubplus   3/3     5m47s
+statefulset.apps/my-release-pubsubplus   3/3     13m
 
-NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                                                                                                                                             AGE
-service/my-release-pubsubplus             LoadBalancer   10.100.200.41   35.232.199.171   22:31777/TCP,8080:31431/TCP,943:30518/TCP,55555:30220/TCP,55003:32416/TCP,55443:31735/TCP,80:30498/TCP,443:30250/TCP,5672:30555/TCP,1883:30503/TCP,9000:30433/TCP   5m47s
-service/my-release-pubsubplus-discovery   ClusterIP      None            <none>           8080/TCP,8741/TCP,8300/TCP,8301/TCP,8302/TCP                                                                                                                        5m47s
+NAME                                      TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)                                                                                                                                                                   AGE
+service/kubernetes                        ClusterIP      10.92.0.1     <none>        443/TCP                                                                                                                                                                   14d
+service/my-release-pubsubplus             LoadBalancer   10.92.13.40   34.67.66.30   2222:30197/TCP,8080:30343/TCP,1943:32551/TCP,55555:30826/TCP,55003:30770/TCP,55443:32583/TCP,8008:32689/TCP,1443:32460/TCP,5672:31960/TCP,1883:32112/TCP,9000:30848/TCP   13m
+service/my-release-pubsubplus-discovery   ClusterIP      None          <none>        8080/TCP,8741/TCP,8300/TCP,8301/TCP,8302/TCP                                                                                                                              13m
 
-NAME                          READY   STATUS    RESTARTS   AGE     LABELS
-pod/my-release-pubsubplus-0   1/1     Running   0          7m11s   active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-0
-pod/my-release-pubsubplus-1   1/1     Running   0          7m11s   active=false,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-1
-pod/my-release-pubsubplus-2   1/1     Running   0          7m11s   app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-2
+NAME                          READY   STATUS    RESTARTS   AGE
+pod/my-release-pubsubplus-0   1/1     Running   0          13m
+pod/my-release-pubsubplus-1   1/1     Running   0          13m
+pod/my-release-pubsubplus-2   1/1     Running   0          13m
 
-NAME                                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-persistentvolumeclaim/data-my-release-pubsubplus-0      Bound    pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
-persistentvolumeclaim/data-my-release-pubsubplus-1      Bound    pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
-persistentvolumeclaim/data-my-release-pubsubplus-2      Bound    pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
+NAME                                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/data-my-release-pubsubplus-0   Bound    pvc-6b0cd358-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
+persistentvolumeclaim/data-my-release-pubsubplus-1   Bound    pvc-6b14bc8a-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
+persistentvolumeclaim/data-my-release-pubsubplus-2   Bound    pvc-6b24b2aa-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
 
-NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                   STORAGECLASS   REASON   AGE
-persistentvolume/pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-0      standard                7m11s
-persistentvolume/pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-1      standard                7m11s
-persistentvolume/pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-2      standard                7m11s
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                  STORAGECLASS   REASON   AGE
+persistentvolume/pvc-6b0cd358-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-0   standard                13m
+persistentvolume/pvc-6b14bc8a-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-1   standard                13m
+persistentvolume/pvc-6b24b2aa-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-2   standard                13m
 
 
 prompt:~$ kubectl describe service my-release-pubsubplus
@@ -532,16 +533,16 @@ Annotations:              <none>
 Selector:                 active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus
 Type:                     LoadBalancer
 IP:                       10.100.200.41
-LoadBalancer Ingress:     35.232.199.171
-Port:                     ssh  22/TCP
+LoadBalancer Ingress:     34.67.66.30
+Port:                     ssh  2222/TCP
 TargetPort:               2222/TCP
-NodePort:                 ssh  31777/TCP
-Endpoints:                10.200.29.186:2222
+NodePort:                 ssh  30197/TCP
+Endpoints:                10.28.1.20:2222
 :
 :
 ```
 
-Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.232.199.171` is the Load Balancer's external Public IP to use.
+Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `34.67.66.30` is the Load Balancer's external Public IP to use.
 
 > Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, execute `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports instead of direct port access, for which the mapping can be obtained from `kubectl describe service XXX-XX-solace`.
 
@@ -559,7 +560,7 @@ If you are using a single event broker and are used to working with a CLI event 
 
 ```sh
 
-$ssh -p 22 admin@35.202.131.158
+$ssh -p 2222 admin@35.202.131.158
 Solace PubSub+ Standard
 Password:
 
@@ -581,8 +582,6 @@ XXX-XXX-pubsubplus-0>
 ```
 
 If you are using an HA deployment, it is better to access the CLI through the Kubernets pod and not directly via SSH.
-
-> Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
 
 * Loopback to SSH directly on the pod
 
