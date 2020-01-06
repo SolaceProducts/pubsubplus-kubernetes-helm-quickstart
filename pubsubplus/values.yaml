@@ -57,7 +57,7 @@ service:
   #    "containerPorts" (from the PubSub+ container) will be exposed as external "servicePorts",
   # Refer to the Solace documentation of Default Port Numbers for the containerPorts.
   ports:
-      - servicePort: 22
+      - servicePort: 2222
         containerPort: 2222
         protocol: TCP
         name: ssh
@@ -65,8 +65,8 @@ service:
         containerPort: 8080
         protocol: TCP
         name: semp
-      - servicePort: 943
-        containerPort: 60943
+      - servicePort: 1943
+        containerPort: 1943
         protocol: TCP
         name: semptls
       - servicePort: 55555
@@ -81,12 +81,12 @@ service:
         containerPort: 55443
         protocol: TCP
         name: smftls
-      - servicePort: 80
-        containerPort: 60080
+      - servicePort: 8008
+        containerPort: 8008
         protocol: TCP
         name: web
-      - servicePort: 443
-        containerPort: 60443
+      - servicePort: 1443
+        containerPort: 1443
         protocol: TCP
         name: webtls
       - servicePort: 5672
