@@ -13,9 +13,9 @@ data:
       export username_admin_password=`cat /mnt/disks/secrets/username_admin_password`
       export username_admin_globalaccesslevel=admin
       export service_ssh_port='2222'
-      export service_webtransport_port='60080'
-      export service_webtransport_tlsport='60443'
-      export service_semp_tlsport='60943'
+      export service_webtransport_port='8008'
+      export service_webtransport_tlsport='1443'
+      export service_semp_tlsport='1943'
       export logging_debug_output=all
 {{- if eq .Values.solace.size "dev" }}
       export system_scaling_maxconnectioncount="100"
