@@ -1,9 +1,9 @@
-# Solace PubSub+ Event Broker: Software on Kubernetes Deployment Documentation
+# Solace PubSub+ Software Event Broker on Kubernetes Deployment Documentation
 
-This is the detailed documentation for deploying Solace PubSub+ Event Broker: Software (PubSub+ EBS) on Kubernetes.
+This document provide detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
-* For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ EBS Helm Chart Reference](/pubsubplus/README.md).
+* For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
 This document is applicable to any platform supporting Kubernetes.
 
@@ -47,7 +47,7 @@ Contents:
   * [**Troubleshooting**](#troubleshooting)
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
-    + [Solace event broker troubleshooting](#solace-event-broker-troubleshooting)
+    + [PubSub+ Software Event Broker troubleshooting](#pubsub-software-event-broker-troubleshooting)
       - [General Kubernetes troubleshooting hints](#general-kubernetes-troubleshooting-hints)
       - [Pods stuck in not enough resources](#pods-stuck-in-not-enough-resources)
       - [Pods stuck in no storage](#pods-stuck-in-no-storage)
@@ -62,38 +62,38 @@ Contents:
 
 
 
-## The Solace PubSub+ Event Broker: Software
+## The Solace PubSub+ Software Event Broker
 
-The [PubSub+ Event Broker: Software](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/), efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This document assumes basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
+This document assumes a basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
 
-For an example deployment diagram check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
+For an example deployment diagram, check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
 
-The PubSub+ Kubernetes deployment is defined by multiple YAML templates with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
+Multiple YAML templates define the PubSub+ Kubernetes deployment with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
-* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can then also manage your deployment's lifecycle including upgrade and delete.
-* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case Helm will not be able to manage your Kubernetes rollouts lifecycle.
+* The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can also manage your deployment's lifecycle, including upgrade and delete.
+* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
 The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
-## PubSub+ Event Broker: Software Deployment Considerations
+## PubSub+ Software Event Broker Deployment Considerations
 
 The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the pods of a PubSub+ EBS deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets, and maps PubSub+ EBS data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally so pods in a PubSub+ EBS redundancy group can communicate with each-other in an HA setting.
+The StatefulSet template controls the pods of a PubSub+ Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a PubSub+ event broker redundancy group can communicate with each other in an HA setting.
 
-All the `pubsubplus` chart parameters are documented in the [PubSub+ EBS Helm Chart](/pubsubplus/README.md#configuration) reference.
+All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 ### Deployment scaling
 
-Solace PubSub+ EBS event broker can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm), controlled by the `solace.size` chart parameter.
+Solace PubSub+ Software Event Broker event broker can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm), controlled by the `solace.size` chart parameter.
 
-Depending on the `solace.redundancy` parameter, one PubSub+ EBS event router pod is deployed in a single-node Standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
+Depending on the `solace.redundancy` parameter, one event router pod is deployed in a single-node standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
 
 Horizontal scaling is possible through [connecting multiple deployments](//docs.solace.com/Overviews/DMR-Overview.htm).
 
@@ -109,7 +109,7 @@ The following CPU and memory requirements (for each pod) are summarized here fro
 
 ### Disk Storage
 
-The [PubSub+ EBS deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
+The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
 
 Storage size (`storage.size` parameter) requirements for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB
@@ -123,7 +123,7 @@ Using a persistent storage is recommended, otherwise if pod-local storage is use
 
 The `pubsubplus` chart supports allocation of new storage volumes or mounting volumes with existing data. To avoid data corruption ensure to allocate clean new volumes for new deployments.
 
-The recommended default allocation is to use Kubernetes [Storage Classes]((//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name and when deleting PubSub+ EBS pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or a deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
+The recommended default allocation is to use Kubernetes [Storage Classes](//kubernetes.io/docs/concepts/storage/storage-classes/) utilizing [Dynamic Volume Provisioning](//kubernetes.io/docs/concepts/storage/dynamic-provisioning/). The `pubsubplus` chart deployment will create a Persistent Volume Claim (PVC) specifying the size and the Storage Class of the requested volume and a Persistent Volume (PV) that meets the requirements will be allocated. Both the PVC and PV names will be linked to the deployment's name. When deleting the event broker pod(s) or even the entire deployment, the PVC and the allocated PV will not be deleted, so potentially complex configuration is preserved. They will be re-mounted and reused with the existing configuration when a new pod starts (controlled by the StatefulSet, automatically matched to the old pod even in an HA deployment) or deployment with the same as the old name is started. Explicitly delete a PVC if no longer needed, which will delete the corresponding PV - refer to [Deleting a Deployment](#deleting-a-deployment).
 
 Instead of using a storage class, the `pubsubplus` chart also allows you describe how to assign storage by adding your own YAML fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
 
@@ -191,9 +191,9 @@ Provide this custom YAML fragment in `storage.customVolumeMount`:
 
 #### Using a pre-created provider-specific volume
 
-The PubSub+ EBS Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
+The PubSub+ Software Event Broker Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
 
-Following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk), note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
+The following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk); note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
 ```yaml
   customVolumeMount: |
     gcePersistentDisk:
@@ -212,9 +212,9 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
       type: Directory
 ```
 
-### Exposing the PubSub+ EBS Services
+### Exposing the PubSub+ Software Event Broker Services
 
-[PubSub+ EBS event broker services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
 
 * LoadBalancer - an external load balancer (default)
 * NodePort
@@ -222,11 +222,11 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 
 To support [Internal load balancers](//kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer), provider-specific service annotation may be added through defining the `service.annotations` parameter.
 
-The `service.ports` parameter defines the services exposed. It specifies the event broker `containerPort` that actually provides the service, and the mapping to the `servicePort` where the service can be accessed when using LoadBalancer or ClusterIP. Note that there is no control over which port services are mapped when using NodePort.
+The `service.ports` parameter defines the services exposed. It specifies the event broker `containerPort` that provides the service and the mapping to the `servicePort` where the service can be accessed when using LoadBalancer or ClusterIP. Note that there is no control over which port services are mapped when using NodePort.
 
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
-A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true". The exposed `pubsubplus` service will forward traffic to that active event broker node. 
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. 
 
 #### Using pod label "active" to identify the active event broker node
 
@@ -240,13 +240,13 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
-### The PubSub+ EBS Docker image
+### The PubSub+ Software Event Broker Docker image
 
-The `image.repository` and `image.tag` parameters combined specify the PubSub+ EBS Docker image to be used for the deployment. They can either point to an image in a public or in a private Docker container registry. 
+The `image.repository` and `image.tag` parameters combined specify the PubSub+ Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
 
 #### Using a public registry
 
-The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free PubSub+ EBS Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
+The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free PubSub+ Software Event Broker Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
 
 #### Using private registries
 
@@ -254,14 +254,14 @@ The following steps are applicable if using a private Docker container registry 
 1. Get the Solace PubSub+ event broker Docker image tar.gz archive
 2. Load the image into the private Docker registry 
 
-To get the PubSub+ EBS event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ Event Broker: Software as a **docker** image or obtain your version from Solace Support.
+To get the PubSub+ Software Event Broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ Software Event Broker as a **docker** image or obtain your version from Solace Support.
 
-| PubSub+ EBS Standard<br/>Docker Image | PubSub+ EBS Enterprise Evaluation Edition<br/>Docker Image
+| PubSub+ Software Event Broker Standard<br/>Docker Image | PubSub+ Software Event Broker Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-To load the Solace PubSub+ EBS Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+To load the Solace PubSub+ Software Event Broker Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
 
 * Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
 * Login to the private registry:
@@ -308,7 +308,7 @@ Then set the `image.pullSecretName` chart value to `<pull-secret-name>`.
 
 #### Using Security Context
 
-The PubSub+ EBS container already runs in non-privileged mode.
+The event broker container already runs in non-privileged mode.
 
 If `securityContext.enabled` is `true` (default) then the `securityContext.fsGroup` and `securityContext.runAsUser` settings define [the pod security context](//kubernetes.io/docs/tasks/configure-pod-container/security-context/).
 
@@ -316,7 +316,7 @@ If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecur
 
 #### Securing Helm v2
 
-Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller and they need to be applied carefully if strict security is required e.g.: in a production environment.
+Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default, Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller, and they need to be applied carefully if strict security is required; for example, in a production environment.
 
 [Securing your Helm Installation](//v2.helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
 
@@ -350,7 +350,7 @@ Check your platform running the `kubectl get nodes` command from your command-li
 
 #### Install and setup the Helm package manager
 
-The Solace PubSub+ EBS can be deployed using both Helm v2 (stable, legacy) and Helm v3 (new, recently released). Most deployments currently use Helm v2.
+The event broker can be deployed using both Helm v2 (stable, legacy) and Helm v3 (new, recently released). Most deployments currently use Helm v2.
 
 If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 (default for now) then also deploying/redeploying Tiller, its in-cluster operator.
 
@@ -392,7 +392,7 @@ As discussed in the [Overview](#overview), two types of deployments will be desc
 
 ### Deployment steps using Helm
 
-The recommended way is to make use of published pre-packaged PubSub+ EBS charts from Solace' public repo and customizing your deployment through [available chart parameters](/pubsubplus/README.md).
+The recommended way is to make use of published pre-packaged PubSub+ charts from Solace' public repo and customizing your deployment through [available chart parameters](/pubsubplus/README.md).
 
 Add or refresh a local Solace `solacecharts` repo:
 ```bash
@@ -408,12 +408,12 @@ helm install  --name my-release solacecharts/pubsubplus
 helm install my-release solacecharts/pubsubplus
 ```
 
-There are three Helm chart variants available from the repo with default small-size configurations:
-1.	`pubsubplus-dev` - minimum footprint PubSub+ EBS for Developers (Standalone)
-2.	`pubsubplus` - PubSub+ EBS Standalone, supporting 100 connections
-3.	`pubsubplus-ha` - PubSub+ EBS HA, supporting 100 connections
+There are three Helm chart variants available with default small-size configurations:
+1.	`pubsubplus-dev` - minimum footprint PubSub+ Software Event Broker for Developers (standalone)
+2.	`pubsubplus` - PubSub+ Software Event Broker standalone, supporting 100 connections
+3.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 100 connections
 
-Customization options are described in the [PubSub+ EBS Helm Chart](/pubsubplus/README.md#configuration) reference.
+Customization options are described in the [PubSub+ Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 Also, refer to the [quick start guide](/README.md) for additional deployment details.
 
@@ -477,7 +477,7 @@ The generated set of templates are now available in the `generated-templates` di
 
 Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
 
-1) Optionally copy the `generated-templates` directory with contents if this is on a different host
+1) Optionally, copy the `generated-templates` directory with contents if this is on a different host
 
 2) Initiate the deployment:
 ```bash
@@ -499,26 +499,27 @@ Now you can validate your deployment on the command line. In this example an HA 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
 NAME                                     READY   AGE
-statefulset.apps/my-release-pubsubplus   3/3     5m47s
+statefulset.apps/my-release-pubsubplus   3/3     13m
 
-NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                                                                                                                                             AGE
-service/my-release-pubsubplus             LoadBalancer   10.100.200.41   35.232.199.171   22:31777/TCP,8080:31431/TCP,943:30518/TCP,55555:30220/TCP,55003:32416/TCP,55443:31735/TCP,80:30498/TCP,443:30250/TCP,5672:30555/TCP,1883:30503/TCP,9000:30433/TCP   5m47s
-service/my-release-pubsubplus-discovery   ClusterIP      None            <none>           8080/TCP,8741/TCP,8300/TCP,8301/TCP,8302/TCP                                                                                                                        5m47s
+NAME                                      TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)                                                                                                                                                                   AGE
+service/kubernetes                        ClusterIP      10.92.0.1     <none>        443/TCP                                                                                                                                                                   14d
+service/my-release-pubsubplus             LoadBalancer   10.92.13.40   34.67.66.30   2222:30197/TCP,8080:30343/TCP,1943:32551/TCP,55555:30826/TCP,55003:30770/TCP,55443:32583/TCP,8008:32689/TCP,1443:32460/TCP,5672:31960/TCP,1883:32112/TCP,9000:30848/TCP   13m
+service/my-release-pubsubplus-discovery   ClusterIP      None          <none>        8080/TCP,8741/TCP,8300/TCP,8301/TCP,8302/TCP                                                                                                                              13m
 
-NAME                          READY   STATUS    RESTARTS   AGE     LABELS
-pod/my-release-pubsubplus-0   1/1     Running   0          7m11s   active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-0
-pod/my-release-pubsubplus-1   1/1     Running   0          7m11s   active=false,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-1
-pod/my-release-pubsubplus-2   1/1     Running   0          7m11s   app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus,controller-revision-hash=my-release-pubsubplus-544547fb86,statefulset.kubernetes.io/pod-name=my-release-pubsubplus-2
+NAME                          READY   STATUS    RESTARTS   AGE
+pod/my-release-pubsubplus-0   1/1     Running   0          13m
+pod/my-release-pubsubplus-1   1/1     Running   0          13m
+pod/my-release-pubsubplus-2   1/1     Running   0          13m
 
-NAME                                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-persistentvolumeclaim/data-my-release-pubsubplus-0      Bound    pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
-persistentvolumeclaim/data-my-release-pubsubplus-1      Bound    pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
-persistentvolumeclaim/data-my-release-pubsubplus-2      Bound    pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            standard       5m48s
+NAME                                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/data-my-release-pubsubplus-0   Bound    pvc-6b0cd358-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
+persistentvolumeclaim/data-my-release-pubsubplus-1   Bound    pvc-6b14bc8a-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
+persistentvolumeclaim/data-my-release-pubsubplus-2   Bound    pvc-6b24b2aa-30c4-11ea-9379-42010a8000c7   30Gi       RWO            standard       13m
 
-NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                   STORAGECLASS   REASON   AGE
-persistentvolume/pvc-234adf60-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-0      standard                7m11s
-persistentvolume/pvc-23518bf4-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-1      standard                7m11s
-persistentvolume/pvc-23572265-1606-11ea-be3e-42010a000b24   30Gi       RWO            Delete           Bound    btest/data-my-release-pubsubplus-2      standard                7m11s
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                                  STORAGECLASS   REASON   AGE
+persistentvolume/pvc-6b0cd358-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-0   standard                13m
+persistentvolume/pvc-6b14bc8a-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-1   standard                13m
+persistentvolume/pvc-6b24b2aa-30c4-11ea-9379-42010a8000c7   30Gi       RWO            Delete           Bound    default/data-my-release-pubsubplus-2   standard                13m
 
 
 prompt:~$ kubectl describe service my-release-pubsubplus
@@ -532,16 +533,16 @@ Annotations:              <none>
 Selector:                 active=true,app.kubernetes.io/instance=my-release,app.kubernetes.io/name=pubsubplus
 Type:                     LoadBalancer
 IP:                       10.100.200.41
-LoadBalancer Ingress:     35.232.199.171
-Port:                     ssh  22/TCP
+LoadBalancer Ingress:     34.67.66.30
+Port:                     ssh  2222/TCP
 TargetPort:               2222/TCP
-NodePort:                 ssh  31777/TCP
-Endpoints:                10.200.29.186:2222
+NodePort:                 ssh  30197/TCP
+Endpoints:                10.28.1.20:2222
 :
 :
 ```
 
-Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.232.199.171` is the Load Balancer's external Public IP to use.
+Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `34.67.66.30` is the Load Balancer's external Public IP to use.
 
 > Note: When using MiniKube, there is no integrated Load Balancer. For a workaround, execute `minikube service XXX-XXX-solace` to expose the services. Services will be accessible directly using mapped ports instead of direct port access, for which the mapping can be obtained from `kubectl describe service XXX-XX-solace`.
 
@@ -559,7 +560,7 @@ If you are using a single event broker and are used to working with a CLI event 
 
 ```sh
 
-$ssh -p 22 admin@35.202.131.158
+$ssh -p 2222 admin@35.202.131.158
 Solace PubSub+ Standard
 Password:
 
@@ -581,8 +582,6 @@ XXX-XXX-pubsubplus-0>
 ```
 
 If you are using an HA deployment, it is better to access the CLI through the Kubernets pod and not directly via SSH.
-
-> Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
 
 * Loopback to SSH directly on the pod
 
@@ -637,7 +636,7 @@ kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
 
 ### Viewing events
 
-Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the PubSub+ EBS deployment.
+Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the PubSub+ deployment.
 
 It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 
@@ -645,7 +644,7 @@ It is recommended to watch events when creating or upgrading a Solace deployment
 kubectl get events  # use -w to watch live
 ```
 
-### Solace PubSub+ EBS troubleshooting
+### PubSub+ Software Event Broker troubleshooting
 
 #### General Kubernetes troubleshooting hints
 https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
@@ -658,20 +657,20 @@ If pods stay in pending state and `kubectl describe pods` reveals there are not 
 
 Pods may also stay in pending state because [storage requirements](#storage) cannot be met. Check `kubectl get pv,pvc`. PVCs and PVs should be in bound state and if not then use `kubectl describe pvc` for any issues.
 
-Unless otherwise specified, a default storage class must be available for default PubSub+ EBS deployment configuration.
+Unless otherwise specified, a default storage class must be available for default PubSub+ deployment configuration.
 ```bash
 kubectl get storageclasses
 ```
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or PubSub+ EBS process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or the event broker process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
 
 #### No Pods listed
 
 If no pods are listed related to your deployment check the StatefulSet for any clues:
 ```
-kubectl describe statefulset.apps/test1-solace
+kubectl describe statefulset my-release-pubsubplus
 ```
 
 #### Security constraints
@@ -680,7 +679,7 @@ Your Kubernetes environment's security constraints may also impact successful de
 
 ## Modifying or upgrading a Deployment
 
-Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 Tip: to get the current value-overrides, check the `USER-SUPPLIED VALUES`:
 ```bash
