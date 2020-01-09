@@ -92,10 +92,9 @@ Helm is configured properly if the command `helm version` returns no error.
 ```bash
   helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
 ```
-
-- By default the publicly available [latest Docker image of PubSub+ Software Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a different image, add the `image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the `--set` commands below, comma-separated.
-
-- Use one of the following chart variants to create a deployment. For configuration options and delete instructions, consult the [PubSub+ Software Event Broker Helm Chart Reference](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/tree/master/pubsubplus).
+- By default the publicly available [latest Docker image of PubSub+ Software Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a non-default image, add the `--set image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the commands below.
+- Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
+- Use one of the following chart variants to create a deployment: 
 
 <details open=true><summary><b>Instructions using Helm v2</b></summary>
 <p>
