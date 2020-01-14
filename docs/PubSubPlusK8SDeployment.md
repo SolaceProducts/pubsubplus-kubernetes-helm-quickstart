@@ -343,7 +343,7 @@ This refers to getting your platform ready either by creating a new one or getti
 * Azure AKS
 * Google GCP
 * OpenShift
-* Minikube
+* MiniKube
 * VMWare PKS
 
 Check your platform running the `kubectl get nodes` command from your command-line client.

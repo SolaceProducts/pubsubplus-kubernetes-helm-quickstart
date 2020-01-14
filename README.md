@@ -38,7 +38,7 @@ For other PubSub+ Software Event Broker configurations or sizes, refer to the [P
 ### 1. Get a Kubernetes environment
 
 Follow your Kubernetes provider's instructions ([other options available here](https://kubernetes.io/docs/setup/)). Ensure you meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted PubSub+ Software Event Broker configuration size.
-> Note: If using [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/), `minikube start` will setup Kubernetes by default on a VM with 2 CPUs and 2 GB memory allocated, which may leave the bare minimum resources for the event broker deployment. For more granular control, use the `--cpus` and `--memory` options.
+> Note: If using [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/), use `minikube start` with specifying the options `--memory` and `--cpu` to assign adequate resources to the MiniKube VM. The recommended memory is 1GB plus the minimum requirements of your event broker.
 
 Also have the `kubectl` tool [installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
 
@@ -105,13 +105,13 @@ a) Create a Solace PubSub+ Software Event Broker minimum deployment for developm
 helm install --name my-release solacecharts/pubsubplus-dev
 ```
 
-b) Create a Solace PubSub+ standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 4 GB of memory must be available to the event broker pod.
+b) Create a Solace PubSub+ standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 2 GB of memory must be available to the event broker pod.
 ```bash
 # Deploy PubSub+ Software Event Broker Standard edition, standalone
 helm install --name my-release solacecharts/pubsubplus
 ```
 
-c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three event broker pods.
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 2 GB of memory available to each of the three event broker pods.
 ```bash
 # Deploy PubSub+ Software Event Broker Standard edition, HA
 helm install --name my-release solacecharts/pubsubplus-ha
