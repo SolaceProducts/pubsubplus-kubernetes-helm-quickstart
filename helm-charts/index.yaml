@@ -2,12 +2,12 @@ apiVersion: v1
 entries:
   pubsubplus:
   - apiVersion: v1
-    created: "2020-01-07T19:06:57.415224481Z"
+    created: "2020-01-15T21:46:17.698326622Z"
     description: Deploy a single-node non-HA Solace PubSub+ Event Broker Software
       onto a Kubernetes Cluster
-    digest: 638eae4087037bc02b7e4761e73be9ac3f5409682a5963c2b9294648fc5000d4
+    digest: 96b8277d382f3111679f9b901c31661c8cfc1fb082944b5f019f593fba82d2eb
     home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -38,12 +38,12 @@ entries:
     version: 2.0.0
   pubsubplus-dev:
   - apiVersion: v1
-    created: "2020-01-07T19:06:57.416688588Z"
+    created: "2020-01-15T21:46:17.699799347Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ Event
       Broker Software onto a Kubernetes Cluster for development purposes
-    digest: 36b7d9d5be847c0790d4549a673860e679ab283e22e8f9478523bd54329dc1ef
+    digest: c2ad324daa792346416ddfc3c066302daa8480e8269dcdda6be9f77bf63d4e2c
     home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -74,12 +74,12 @@ entries:
     version: 2.0.0
   pubsubplus-ha:
   - apiVersion: v1
-    created: "2020-01-07T19:06:57.4177527Z"
+    created: "2020-01-15T21:46:17.700535603Z"
     description: Deploy an HA redundancy group of Solace PubSub+ Event Broker Software
       onto a Kubernetes Cluster
-    digest: 27b1f1c0b4a404bffbd18e3daab5c0083bcf66202430fd396c6d2b2815ff70ac
+    digest: 1e45e099860f5e7da20ef096c6985953d4e9b4e55b5bbba9ef35d871896f3542
     home: https://dev.solace.com
-    icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -108,4 +108,4 @@ entries:
     urls:
     - https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts/pubsubplus-ha-2.0.0.tgz
     version: 2.0.0
-generated: "2020-01-07T19:06:57.412938912Z"
+generated: "2020-01-15T21:46:17.696065709Z"
