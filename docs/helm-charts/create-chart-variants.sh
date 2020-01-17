@@ -25,7 +25,7 @@ sed -i 's/# Solace PubSub+ Message Broker Helm Chart/# Solace PubSub+ Message Br
 sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps a minimum footprint single-node deployment/g' pubsubplus-dev/README.md
 sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-dev@g' pubsubplus-dev/README.md
 sed -i '/`solace.size`/ s/| `prod.*` |/| `dev` |/g' pubsubplus-dev/README.md
-sed -i '/`storage.size`/ s/| `??Gi` |/| `10Gi` |/g' pubsubplus-dev/README.md
+sed -i '/`storage.size`/ s/| `..Gi` |/| `10Gi` |/g' pubsubplus-dev/README.md
 helm package pubsubplus-dev
 
 # Customize pubsubplus
