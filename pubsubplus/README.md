@@ -10,13 +10,13 @@ Detailed documentation is provided in the [Solace PubSub+ Software Event Broker 
 
 ## Prerequisites
 
-* Kubernetes 1.9 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
+* Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2
 * If using a private Docker registry, load the PubSub+ Software Event Broker Docker image and for signed images create an image pull secret
-* With persistent storage enabled (see in [Configuration](#configuration)):
+* With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
-Also consult additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations).
+Also review additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-software-event-broker-deployment-considerations).
 
 ## Create a deployment
 
@@ -79,7 +79,7 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `nameOverride`                 | Kubernetes objects will be named as `<release-name>-nameOverride`                                       | Undefined, default naming is `<release-name>-<chart-name>` |
 | `fullnameOverride`             | Kubernetes objects will be named as `fullnameOverride`                                                  | Undefined, default naming is `<release-name>-<chart-name>` |
 | `solace.redundancy`            | `false` will create a single-node non-HA deployment; `true` will create an HA deployment with Primary, Backup and Monitor nodes | `false` |
-| `solace.size`                  | Event broker connection scaling. Options: `dev` (requires minimum resources but no guaranteed performance), `prod100`, `prod1k`, `prod10k`, `prod100k`, `prod200k` | `prod100` | `prod100` |
+| `solace.size`                  | Event broker connection scaling. Options: `dev` (requires minimum resources but no guaranteed performance), `prod100`, `prod1k`, `prod10k`, `prod100k`, `prod200k` | `prod100` |
 | `solace.usernameAdminPassword` | The password for the "admin" management user. Will autogenerate it if not provided. **Important:** refer to the the information from `helm status` how to retrieve it and use it for `helm upgrade`. | Undefined, meaning autogenerate |
 | `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | Undefined, default is UTC |
 | `image.repository`             | The docker repo name and path to the Solace Docker image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
@@ -95,6 +95,7 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
 | `storage.slow`                 | `true` to indicate slow storage used, e.g. for NFS.                                                    | `false` |
 | `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | Undefined |
+<a name="config-storageclass"></a>
 | `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
 
