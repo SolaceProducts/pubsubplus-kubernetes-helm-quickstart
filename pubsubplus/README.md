@@ -95,8 +95,8 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
 | `storage.slow`                 | `true` to indicate slow storage used, e.g. for NFS.                                                    | `false` |
 | `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | Undefined |
-<a name="config-storageclass"></a>
-| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
+| `storage.useStorageClass` <a name="config-storageclass"></a> | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
+
 
 
