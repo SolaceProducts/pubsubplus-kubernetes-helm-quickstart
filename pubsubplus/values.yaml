@@ -46,6 +46,12 @@ securityContext:
   # runAsUser: expecting a number
   runAsUser: 1000001
 
+serviceAccount:
+  # create=true will create a service account to be used for the deployment
+  create: true
+  # name if specified will be used as service account name - must exist if create=false
+  # name:
+
 service:
   # service.type specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer

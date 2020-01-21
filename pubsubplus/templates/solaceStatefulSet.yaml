@@ -35,6 +35,7 @@ spec:
         runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
       {{- end }}
 {{- end }}
+      serviceAccountName: {{ template "solace.serviceAccountName" . }}
       terminationGracePeriodSeconds: 1200
       containers:
       - name: {{ .Chart.Name }}
