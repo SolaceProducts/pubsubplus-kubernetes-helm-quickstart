@@ -45,7 +45,7 @@ helm delete --purge my-release
 kubectl get pvc | grep data-my-release
 # Delete any PVCs related to my-release
 ```
-Note: ensure to delete existing PVCs if reusing the same deployment name for a clean new deployment.
+**Important:** Ensure to delete existing PVCs if reusing the same deployment name for a clean new deployment.
 
 ## Configuration
 
