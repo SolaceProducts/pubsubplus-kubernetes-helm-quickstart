@@ -47,7 +47,7 @@ data:
       export routername=$(echo $(hostname) | sed 's/-//g')
       export redundancy_enable=yes
       export configsync_enable=yes
-      export redundancy_group_password=`cat /mnt/disks/secrets/username_admin_password`
+      export redundancy_authentication_presharedkey_key=`cat /mnt/disks/secrets/username_admin_password | awk '{x=$0;for(i=length;i<51;i++)x=x "0";}END{print x}' | base64` # Right-pad with 0s to 50 length
       export redundancy_group_node_${service_name}0_nodetype=message_routing
       export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
       export redundancy_group_node_${service_name}1_nodetype=message_routing

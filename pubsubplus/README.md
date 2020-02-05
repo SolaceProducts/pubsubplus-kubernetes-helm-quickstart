@@ -45,7 +45,7 @@ helm delete --purge my-release
 kubectl get pvc | grep data-my-release
 # Delete any PVCs related to my-release
 ```
-Note: ensure to delete existing PVCs if reusing the same deployment name for a clean new deployment.
+**Important:** Ensure to delete existing PVCs if reusing the same deployment name for a clean new deployment.
 
 ## Configuration
 
@@ -89,6 +89,8 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used |
 | `securityContext.fsGroup`      | Specifies `fsGroup` in pod security context                                                             | set to default non-zero id 1000002 |
 | `securityContext.runAsUser`    | Specifies `runAsUser` in pod security context                                                           | set to default PubSub+ appuser id 1000001 |
+| `serviceAccount.create`        | `true` will create a service account dedicated to the deployment in the namespace                       | `true` |
+| `serviceAccount.name`          | Refer to https://helm.sh/docs/topics/chart_best_practices/rbac/#using-rbac-resources                    | Undefined |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
 | `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | Undefined  |
 | `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |

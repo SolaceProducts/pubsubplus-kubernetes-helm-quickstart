@@ -35,6 +35,7 @@ spec:
         runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
       {{- end }}
 {{- end }}
+      serviceAccountName: {{ template "solace.serviceAccountName" . }}
       terminationGracePeriodSeconds: 1200
       containers:
       - name: {{ .Chart.Name }}
@@ -94,9 +95,8 @@ spec:
             - /mnt/disks/solace/readiness_check.sh
         securityContext:
           privileged: false
-{{- if semverCompare "<9.4" (default "9.3" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
+{{- if semverCompare "<9.4" (default "9.4" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
           # need capabilities opened up if PubSub+ version is lower than 9.4
-          # default "9.3" to be changed to 9.4 after 9.4 released
           capabilities:
             add:
               - IPC_LOCK

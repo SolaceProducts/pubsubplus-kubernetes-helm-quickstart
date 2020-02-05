@@ -664,7 +664,7 @@ kubectl get storageclasses
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or the event broker process start. Try to delete and then recreate the deployment and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or the event broker process start. Try to delete and then recreate the deployment - if needed, remove related PVCs as they would mount volumes with existing, possibly outdated or incompatible database - and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
 
 #### No Pods listed
 
