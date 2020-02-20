@@ -47,20 +47,20 @@ spec:
             cpu: "0.2"
             memory: 0.8Gi
 {{- else if eq .Values.solace.size "prod100" }}
-            cpu: "1.2"
-            memory: 2Gi
+            cpu: "2"
+            memory: 1.9Gi
 {{- else if eq .Values.solace.size "prod1k" }}
-            cpu: "1.2"
-            memory: 4Gi
+            cpu: "2"
+            memory: 5.2Gi
 {{- else if eq .Values.solace.size "prod10k" }}
-            cpu: "3.5"
-            memory: 12Gi
+            cpu: "4"
+            memory: 12.6Gi
 {{- else if eq .Values.solace.size "prod100k" }}
-            cpu: "7.5"
-            memory: 28Gi
+            cpu: "8"
+            memory: 27.5Gi
 {{- else if eq .Values.solace.size "prod200k" }}
-            cpu: "11.5"
-            memory: 56Gi
+            cpu: "12"
+            memory: 52.6Gi
 {{- end }}
           limits:
 {{- if eq .Values.solace.size "dev" }}
