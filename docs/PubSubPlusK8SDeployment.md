@@ -622,17 +622,21 @@ Use the external Public IP to access the deployment. If a port required for a pr
 
 ### Viewing logs
 
-Logs from the currently running container:
-
+Detailed logs from the currently running container:
 ```sh
 kubectl logs XXX-XXX-pubsubplus-0 -c solace  # use -f to follow live
 ```
 
-Logs from the previously terminated container:
-
+Detailed logs from the previously terminated container:
 ```sh
 kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
 ```
+
+Filter on bringup logs (helps with initial troubleshooting):
+```sh
+kubectl logs XXX-XXX-pubsubplus-0 -c solace | grep [.]sh
+```
+
 
 ### Viewing events
 

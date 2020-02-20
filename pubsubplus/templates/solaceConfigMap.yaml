@@ -113,7 +113,7 @@ data:
           echo "`date` ERROR: ${APP}-Solace Management API never came up"  >&2
           exit 1 
         fi
-
+        # Determine local activity
         count=0
         echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
         while [ ${count} -lt ${loop_guard} ]; do 
@@ -146,7 +146,6 @@ data:
           echo "`date` ERROR: ${APP}-Local activity state never become Local Active or Mate Active"  >&2
           exit 1 
         fi
-
         # If we need to assert master, then we need to wait for mate to reconcile
         if [ "${resync_step}" = "assert-master" ]; then
           count=0
@@ -172,13 +171,60 @@ data:
             exit 1 
           fi
         fi # if assert-master
-        # Now can issue {resync_step} command and exit.
+        # Ensure Config-sync connection state is Connected before proceeding
+        count=0
+        echo "`date` INFO: ${APP}-Waiting for config-sync connected"
+        while [ ${count} -lt ${loop_guard} ]; do
+          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+              -v "/rpc-reply/rpc/show/config-sync/status/client/connection-state"`
+          connection_state=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+          run_time=$((${count} * ${pause}))
+          case "${connection_state}" in
+            "Connected")
+              echo "`date` INFO: ${APP}-Config-sync connection state is Connected, after ${run_time} seconds"
+              break
+              ;;
+          esac
+          ((count++))
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync connection state is: ${connection_state}, not yet in Connected"
+          sleep ${pause}
+        done
+        if [ ${count} -eq ${loop_guard} ]; then
+          echo "`date` ERROR: ${APP}-Config-sync connection state never reached Connected" >&2
+          exit 1
+        fi
+        # Now can issue {resync_step} command
+        echo "`date` INFO: ${APP}-Initiating ${resync_step}"
         /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
         /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
-        echo "`date` INFO: ${APP}-Solace message broker bringup complete for this node."
+        # Wait for config-sync results
+        count=0
+        echo "`date` INFO: ${APP}-Waiting for config-sync connected"
+        while [ ${count} -lt ${loop_guard} ]; do
+          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                  -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+                  -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
+          confsyncstatus_results=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+          run_time=$((${count} * ${pause}))
+          case "${confsyncstatus_results}" in
+            "Up")
+              echo "`date` INFO: ${APP}-Config-sync is Up, after ${run_time} seconds"
+              break
+              ;;
+          esac
+          ((count++))
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync is: ${confsyncstatus_results}, not yet Up"
+          sleep ${pause}
+        done
+        if [ ${count} -eq ${loop_guard} ]; then
+          echo "`date` ERROR: ${APP}-Config-sync never reached state \"Up\"" >&2
+          exit 1
+        fi
       fi # if not monitor
+      echo "`date` INFO: ${APP}-Solace message broker bringup is complete for this node."
 {{- end }}
       exit 0
 
