@@ -704,6 +704,8 @@ solace:
 ```
 Note that `usernameAdminPassword` has been generated at the initial deployment because it was not specified and must be used henceforth for all change requests to keep the same.
 
+For both version upgrade and modifications, the "RollingUpdate" strategy of the Kubernetes StatefulSet applies: pods in the StatefulSet are restarted with new values in reverse order of ordinals, which means for PubSubPlus first the monitoring node (ordinal 2), then backup (ordinal 1) and finally the primary node (ordinal 0).
+
 #### Upgrade example
 
 To **upgrade** the version of the event broker running within a Kubernetes cluster:

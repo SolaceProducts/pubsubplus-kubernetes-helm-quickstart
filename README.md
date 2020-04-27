@@ -55,7 +55,9 @@ Note that Helm is transitioning from v2 to v3. Many deployments still use v2. Th
 
 On Linux a simple option to set up the latest stable release is to run:
 
-<details open=true><summary><b>Instructions for Helm v2 setup</b></summary>
+(Click on the arrow to open instructions for Helm v2 or v3)
+
+<details><summary><b>Instructions for Helm v2 setup</b></summary>
 <p>
 
 ```bash
@@ -96,7 +98,9 @@ Helm is configured properly if the command `helm version` returns no error.
 - Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
 - Use one of the following chart variants to create a deployment: 
 
-<details open=true><summary><b>Instructions using Helm v2</b></summary>
+(Click on the arrow to open instructions for Helm v2 or v3)
+
+<details><summary><b>Instructions using Helm v2</b></summary>
 <p>
 
 a) Create a Solace PubSub+ Software Event Broker minimum deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory be available to the event broker pod.
