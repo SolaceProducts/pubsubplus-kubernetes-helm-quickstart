@@ -231,15 +231,18 @@ data:
 
   readiness_check.sh: |-
     #!/bin/bash
+    LOG_FILE=/var/lib/solace/jail/logs/k8s_readiness_check.log
+    exec > >(tee -a ${LOG_FILE}) 2>&1
 
     # Function to set Kubernetes metadata labels
     set_label () {
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
       previous_state=`cat $3`
       if [ "${2}" = "${previous_state}" ]; then
-        #echo "`date` INFO: ${APP}-Current and Previous state match, not updating label"
+        echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating label"
         :
       else
+        echo "`date` INFO: ${APP}-Trying to update label from `cat ${3}` to ${2}"
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         K8S=https://kubernetes.default.svc.cluster.local:$KUBERNETES_SERVICE_PORT
@@ -257,6 +260,7 @@ data:
             echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
             exit 1
           fi
+          echo "`date` INFO: ${APP}-Failed to update label from ${3} to ${2}, retrying"
         fi
       fi
     }
@@ -276,6 +280,7 @@ data:
     # For upgrade purposes, ensure redundancy is up only when the pod is started
     redundacycheck_file=/tmp/redundacycheck
     if [ ! -f ${redundacycheck_file} ]; then
+      echo "`date` INFO: ${APP}-redundacycheck_file didn't exist, running extended checks for startup only"
       # First check all nodes are online
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
@@ -360,13 +365,13 @@ data:
     
     case "${health_result}" in
       "200")
-        echo "`date` INFO: ${APP}-Message Router is Active and Healthy"
+        echo "`date` INFO: ${APP}-Message Router is Active and Healthy (200)"
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
         set_label "active" "false" $state_file
-        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required"
+        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required (503)"
         ;;
       "")
         echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
@@ -393,6 +398,7 @@ data:
         # Set active label to "true"
         set_label "active" "true" $state_file
         # Pass readiness check
+        echo "`date` INFO: ${APP}-Had 503 but passing readiness check because SEMP call worked and got Local Active"
         exit 0
         ;;
       "Mate Active")
@@ -400,6 +406,7 @@ data:
         # Set active label to "false"
         set_label "active" "false" $state_file
         # Pass readiness check
+        echo "`date` INFO: ${APP}-Had 503 but this is Mate Active so passing readiness check"
         exit 0
         ;;
       *)
@@ -431,7 +438,6 @@ data:
         exit 1
     esac
 {{- end }}
-
   semp_query.sh: |-
       #!/bin/bash
       APP=`basename "$0"`
