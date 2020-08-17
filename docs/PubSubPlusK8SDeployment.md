@@ -70,7 +70,7 @@ The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) o
 
 This document assumes a basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
 
-For an example deployment diagram, check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/solace-gke-quickstart/tree/9.4Release#how-to-deploy-a-solace-pubsub-software-event-broker-onto-gke).
+For an example deployment diagram, check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/pubsubplus-gke-quickstart#how-to-deploy-solace-pubsub-software-event-broker-onto-gke).
 
 Multiple YAML templates define the PubSub+ Kubernetes deployment with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
 
