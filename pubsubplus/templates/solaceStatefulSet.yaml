@@ -120,7 +120,7 @@ spec:
            source /mnt/disks/solace/init.sh
            # not using postinstall hooks because of order dependencies
            # launch config check - readiness check script will be launched by readinessProbe
-           nohup /mnt/disks/solace/config-sync-check.sh &
+           nohup /mnt/disks/solace/setup-config-sync.sh &
            /usr/sbin/boot.sh
         lifecycle:
           preStop:
@@ -155,12 +155,15 @@ spec:
         - name: data
           mountPath: /var/lib/solace/diags
           subPath: diags
-        {{- if and (not .Values.storage.slow) (not .Values.storage.nfs) }}
+{{- if (not .Values.storage.slow) }}
         # only mount when not using slow storage
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
-        {{- end }}
+{{- else }}
+        - name: soft-adb-ephemeral
+          mountPath: /usr/sw/internalSpool/softAdb
+{{- end }}
         ports:
         {{- range $item := .Values.service.ports }}
         - containerPort: {{ $item.containerPort }}
@@ -178,6 +181,10 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
+{{- if .Values.storage.slow }}
+        - name: soft-adb-ephemeral
+          emptyDir: {}
+{{- end }}
 {{- if and (.Values.storage) (not .Values.storage.persistent) }}
         - name: data
           emptyDir: {}
@@ -187,6 +194,7 @@ spec:
 {{ tpl . $ | indent 10 }}
           {{- end }}
 {{- else }}
+
   # This is the default way to acquire volume for the data mount
   volumeClaimTemplates:
   - metadata:

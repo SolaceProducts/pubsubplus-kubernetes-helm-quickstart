@@ -350,9 +350,9 @@ Check your platform running the `kubectl get nodes` command from your command-li
 
 #### Install and setup the Helm package manager
 
-The event broker can be deployed using both Helm v2 (stable, legacy) and Helm v3 (new, recently released). Most deployments currently use Helm v2.
+The event broker can be deployed using both Helm v2 and Helm v3. Helm v3 is recommended as it offers better security and it is actively maintained.
 
-If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 (default for now) then also deploying/redeploying Tiller, its in-cluster operator.
+If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 then also deploying/redeploying Tiller, its in-cluster operator.
 
 ##### Helm v2
 
@@ -687,7 +687,7 @@ Use the `helm upgrade` command to upgrade/modify the event broker deployment: re
 
 Tip: to get the current value-overrides, check the `USER-SUPPLIED VALUES`:
 ```bash
-helm get my-release | sed '/^HOOKS/,$d'
+helm get values my-release
 ```
 
 For the next examples, assume a deployment has been created with some initial overrides for a develoment HA cluster:

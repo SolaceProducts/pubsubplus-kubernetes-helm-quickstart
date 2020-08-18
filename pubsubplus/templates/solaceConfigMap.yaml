@@ -72,7 +72,7 @@ data:
       esac
 {{- end }}
 
-  config-sync-check.sh: |-
+  setup-config-sync.sh: |-
       #!/bin/bash
 {{- if .Values.solace.redundancy }}
       APP=`basename "$0"`
@@ -231,7 +231,8 @@ data:
 
   readiness_check.sh: |-
     #!/bin/bash
-    LOG_FILE=/var/lib/solace/jail/logs/k8s_readiness_check.log
+    LOG_FILE=/usr/sw/var/k8s_readiness_check.log # STDOUT/STDERR goes to k8s event logs but gets cleaned out eventually. This will also persist it.
+    tail -n 1000 ${LOG_FILE} > ${LOG_FILE}.tmp; mv -f ${LOG_FILE}.tmp ${LOG_FILE} || :  # Limit logs size
     exec > >(tee -a ${LOG_FILE}) 2>&1
 
     # Function to set Kubernetes metadata labels
@@ -239,10 +240,10 @@ data:
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
       previous_state=`cat $3`
       if [ "${2}" = "${previous_state}" ]; then
-        echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating label"
+        #echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating label"
         :
       else
-        echo "`date` INFO: ${APP}-Trying to update label from `cat ${3}` to ${2}"
+        echo "`date` INFO: ${APP}-Updating label from `cat ${3}` to ${2}"
         echo ${2} > ${3}
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         K8S=https://kubernetes.default.svc.cluster.local:$KUBERNETES_SERVICE_PORT
@@ -264,7 +265,7 @@ data:
         fi
       fi
     }
-    # note that there are no re-tries here, if check fails the return not ready.
+    # note that there are no re-tries here, if check fails then return not ready.
     APP=`basename "$0"`
     state_file=/tmp/activity_state
     if [ ! -f ${state_file} ]; then  # State file not found, creating
@@ -277,39 +278,20 @@ data:
     node_ordinal=${host_array[-1]}
     password=`cat /mnt/disks/secrets/username_admin_password`
 
-    # For upgrade purposes, ensure redundancy is up only when the pod is started
-    redundacycheck_file=/tmp/redundacycheck
-    if [ ! -f ${redundacycheck_file} ]; then
-      echo "`date` INFO: ${APP}-redundacycheck_file didn't exist, running extended checks for startup only"
-      # First check all nodes are online
+    # For upgrade purposes, additional checks are required for readiness state when the pod has been started
+    # This is an upgrade if the lastversion_file exists and contents differ from /usr/sw/loads/currentload
+    lastversion_file=/usr/sw/var/lastBrokerVersionBeforeReboot
+    if [ -f ${lastversion_file} ] && [[ $(cat ${lastversion_file}) != $(readlink /usr/sw/loads/currentload) ]] ; then
+      echo "`date` INFO: ${APP}-Upgrade detected, running additional checks..."
+      # Check redundancy
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
-              -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      if [[ ${results} != *"<errorInfo></errorInfo>"* ]]; then
-        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" -` || errorinfo=
-        echo "`date` INFO: ${APP}-Waiting for valid server status response, got ${errorinfo}"
+              -q "<rpc><show><redundancy/></show></rpc>" \
+              -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
+      redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+      if [ "${redundancystatus_results}" != "Up" ]; then
+        echo "`date` INFO: ${APP}-Redundancy state is not yet up."
         exit 1
       fi
-      nr_node_results=`echo ${results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
-      if [ "$nr_node_results" -ne "3" ]; then
-        echo "`date` INFO: ${APP}-Waiting for all 3 nodes online, got ${nr_node_results}"
-        exit 1
-      fi
-      # Then for each node determine the ip address and check redundancy. Note: id starts here from 1 and not 0.
-      for id in 1 2 3; do
-        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
-                -v "//ip-address[$id]"`
-        node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://$node_ip_address:8080/SEMP \
-                -q "<rpc><show><redundancy/></show></rpc>" \
-                -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
-        redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-        if [ "${redundancystatus_results}" != "Up" ]; then
-          echo "`date` INFO: ${APP}-Redundancy state is not yet up."
-          exit 1
-        fi
-      done
       # Additionally check config-sync status for non-monitoring nodes
       if [ "${node_ordinal}" != "2" ]; then
         results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
@@ -321,26 +303,10 @@ data:
           exit 1
         fi
       fi
-      # Then for each node check that they report 3 Consul voters.
-      for id in 1 2 3; do
-        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
-                -v "//ip-address[$id]"`
-        node_ip_address=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-        nr_voter_results=`curl --unix-socket /var/run/solace/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  || echo {} | python -m json.tool | grep Voter | grep true | wc -l`
-        if [ $nr_voter_results -ne 3 ]; then
-          # For backwards compatibility - will revise.
-          nr_voter_results=`curl --unix-socket /var/run/consul -s http://$node_ip_address:8500/v1/operator/raft/configuration  | python -m json.tool | grep Voter | grep true | wc -l`
-          if [ $nr_voter_results -ne 3 ]; then
-            echo "`date` INFO: ${APP}-Waiting for all 3 Consul voters to be present for node $node_ip_address, got ${nr_voter_results}"
-            exit 1
-          fi
-        fi
-      done
-      # Creating marker - important that after initial startup pod keeps being ready to serve traffic during failover while redundancy is down
-      echo "true" > ${redundacycheck_file}
     fi
-    
+    # Record current version in lastversion_file
+    readlink /usr/sw/loads/currentload > ${lastversion_file}
+
     if [ "${node_ordinal}" = "2" ]; then
       # For monitor node just check for 3 online nodes in group; active label will always be "false"
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
@@ -353,7 +319,7 @@ data:
       fi
       nodes_online=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
       if [ "$nodes_online" -eq "3" ]; then
-        echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
+        #echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
         exit 0
       else
         echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, ${nodes_online} of 3 nodes online"
@@ -365,20 +331,20 @@ data:
     
     case "${health_result}" in
       "200")
-        echo "`date` INFO: ${APP}-Message Router is Active and Healthy (200)"
+        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-Message Router is Active and Healthy (200)"; fi
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required (503)"; fi
         set_label "active" "false" $state_file
-        echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required (503)"
         ;;
       "")
         echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
         set_label "active" "false" $state_file
         exit 1
     esac
-     
+
     # Checking if Message Router is Standby
     case "${node_ordinal}" in
       "0")
@@ -404,9 +370,9 @@ data:
       "Mate Active")
         # Redundancy is up and node is mate Active"
         # Set active label to "false"
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-This broker node is Mate Active"; fi
         set_label "active" "false" $state_file
         # Pass readiness check
-        echo "`date` INFO: ${APP}-Had 503 but this is Mate Active so passing readiness check"
         exit 0
         ;;
       *)

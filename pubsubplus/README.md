@@ -11,7 +11,7 @@ Detailed documentation is provided in the [Solace PubSub+ Software Event Broker 
 ## Prerequisites
 
 * Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
-* Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2
+* Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2. Helm v3 is recommended, examples in this document use v3.
 * If using a private Docker registry, load the PubSub+ Software Event Broker Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
@@ -22,7 +22,7 @@ Also review additional [deployment considerations](//github.com/SolaceProducts/p
 
 ```bash
 helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
-helm install --name my-release solacecharts/pubsubplus
+helm install my-release solacecharts/pubsubplus
 ```
 
 ## Use a deployment
@@ -41,7 +41,7 @@ Refer to the detailed PubSub+ Kubernetes documentation for:
 ## Delete a deployment
 
 ```bash
-helm delete --purge my-release
+helm delete my-release
 kubectl get pvc | grep data-my-release
 # Delete any PVCs related to my-release
 ```
@@ -55,7 +55,7 @@ There are several ways to customize the deployment:
 
 - Override default values using the `--set key=value[,key=value]` argument to `helm install`. For example,
 ```bash
-helm install --name my-release \
+helm install my-release \
   --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword \
   solacecharts/pubsubplus
 ```
@@ -83,7 +83,7 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `solace.usernameAdminPassword` | The password for the "admin" management user. Will autogenerate it if not provided. **Important:** refer to the the information from `helm status` how to retrieve it and use it for `helm upgrade`. | Undefined, meaning autogenerate |
 | `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | Undefined, default is UTC |
 | `image.repository`             | The docker repo name and path to the Solace Docker image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
-| `image.tag`                    | The Solace Docker image tag. It is recommended to specify an explicit tag for production use            | `latest`                                                |
+| `image.tag`                    | The Solace Docker image tag. It is recommended to specify an explicit tag for production use For possible tags, refer to the [Solace Docker Hub repo](https://hub.docker.com/r/solace/solace-pubsub-standard/tags) | `latest`                                                |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
 | `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | Undefined, meaning no ImagePullSecret used                |
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used |
