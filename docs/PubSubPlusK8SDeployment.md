@@ -790,7 +790,7 @@ helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.red
 # Delete this deployment
 helm delete my-release
 # Reinstall deployment, assuming persistent storage. Notice the admin password specified
-helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true,,solace.usernameAdminPassword: jMzKoW39zz
+helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=jMzKoW39zz
 # Original deployment is now back up
 ```
 
