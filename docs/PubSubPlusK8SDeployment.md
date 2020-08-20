@@ -628,23 +628,32 @@ Use the external Public IP to access the deployment. If a port required for a pr
 
 ## Troubleshooting
 
+### General Kubernetes troubleshooting hints
+https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
+
+### Checking the reason for failed resources
+
+Run `kubectl get statefulsets,services,pods,pvc,pv` to get an understanding of the state, then drill down to get more information on a failed resource to reveal  possible Kubernetes resourcing issues, e.g.:
+```sh
+kubectl describe pvc <pvc-name>
+```
+
 ### Viewing logs
 
-Detailed logs from the currently running container:
+Detailed logs from the currently running container in a pod:
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace  # use -f to follow live
+kubectl logs XXX-XXX-pubsubplus-0 -f  # use -f to follow live
 ```
 
-Detailed logs from the previously terminated container:
+It is also possible to get the logs from a previously terminated or failed container:
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
+kubectl logs XXX-XXX-pubsubplus-0 -p
 ```
 
-Filter on bringup logs (helps with initial troubleshooting):
+Filtering on bringup logs (helps with initial troubleshooting):
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace | grep [.]sh
+kubectl logs XXX-XXX-pubsubplus-0 | grep [.]sh
 ```
-
 
 ### Viewing events
 
@@ -657,9 +666,6 @@ kubectl get events -w # use -w to watch live
 ```
 
 ### PubSub+ Software Event Broker troubleshooting
-
-#### General Kubernetes troubleshooting hints
-https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
 
 #### Pods stuck in not enough resources
 
@@ -676,7 +682,10 @@ kubectl get storageclasses
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or the event broker process start. Try to delete and then recreate the deployment - if needed, remove related PVCs as they would mount volumes with existing, possibly outdated or incompatible database - and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue with available Kubernetes node resources or with the container OS or the event broker process start.
+
+* Try to understand the reason following earlier hints in this section.
+* Try to recreate the issue by deleting and then reinstalling the deployment - ensure to remove related PVCs if applicable as they would mount volumes with existing, possibly outdated or incompatible database - and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
 
 #### No Pods listed
 
