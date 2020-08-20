@@ -69,7 +69,7 @@ script:
 - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
 - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
 - helm list
-- helm delete $(helm list | grep DEPLOYED | awk '{print $1}')
+- helm delete $(helm list | grep deployed | awk '{print $1}')
 - kubectl delete pvc --all
 - bash docs/helm-charts/create-chart-variants.sh; # Create chart variants
 - helm lint pubsubplus
