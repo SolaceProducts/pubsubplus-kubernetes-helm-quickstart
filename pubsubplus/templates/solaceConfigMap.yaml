@@ -306,9 +306,8 @@ data:
     fi
     # Record current version in lastversion_file
     readlink /usr/sw/loads/currentload > ${lastversion_file}
-
+    # For monitor node just check for 3 online nodes in group; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
-      # For monitor node just check for 3 online nodes in group; active label will always be "false"
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
@@ -326,25 +325,24 @@ data:
         exit 1
       fi
     fi # End Monitor Node
-
+    # For Primary or Backup nodes set both service readiness (active label) and k8s readiness (exit return value)
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
-    
     case "${health_result}" in
       "200")
-        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-Message Router is Active and Healthy (200)"; fi
+        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-HA Message Router health check reported 200, message spool is up"; fi
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-Message Router is Healthy but not Active, further check required (503)"; fi
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-HA Message Router health check reported 503"; fi
         set_label "active" "false" $state_file
+        # Further check is required to determine readiness
         ;;
-      "")
-        echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
+      *)
+        echo "`date` WARN: ${APP}-HA Message Router health check reported unexpected ${health_result}"
         set_label "active" "false" $state_file
         exit 1
     esac
-
     # Checking if Message Router is Standby
     case "${node_ordinal}" in
       "0")
@@ -359,48 +357,35 @@ data:
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     case "${local_activity}" in
-      "Local Active")
-        # Redundancy is up and node is locally Active"
-        # Set active label to "true"
-        set_label "active" "true" $state_file
-        # Pass readiness check
-        echo "`date` INFO: ${APP}-Had 503 but passing readiness check because SEMP call worked and got Local Active"
-        exit 0
-        ;;
       "Mate Active")
         # Redundancy is up and node is mate Active"
-        # Set active label to "false"
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-This broker node is Mate Active"; fi
-        set_label "active" "false" $state_file
         # Pass readiness check
         exit 0
         ;;
       *)
         echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check. Local activity state is: ${local_activity}"
-        # Set active label to "false"
-        set_label "active" "false" $state_file
-        # Fail readiness check
         exit 1
         ;;
     esac
 {{- else }}
     # nonHA config
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
-    
     case "${health_result}" in
       "200")
-        echo "`date` INFO: ${APP}-nonHA Message Router is Active and Healthy"
+        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-nonHA Message Router health check reported 200, message spool is up"; fi
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
-        echo "`date` INFO: ${APP}-nonHA Message Router message spool is down"
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Message Router health check reported 503, message spool is down"; fi
         set_label "active" "false" $state_file
+        # Fail readiness check
         exit 1
         ;;
-      "")
-        echo "`date` WARN: ${APP}-Unable to determine config role, failing readiness check"
+      *)
+        echo "`date` WARN: ${APP}-nonHA Message Router health check reported ${health_result}"
         set_label "active" "false" $state_file
+        # Fail readiness check
         exit 1
     esac
 {{- end }}
