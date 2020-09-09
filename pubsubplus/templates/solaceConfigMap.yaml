@@ -224,7 +224,7 @@ data:
           exit 1
         fi
       fi # if not monitor
-      echo "`date` INFO: ${APP}-Solace message broker bringup is complete for this node."
+      echo "`date` INFO: ${APP}-Solace Event Broker bringup is complete for this node."
 {{- end }}
       exit 0
 
@@ -329,21 +329,21 @@ data:
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
     case "${health_result}" in
       "200")
-        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-HA Message Router health check reported 200, message spool is up"; fi
+        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 200, message spool is up"; fi
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-HA Message Router health check reported 503"; fi
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 503"; fi
         set_label "active" "false" $state_file
         # Further check is required to determine readiness
         ;;
       *)
-        echo "`date` WARN: ${APP}-HA Message Router health check reported unexpected ${health_result}"
+        echo "`date` WARN: ${APP}-HA Event Broker health check reported unexpected ${health_result}"
         set_label "active" "false" $state_file
         exit 1
     esac
-    # Checking if Message Router is Standby
+    # At this point analyzing readiness after health check returned 503 - checking if Event Broker is Standby
     case "${node_ordinal}" in
       "0")
         config_role="primary"
@@ -363,7 +363,7 @@ data:
         exit 0
         ;;
       *)
-        echo "`date` WARN: ${APP}-Redundancy not up or not responding, failing readiness check. Local activity state is: ${local_activity}"
+        echo "`date` WARN: ${APP}-Health check returned 503 and local activity state is: ${local_activity}, failing readiness check."
         exit 1
         ;;
     esac
@@ -372,18 +372,18 @@ data:
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
     case "${health_result}" in
       "200")
-        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-nonHA Message Router health check reported 200, message spool is up"; fi
+        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 200, message spool is up"; fi
         set_label "active" "true" $state_file
         exit 0
         ;;
       "503")
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Message Router health check reported 503, message spool is down"; fi
+        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 503, message spool is down"; fi
         set_label "active" "false" $state_file
         # Fail readiness check
         exit 1
         ;;
       *)
-        echo "`date` WARN: ${APP}-nonHA Message Router health check reported ${health_result}"
+        echo "`date` WARN: ${APP}-nonHA Event Broker health check reported ${health_result}"
         set_label "active" "false" $state_file
         # Fail readiness check
         exit 1
