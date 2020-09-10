@@ -19,8 +19,8 @@ before_install:
 - gcloud auth activate-service-account -q $(jq -r .client_email keyfile) --key-file=./keyfile
   --project  $(jq -r .project_id keyfile)
 - rm ./keyfile
-- export DESIRED_VERSION=v2.14.3; curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get
-  | bash
+- export DESIRED_VERSION=; curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+  | bash; helm version
 install: true
 script:
 - pwd
@@ -36,12 +36,12 @@ script:
   capable-stream-180018
 - popd
 - kubectl get statefulset,svc,pods,pvc,pv
-- kubectl -n kube-system create serviceaccount tiller
-- kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-- helm init --wait --service-account=tiller --upgrade
-- helm version
+- #kubectl -n kube-system create serviceaccount tiller
+- #kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+- #helm init --wait --service-account=tiller --upgrade
+- #helm version
 - helm lint pubsubplus
-- helm install --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin --name my-release pubsubplus
+- helm install my-release --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin pubsubplus
 - kubectl get statefulset,svc,pods,pvc,pv --show-labels
 - echo "Waiting for cluster to become active"
 - travis_wait 30 sleep 1800 &
@@ -69,15 +69,15 @@ script:
 - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
 - curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
 - helm list
-- helm delete $(helm list | grep DEPLOYED | awk '{print $1}') --purge
+- helm delete $(helm list | grep deployed | awk '{print $1}')
 - kubectl delete pvc --all
 - bash docs/helm-charts/create-chart-variants.sh; # Create chart variants
 - helm lint pubsubplus
-- helm install pubsubplus --dry-run
+- helm install --generate-name pubsubplus --dry-run
 - helm lint pubsubplus-ha
-- helm install pubsubplus-ha --dry-run
+- helm install --generate-name pubsubplus-ha --dry-run
 - helm lint pubsubplus-dev
-- helm install pubsubplus-dev --dry-run
+- helm install --generate-name pubsubplus-dev --dry-run
 - # Publish to gh-pages and test
 - >
   if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "master" ]; then

@@ -40,6 +40,7 @@ Contents:
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
   * [**Validating the Deployment**](#validating-the-deployment)
     + [Gaining admin access to the event broker](#gaining-admin-access-to-the-event-broker)
+      - [Admin Password](#admin-password)
       - [WebUI, SolAdmin and SEMP access](#webui-soladmin-and-semp-access)
       - [Solace CLI access](#solace-cli-access)
       - [SSH access to individual event brokers](#ssh-access-to-individual-event-brokers)
@@ -57,6 +58,7 @@ Contents:
   * [**Modifying or upgrading a Deployment**](#modifying-or-upgrading-a-deployment)
       - [Upgrade example](#upgrade-example)
       - [Modification example](#modification-example)
+  * [**Re-installing a Deployment**](#re-installing-a-deployment)
   * [**Deleting a Deployment**](#deleting-a-deployment)
 
 
@@ -226,7 +228,7 @@ The `service.ports` parameter defines the services exposed. It specifies the eve
 
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
-A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. 
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. **Important**: service means here [Guaranteed Messaging level of  Quality-of-Service (QoS) of event messages persistence](//docs.solace.com/PubSub-Basics/Guaranteed-Messages.htm). Messaging traffic will not be forwarded if service level is degraded to [Direct Messages](//docs.solace.com/PubSub-Basics/Direct-Messages.htm) only.
 
 #### Using pod label "active" to identify the active event broker node
 
@@ -350,9 +352,9 @@ Check your platform running the `kubectl get nodes` command from your command-li
 
 #### Install and setup the Helm package manager
 
-The event broker can be deployed using both Helm v2 (stable, legacy) and Helm v3 (new, recently released). Most deployments currently use Helm v2.
+The event broker can be deployed using both Helm v2 and Helm v3. Helm v3 is recommended as it offers better security and it is actively maintained.
 
-If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 (default for now) then also deploying/redeploying Tiller, its in-cluster operator.
+If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 then also deploying/redeploying Tiller, its in-cluster operator.
 
 ##### Helm v2
 
@@ -550,6 +552,12 @@ Generally, all services including management and messaging are accessible throug
 
 There are [multiple management tools](//docs.solace.com/Management-Tools.htm ) available. The WebUI is the recommended simplest way to administer the event broker for common tasks.
 
+#### Admin Password
+
+A random admin password will be generated if it has not been provided at deployment using the `solace.usernameAdminPassword` parameter, refer to the the information from `helm status` how to retrieve it.
+
+**Important:** Every time `helm install` or `helm upgrade` is called a new admin password will be generated, which may break an existing deployment. Therefore ensure to always provide the password from the initial deployment as `solace.usernameAdminPassword=<PASSWORD>` parameter to subsequent `install` and `upgrade` commands.
+
 #### WebUI, SolAdmin and SEMP access
 
 Use the Load Balancer's external Public IP at port 8080 to access these services.
@@ -620,23 +628,32 @@ Use the external Public IP to access the deployment. If a port required for a pr
 
 ## Troubleshooting
 
+### General Kubernetes troubleshooting hints
+https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
+
+### Checking the reason for failed resources
+
+Run `kubectl get statefulsets,services,pods,pvc,pv` to get an understanding of the state, then drill down to get more information on a failed resource to reveal  possible Kubernetes resourcing issues, e.g.:
+```sh
+kubectl describe pvc <pvc-name>
+```
+
 ### Viewing logs
 
-Detailed logs from the currently running container:
+Detailed logs from the currently running container in a pod:
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace  # use -f to follow live
+kubectl logs XXX-XXX-pubsubplus-0 -f  # use -f to follow live
 ```
 
-Detailed logs from the previously terminated container:
+It is also possible to get the logs from a previously terminated or failed container:
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
+kubectl logs XXX-XXX-pubsubplus-0 -p
 ```
 
-Filter on bringup logs (helps with initial troubleshooting):
+Filtering on bringup logs (helps with initial troubleshooting):
 ```sh
-kubectl logs XXX-XXX-pubsubplus-0 -c solace | grep [.]sh
+kubectl logs XXX-XXX-pubsubplus-0 | grep [.]sh
 ```
-
 
 ### Viewing events
 
@@ -645,13 +662,10 @@ Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/
 It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 
 ```sh
-kubectl get events  # use -w to watch live
+kubectl get events -w # use -w to watch live
 ```
 
 ### PubSub+ Software Event Broker troubleshooting
-
-#### General Kubernetes troubleshooting hints
-https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/
 
 #### Pods stuck in not enough resources
 
@@ -668,7 +682,10 @@ kubectl get storageclasses
 
 #### Pods stuck in CrashLoopBackoff, Failed or Not Ready
 
-Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue at the container OS or the event broker process start. Try to delete and then recreate the deployment - if needed, remove related PVCs as they would mount volumes with existing, possibly outdated or incompatible database - and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue. Also try to check [logs from the previously terminated container](#viewing-logs).
+Pods stuck in CrashLoopBackoff, or Failed, or Running but not Ready "active" state, usually indicate an issue with available Kubernetes node resources or with the container OS or the event broker process start.
+
+* Try to understand the reason following earlier hints in this section.
+* Try to recreate the issue by deleting and then reinstalling the deployment - ensure to remove related PVCs if applicable as they would mount volumes with existing, possibly outdated or incompatible database - and watch the [logs](#viewing-logs) and [events](#viewing-events) from the beginning. Look for ERROR messages preceded by information that may reveal the issue.
 
 #### No Pods listed
 
@@ -685,26 +702,33 @@ Your Kubernetes environment's security constraints may also impact successful de
 
 Use the `helm upgrade` command to upgrade/modify the event broker deployment: request the required modifications to the chart in passing the new/changed parameters or creating an upgrade `<values-file>` YAML file. When chaining multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
-Tip: to get the current value-overrides, check the `USER-SUPPLIED VALUES`:
+For both version upgrade and modifications, the "RollingUpdate" strategy of the Kubernetes StatefulSet applies: pods in the StatefulSet are restarted with new values in reverse order of ordinals, which means for PubSubPlus first the monitoring node (ordinal 2), then backup (ordinal 1) and finally the primary node (ordinal 0).
+
+For the next examples, assume a deployment has been created with some initial overrides for a development HA cluster:
 ```bash
-helm get my-release | sed '/^HOOKS/,$d'
+helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true
 ```
 
-For the next examples, assume a deployment has been created with some initial overrides for a develoment HA cluster:
-```bash
-helm install  --name my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true
-```
+#### Getting the currently used parameter values
 
-This will generate following value-overrides in the `USER-SUPPLIED VALUES`:
+Currently used parameter values are the default chart parameter values overlayed with value-overrides.
+
+To get the default chart parameter values, check `helm show values solacecharts/pubsubplus`.
+
+To get the current value-overrides, execute:
 ```
+$ helm get values my-release
+USER-SUPPLIED VALUES:
 solace:
   redundancy: true
   size: dev
-  usernameAdminPassword: jMzKoW39zz
 ```
-Note that `usernameAdminPassword` has been generated at the initial deployment because it was not specified and must be used henceforth for all change requests to keep the same.
-
-For both version upgrade and modifications, the "RollingUpdate" strategy of the Kubernetes StatefulSet applies: pods in the StatefulSet are restarted with new values in reverse order of ordinals, which means for PubSubPlus first the monitoring node (ordinal 2), then backup (ordinal 1) and finally the primary node (ordinal 0).
+**Important:** this will not show, but be aware of an additional non-default parameter:
+```
+solace:
+  usernameAdminPassword: jMzKoW39zz   # The value is just an example
+```
+This has been generated at the initial deployment if not specified and must be used henceforth for all change requests, to keep the same. See related note in the [Admin Password section](#admin-password).
 
 #### Upgrade example
 
@@ -715,7 +739,7 @@ To **upgrade** the version of the event broker running within a Kubernetes clust
   * Set the new image in the Helm upgrade command, also ensure to include the original overrides: 
 ```bash
 helm upgrade my-release solacecharts/pubsubplus \
-  --set solace.size=dev,solace.redundancy=true,usernameAdminPassword: jMzKoW39zz \
+  --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword: jMzKoW39zz \
   --set image.repository=<repo>/<project>/solace-pubsub-standard,image.tag=NEW.VERSION.XXXXX,image.pullPolicy=IfNotPresent
 ```
   * Or create a simple `version-upgrade.yaml` file and use that to upgrade the release:
@@ -757,8 +781,26 @@ EOF
 Now upgrade the deployment, passing the changes. This time the original `--set` value-overrides are combined with the override file:
 ```bash
 helm upgrade my-release solacecharts/pubsubplus \
-  --set solace.size=dev,solace.redundancy=true,usernameAdminPassword: jMzKoW39zz \
+  --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword: jMzKoW39zz \
   --values port-update.yaml
+```
+
+## Re-installing a Deployment
+
+If using *persistent* storage broker data will not be deleted upon `helm delete`.
+
+In this case the deployment can be reinstalled and continue from the point before the `helm delete` command was executed by running `helm install` again, using the **same** release name and parameters as the previous run. This includes explicitly providing the same admin password as before.
+
+```
+# Initial deployment:
+helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true
+# This will auto-generate an admin password
+# Retrieve the admin password, follow instructions from the output of "helm status", section Admin credentials
+# Delete this deployment
+helm delete my-release
+# Reinstall deployment, assuming persistent storage. Notice the admin password specified
+helm install my-release solacecharts/pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=jMzKoW39zz
+# Original deployment is now back up
 ```
 
 ## Deleting a Deployment
