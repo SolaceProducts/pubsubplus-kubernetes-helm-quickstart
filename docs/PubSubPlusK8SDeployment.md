@@ -228,7 +228,7 @@ The `service.ports` parameter defines the services exposed. It specifies the eve
 
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
-A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. 
+A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. **Important**: service means here [Guaranteed Messaging level of  Quality-of-Service (QoS) of event messages persistence](//docs.solace.com/PubSub-Basics/Guaranteed-Messages.htm). Messaging traffic will not be forwarded if service level is degraded to [Direct Messages](//docs.solace.com/PubSub-Basics/Direct-Messages.htm) only.
 
 #### Using pod label "active" to identify the active event broker node
 
