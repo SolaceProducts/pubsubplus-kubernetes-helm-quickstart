@@ -29,7 +29,7 @@ We recommend using the Helm tool for convenience. An [alternative method](/docs/
 In this quick start we go through the steps to set up a PubSub+ Software Event Broker using [Solace PubSub+ Helm charts](//hub.helm.sh/charts/solace).
 
 There are three Helm chart variants available with default small-size configurations:
-1.	`pubsubplus-dev` - minimum footprint PubSub+ Software Event Broker for Developers (standalone)
+1.	`pubsubplus-dev` - recommended PubSub+ Software Event Broker for Developers (standalone) - no guaranteed performance
 2.	`pubsubplus` - PubSub+ Software Event Broker standalone, supporting 100 connections
 3.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 100 connections
 
@@ -103,19 +103,19 @@ Helm is configured properly if the command `helm version` returns no error.
 <details><summary><b>Instructions using Helm v2</b></summary>
 <p>
 
-a) Create a Solace PubSub+ Software Event Broker minimum deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory be available to the event broker pod.
+a) Create a Solace PubSub+ Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 3.6 GB of memory be available to the event broker pod.
 ```bash
-# Deploy PubSub+ Software Event Broker Standard edition, minimum footprint developer version
+# Deploy PubSub+ Software Event Broker Standard edition for developers
 helm install --name my-release solacecharts/pubsubplus-dev
 ```
 
-b) Create a Solace PubSub+ standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 2 GB of memory must be available to the event broker pod.
+b) Create a Solace PubSub+ standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 3.6 GB of memory must be available to the event broker pod.
 ```bash
 # Deploy PubSub+ Software Event Broker Standard edition, standalone
 helm install --name my-release solacecharts/pubsubplus
 ```
 
-c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 2 GB of memory available to each of the three event broker pods.
+c) Create a Solace PubSub+ HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 3.6 GB of memory available to each of the three event broker pods.
 ```bash
 # Deploy PubSub+ Software Event Broker Standard edition, HA
 helm install --name my-release solacecharts/pubsubplus-ha
@@ -126,9 +126,9 @@ helm install --name my-release solacecharts/pubsubplus-ha
 <details><summary><b>Instructions using Helm v3</b></summary>
 <p>
 
-a) Create a Solace PubSub+ Software Event Broker minimum deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
+a) Create a Solace PubSub+ Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
 ```bash
-# Deploy PubSub+ Software Event Broker Standard edition, minimum footprint developer version
+# Deploy PubSub+ Software Event Broker Standard edition for developers
 helm install my-release solacecharts/pubsubplus-dev
 ```
 

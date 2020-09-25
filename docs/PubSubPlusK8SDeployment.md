@@ -93,7 +93,7 @@ All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Ev
 
 ### Deployment scaling
 
-Solace PubSub+ Software Event Broker event broker can be vertically scaled by deploying in one of the [client connection scaling tiers](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm), controlled by the `solace.size` chart parameter.
+Solace PubSub+ Software Event Broker event broker can be vertically scaled by specifying the [number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
 
 Depending on the `solace.redundancy` parameter, one event router pod is deployed in a single-node standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
 
@@ -101,13 +101,13 @@ Horizontal scaling is possible through [connecting multiple deployments](//docs.
 
 ### CPU and Memory Requirements
 
-The following CPU and memory requirements (for each pod) are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Scaling-Tier-Resources.htm#Cloud) for the possible `pubsubplus` chart `solace.size` parameter values:
-* `dev`: no guaranteed performance, minimum requirements: 1 CPU, 1 GB memory
-* `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
-* `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 4 GB memory
-* `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
-* `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
-* `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
+The following CPU and memory requirements (for each pod) are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `pubsubplus` chart `solace.size` parameter values:
+* `dev`: no guaranteed performance, minimum requirements: 1 CPU, 3.4 GiB memory
+* `prod100`: up to 100 connections, minimum requirements: 2 CPU, 3.4 GiB memory
+* `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 6.4 GiB memory
+* `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12.2 GiB memory
+* `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 30.3 GiB memory
+* `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 51.4 GiB memory
 
 ### Disk Storage
 
@@ -411,7 +411,7 @@ helm install my-release solacecharts/pubsubplus
 ```
 
 There are three Helm chart variants available with default small-size configurations:
-1.	`pubsubplus-dev` - minimum footprint PubSub+ Software Event Broker for Developers (standalone)
+1.	`pubsubplus-dev` - PubSub+ Software Event Broker for Developers (standalone)
 2.	`pubsubplus` - PubSub+ Software Event Broker standalone, supporting 100 connections
 3.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 100 connections
 
