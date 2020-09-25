@@ -44,7 +44,7 @@ spec:
         resources:
           requests:
 {{- if eq .Values.solace.size "dev" }}
-            cpu: "2"
+            cpu: "1"
             memory: 3.4Gi
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "2"
