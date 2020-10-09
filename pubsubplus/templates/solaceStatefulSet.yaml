@@ -44,11 +44,11 @@ spec:
         resources:
           requests:
 {{- if eq .Values.solace.size "dev" }}
-            cpu: "0.2"
-            memory: 0.8Gi
+            cpu: "1"
+            memory: 3.4Gi
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "2"
-            memory: 2.8Gi
+            memory: 3.4Gi
 {{- else if eq .Values.solace.size "prod1k" }}
             cpu: "2"
             memory: 6.5Gi
@@ -57,30 +57,30 @@ spec:
             memory: 13.9Gi
 {{- else if eq .Values.solace.size "prod100k" }}
             cpu: "8"
-            memory: 28.9Gi
+            memory: 30.3Gi
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
             memory: 53.5Gi
 {{- end }}
           limits:
 {{- if eq .Values.solace.size "dev" }}
-            cpu: "1"
-            memory: 2Gi
+            cpu: "2"
+            memory: 3.4Gi
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "2"
-            memory: 3Gi
+            memory: 3.4Gi
 {{- else if eq .Values.solace.size "prod1k" }}
             cpu: "2"
-            memory: 7.5Gi
+            memory: 6.5Gi
 {{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
-            memory: 15Gi
+            memory: 13.9Gi
 {{- else if eq .Values.solace.size "prod100k" }}
             cpu: "8"
-            memory: 30Gi
+            memory: 30.3Gi
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
-            memory: 60Gi
+            memory: 53.5Gi
 {{- end }}
         livenessProbe:
           tcpSocket:

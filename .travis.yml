@@ -30,8 +30,7 @@ script:
 - export TESTCLUSTERNAME="sol-gke-travistest-$(date +%s)"
 - wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
 - chmod 755 create_cluster.sh
-- "./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -m
-  n1-standard-1"
+- "./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -m e2-standard-2"
 - gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project
   capable-stream-180018
 - popd
@@ -41,7 +40,7 @@ script:
 - #helm init --wait --service-account=tiller --upgrade
 - #helm version
 - helm lint pubsubplus
-- helm install my-release --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin pubsubplus
+- helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin,image.repository=bczoma/solace-pubsub-standard,image.tag=test
 - kubectl get statefulset,svc,pods,pvc,pv --show-labels
 - echo "Waiting for cluster to become active"
 - travis_wait 30 sleep 1800 &
