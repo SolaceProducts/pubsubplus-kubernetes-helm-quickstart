@@ -37,7 +37,7 @@ For other PubSub+ Software Event Broker configurations or sizes, refer to the [P
 
 ### 1. Get a Kubernetes environment
 
-Follow your Kubernetes provider's instructions ([other options available here](https://kubernetes.io/docs/setup/)). Ensure you meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted PubSub+ Software Event Broker configuration size.
+Follow your Kubernetes provider's instructions ([other options available here](https://kubernetes.io/docs/setup/)). Ensure you meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted PubSub+ Software Event Broker configuration size. Important: the broker resource requirements refer to available resources on a [Kubernetes node](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/#kube-scheduler).
 > Note: If using [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/), use `minikube start` with specifying the options `--memory` and `--cpu` to assign adequate resources to the MiniKube VM. The recommended memory is 1GB plus the minimum requirements of your event broker.
 
 Also have the `kubectl` tool [installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
@@ -51,7 +51,7 @@ kubectl get nodes
 ### 2. Install and configure Helm
 
 Follow the [Helm Installation notes of your target release](https://github.com/helm/helm/releases) for your platform.
-Note that Helm is transitioning from v2 to v3. Many deployments still use v2. The event broker can be deployed using either version, however concurrent use of v2 and v3 from the same command-line environment is not supported.
+Note that Helm is transitioning from v2 to v3. Some deployments still use v2. The event broker can be deployed using either version, however concurrent use of v2 and v3 from the same command-line environment is not supported.
 
 On Linux a simple option to set up the latest stable release is to run:
 
@@ -100,7 +100,7 @@ Helm is configured properly if the command `helm version` returns no error.
 
 (Click on the arrow to open instructions for Helm v2 or v3)
 
-<details><summary><b>Instructions using Helm v2</b></summary>
+<details><summary><b>Install using Helm v2</b></summary>
 <p>
 
 a) Create a Solace PubSub+ Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 3.6 GB of memory be available to the event broker pod.
@@ -123,7 +123,7 @@ helm install --name my-release solacecharts/pubsubplus-ha
 </p>
 </details>
 
-<details><summary><b>Instructions using Helm v3</b></summary>
+<details><summary><b>Install using Helm v3</b></summary>
 <p>
 
 a) Create a Solace PubSub+ Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
