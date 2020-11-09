@@ -237,14 +237,14 @@ data:
 
     # Function to set Kubernetes metadata labels
     set_label () {
+      # Params: $2 label set value; $3 file where internal tracking of label value stored
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
       previous_state=`cat $3`
       if [ "${2}" = "${previous_state}" ]; then
-        #echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating label"
+        #echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating pod label"
         :
       else
-        echo "`date` INFO: ${APP}-Updating label from `cat ${3}` to ${2}"
-        echo ${2} > ${3}
+        echo "`date` INFO: ${APP}-Updating pod label using K8s API from `cat ${3}` to ${2}"
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         K8S=https://kubernetes.default.svc.cluster.local:$KUBERNETES_SERVICE_PORT
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -254,18 +254,18 @@ data:
             --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Authorization: Bearer $KUBE_TOKEN" -H "Content-Type:application/json-patch+json" \
             $K8S/api/v1/namespaces/$NAMESPACE/pods/$HOSTNAME ; then
-          # Fall back to alternative method to update label
+          # Label update didn't work this way, fall back to alternative legacy method to update label
           if ! curl -sSk --output /dev/null -H "Authorization: Bearer $KUBE_TOKEN" --request PATCH --data "$(cat /tmp/patch_label.json)" \
             -H "Content-Type:application/json-patch+json" \
             https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME ; then
             echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
             exit 1
           fi
-          echo "`date` INFO: ${APP}-Failed to update label from ${3} to ${2}, retrying"
         fi
+        echo ${2} > ${3} # Track latest value of label
       fi
     }
-    # note that there are no re-tries here, if check fails then return not ready.
+    # Main logic: note that there are no re-tries here, if check fails then return not ready.
     APP=`basename "$0"`
     state_file=/tmp/activity_state
     if [ ! -f ${state_file} ]; then  # State file not found, creating
