@@ -9,224 +9,248 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 data:
   init.sh: |-
-    # export username_admin_passwordfilepath=/mnt/disks/secrets/username_admin_password
-      export username_admin_password=`cat /mnt/disks/secrets/username_admin_password`
-      export username_admin_globalaccesslevel=admin
-      export service_ssh_port='2222'
-      export service_webtransport_port='8008'
-      export service_webtransport_tlsport='1443'
-      export service_semp_tlsport='1943'
-      export logging_debug_output=all
+    export username_admin_passwordfilepath="/mnt/disks/secrets/username_admin_password"
+    export username_admin_globalaccesslevel=admin
+    export service_ssh_port='2222'
+    export service_webtransport_port='8008'
+    export service_webtransport_tlsport='1443'
+    export service_semp_tlsport='1943'
+    export logging_debug_output=all
 {{- if eq .Values.solace.size "dev" }}
-      export system_scaling_maxconnectioncount="100"
+    export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod100" }}
-      export system_scaling_maxconnectioncount="100"
+    export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod1k" }}
-      export system_scaling_maxconnectioncount="1000"
+    export system_scaling_maxconnectioncount="1000"
 {{- else if eq .Values.solace.size "prod10k" }}
-      export system_scaling_maxconnectioncount="10000"
+    export system_scaling_maxconnectioncount="10000"
 {{- else if eq .Values.solace.size "prod100k" }}
-      export system_scaling_maxconnectioncount="100000"
+    export system_scaling_maxconnectioncount="100000"
 {{- else if eq .Values.solace.size "prod200k" }}
-      export system_scaling_maxconnectioncount="200000"
+    export system_scaling_maxconnectioncount="200000"
+{{- end }}
+{{- if and (.Values.tls) (.Values.tls.enabled) }}
+    cat /mnt/disks/certs/server/tls.key /mnt/disks/certs/server/tls.crt > /dev/shm/server.cert
+    export tls_servercertificate_filepath="/dev/shm/server.cert"
 {{- end }}
 {{- if .Values.solace.redundancy }}
-      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
-      # https://github.com/kubernetes/kubernetes/issues/40651
-      # node_ordinal=$(STATEFULSET_ORDINAL)
-      IFS='-' read -ra host_array <<< $(hostname)
-      node_ordinal=${host_array[-1]}
-      if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
-        namespace=`echo $STATEFULSET_NAMESPACE`
-      else
-        namespace=default
+    # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
+    # https://github.com/kubernetes/kubernetes/issues/40651
+    # node_ordinal=$(STATEFULSET_ORDINAL)
+    IFS='-' read -ra host_array <<< $(hostname)
+    node_ordinal=${host_array[-1]}
+    if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
+      namespace=`echo $STATEFULSET_NAMESPACE`
+    else
+      namespace=default
+    fi
+    service={{ template "solace.fullname" . }}
+    # Deal with the fact we cannot accept "-" in routre names
+    service_name=$(echo ${service} | sed 's/-//g')
+    export routername=$(echo $(hostname) | sed 's/-//g')
+    export redundancy_enable=yes
+    export configsync_enable=yes
+    export redundancy_authentication_presharedkey_key=`cat /mnt/disks/secrets/username_admin_password | awk '{x=$0;for(i=length;i<51;i++)x=x "0";}END{print x}' | base64` # Right-pad with 0s to 50 length
+    export redundancy_group_node_${service_name}0_nodetype=message_routing
+    export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+    export redundancy_group_node_${service_name}1_nodetype=message_routing
+    export redundancy_group_node_${service_name}1_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+    export redundancy_group_node_${service_name}2_nodetype=monitoring
+    export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc
+
+    case ${node_ordinal} in
+    0)
+      export nodetype=message_routing
+      export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+      export redundancy_activestandbyrole=primary
+      ;;
+    1)
+      export nodetype=message_routing
+      export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+      export redundancy_activestandbyrole=backup
+      ;;
+    2)
+      export nodetype=monitoring
+      ;;
+    esac
+{{- end }}
+
+  startup-broker.sh: |-
+    #!/bin/bash
+    APP=`basename "$0"`
+    node_ordinal=${host_array[-1]}
+    echo "`date` INFO: ${APP}-Node ordinal: ${node_ordinal}"
+    echo "`date` INFO: ${APP}-Waiting for management API to become available"
+    password=`cat /mnt/disks/secrets/username_admin_password`
+    loop_guard=60
+    pause=10
+    count=0
+    while [ ${count} -lt ${loop_guard} ]; do 
+      if /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -t ; then
+        break
       fi
-      service={{ template "solace.fullname" . }}
-      # Deal with the fact we cannot accept "-" in routre names
-      service_name=$(echo ${service} | sed 's/-//g')
-      export routername=$(echo $(hostname) | sed 's/-//g')
-      export redundancy_enable=yes
-      export configsync_enable=yes
-      export redundancy_authentication_presharedkey_key=`cat /mnt/disks/secrets/username_admin_password | awk '{x=$0;for(i=length;i<51;i++)x=x "0";}END{print x}' | base64` # Right-pad with 0s to 50 length
-      export redundancy_group_node_${service_name}0_nodetype=message_routing
-      export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc
-      export redundancy_group_node_${service_name}1_nodetype=message_routing
-      export redundancy_group_node_${service_name}1_connectvia=${service}-1.${service}-discovery.${namespace}.svc
-      export redundancy_group_node_${service_name}2_nodetype=monitoring
-      export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc
-
-      case ${node_ordinal} in
-      0)
-       export nodetype=message_routing
-       export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
-       export redundancy_activestandbyrole=primary
-        ;;
-      1)
-       export nodetype=message_routing
-       export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
-       export redundancy_activestandbyrole=backup
-        ;;
-      2)
-       export nodetype=monitoring
-       ;;
-      esac
+      run_time=$((${count} * ${pause}))
+      ((count++))
+      echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Management API not yet accessible"
+      sleep ${pause}
+    done
+    if [ ${count} -eq ${loop_guard} ]; then
+      echo "`date` ERROR: ${APP}-Solace Management API never came up"  >&2
+      exit 1 
+    fi
+{{- if and (.Values.tls) (.Values.tls.enabled) }}
+    cert_results=`curl -k -sS -u admin:${password} https://localhost:1943/SEMP \
+        -d "<rpc><ssl><server-certificate><filename>../../../../../dev/shm/server.cert</filename></server-certificate></ssl></rpc>"`
+    rm /dev/shm/server.cert
+    if ! grep -q '<execute-result code="ok"/>' <<< "$cert_results"; then
+      echo "`date` ERROR: ${APP}-Unable to set the server certificate, exiting"  >&2
+      exit 1 
+    fi
 {{- end }}
-
-  setup-config-sync.sh: |-
-      #!/bin/bash
 {{- if .Values.solace.redundancy }}
-      APP=`basename "$0"`
-      # [TODO] KBARR not using correct method of finding ordinal until we bump min Kubernetes release above 1.8.1
-      # https://github.com/kubernetes/kubernetes/issues/40651
-      # node_ordinal=$(STATEFULSET_ORDINAL)
-      IFS='-' read -ra host_array <<< $(hostname)
-      node_ordinal=${host_array[-1]}
-      echo "`date` INFO: ${APP}-node ordinal: ${node_ordinal}"
-      password=`cat /mnt/disks/secrets/username_admin_password`
-      loop_guard=60
-      pause=10
-      count=0
+    IFS='-' read -ra host_array <<< $(hostname)
+    #exclude monitor node from config-sync check
+    if [ "${node_ordinal}" != "2" ]; then
       resync_step=""
       role=""
-      #exclude monitor node from config-sync check
-      if [ "${node_ordinal}" != "2" ]; then
-        while [ ${count} -lt ${loop_guard} ]; do 
-          role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
-                -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
-          run_time=$((${count} * ${pause}))
-          case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
-            "Primary")
-            role="primary"
+      count=0
+      while [ ${count} -lt ${loop_guard} ]; do 
+        role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+              -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
+              -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
+        run_time=$((${count} * ${pause}))
+        case "`echo ${role_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`" in
+          "Primary")
+          role="primary"
+          break
+          ;;
+          "Backup")
+          role="backup"
+          break
+          ;;
+        esac
+        ((count++))
+        echo "`date` INFO: ${APP}-Waited ${run_time} seconds, got ${role_results} for this node's active-standby role"
+        sleep ${pause}
+      done
+      if [ ${count} -eq ${loop_guard} ]; then
+        echo "`date` ERROR: ${APP}-Could not determine this node's active-standby role"  >&2
+        exit 1 
+      fi
+      # Determine local activity
+      count=0
+      echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
+      while [ ${count} -lt ${loop_guard} ]; do 
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
+            -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
+        local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        run_time=$((${count} * ${pause}))
+        case "${local_activity}" in
+          "Local Active")
+            echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
+            # We should only be here on new cluster create, if not likely a bug
+            # Need to issue assert master to get back into sync"
+            resync_step="assert-master"
             break
             ;;
-            "Backup")
-            role="backup"
+          "Mate Active")
+            echo "`date` INFO: ${APP}-Node activity status is Mate Active, after ${run_time} seconds"
+            # This is normal state if we are backup or recreated later on
+            # will issue a resync master to get back into sync
+            resync_step="resync-master"
             break
             ;;
-          esac
-          ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Management API not yet accessible"
-          sleep ${pause}
-        done
-        if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Solace Management API never came up"  >&2
-          exit 1 
-        fi
-        # Determine local activity
+        esac
+        ((count++))
+        echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Local activity state is: ${local_activity}"
+        sleep ${pause}
+      done
+      if [ ${count} -eq ${loop_guard} ]; then
+        echo "`date` ERROR: ${APP}-Local activity state never become Local Active or Mate Active"  >&2
+        exit 1 
+      fi
+      # If we need to assert master, then we need to wait for mate to reconcile
+      if [ "${resync_step}" = "assert-master" ]; then
         count=0
-        echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
+        echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
         while [ ${count} -lt ${loop_guard} ]; do 
           online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
               -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
-              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
-          local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+              -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
+          mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
           run_time=$((${count} * ${pause}))
-          case "${local_activity}" in
-            "Local Active")
-              echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
-              # We should only be here on new cluster create, if not likely a bug
-              # Need to issue assert master to get back into sync"
-              resync_step="assert-master"
-              break
-              ;;
-            "Mate Active")
-              echo "`date` INFO: ${APP}-Node activity status is Mate Active, after ${run_time} seconds"
-              # This is normal state if we are backup or recreated later on
-              # will issue a resync master to get back into sync
-              resync_step="resync-master"
+          case "${mate_activity}" in
+            "Standby")
+              echo "`date` INFO: ${APP}-Activity state reported by mate is Standby, after ${run_time} seconds"
               break
               ;;
           esac
           ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Local activity state is: ${local_activity}"
+          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate activity state is: ${mate_activity}, not yet in sync"
           sleep ${pause}
         done
         if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Local activity state never become Local Active or Mate Active"  >&2
+          echo "`date` ERROR: ${APP}-Mate not in sync, never reached Standby" >&2
           exit 1 
         fi
-        # If we need to assert master, then we need to wait for mate to reconcile
-        if [ "${resync_step}" = "assert-master" ]; then
-          count=0
-          echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
-          while [ ${count} -lt ${loop_guard} ]; do 
-            online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
-                -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
-            mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-            run_time=$((${count} * ${pause}))
-            case "${mate_activity}" in
-              "Standby")
-                echo "`date` INFO: ${APP}-Activity state reported by mate is Standby, after ${run_time} seconds"
-                break
-                ;;
-            esac
-            ((count++))
-            echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Mate activity state is: ${mate_activity}, not yet in sync"
-            sleep ${pause}
-          done
-          if [ ${count} -eq ${loop_guard} ]; then
-            echo "`date` ERROR: ${APP}-Mate not in sync, never reached Standby" >&2
-            exit 1 
-          fi
-        fi # if assert-master
-        # Ensure Config-sync connection state is Connected before proceeding
-        count=0
-        echo "`date` INFO: ${APP}-Waiting for config-sync connected"
-        while [ ${count} -lt ${loop_guard} ]; do
-          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc><show><config-sync></config-sync></show></rpc>" \
-              -v "/rpc-reply/rpc/show/config-sync/status/client/connection-state"`
-          connection_state=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-          run_time=$((${count} * ${pause}))
-          case "${connection_state}" in
-            "Connected")
-              echo "`date` INFO: ${APP}-Config-sync connection state is Connected, after ${run_time} seconds"
-              break
-              ;;
-          esac
-          ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync connection state is: ${connection_state}, not yet in Connected"
-          sleep ${pause}
-        done
-        if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Config-sync connection state never reached Connected" >&2
-          exit 1
-        fi
-        # Now can issue {resync_step} command
-        echo "`date` INFO: ${APP}-Initiating ${resync_step}"
-        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
-        /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-              -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
-        # Wait for config-sync results
-        count=0
-        echo "`date` INFO: ${APP}-Waiting for config-sync connected"
-        while [ ${count} -lt ${loop_guard} ]; do
-          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
-                  -q "<rpc><show><config-sync></config-sync></show></rpc>" \
-                  -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
-          confsyncstatus_results=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-          run_time=$((${count} * ${pause}))
-          case "${confsyncstatus_results}" in
-            "Up")
-              echo "`date` INFO: ${APP}-Config-sync is Up, after ${run_time} seconds"
-              break
-              ;;
-          esac
-          ((count++))
-          echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync is: ${confsyncstatus_results}, not yet Up"
-          sleep ${pause}
-        done
-        if [ ${count} -eq ${loop_guard} ]; then
-          echo "`date` ERROR: ${APP}-Config-sync never reached state \"Up\"" >&2
-          exit 1
-        fi
-      fi # if not monitor
-      echo "`date` INFO: ${APP}-Solace Event Broker bringup is complete for this node."
+      fi # if assert-master
+      # Ensure Config-sync connection state is Connected before proceeding
+      count=0
+      echo "`date` INFO: ${APP}-Waiting for config-sync connected"
+      while [ ${count} -lt ${loop_guard} ]; do
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+            -v "/rpc-reply/rpc/show/config-sync/status/client/connection-state"`
+        connection_state=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        run_time=$((${count} * ${pause}))
+        case "${connection_state}" in
+          "Connected")
+            echo "`date` INFO: ${APP}-Config-sync connection state is Connected, after ${run_time} seconds"
+            break
+            ;;
+        esac
+        ((count++))
+        echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync connection state is: ${connection_state}, not yet in Connected"
+        sleep ${pause}
+      done
+      if [ ${count} -eq ${loop_guard} ]; then
+        echo "`date` ERROR: ${APP}-Config-sync connection state never reached Connected" >&2
+        exit 1
+      fi
+      # Now can issue {resync_step} command
+      echo "`date` INFO: ${APP}-Initiating ${resync_step}"
+      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+            -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+      # Wait for config-sync results
+      count=0
+      echo "`date` INFO: ${APP}-Waiting for config-sync connected"
+      while [ ${count} -lt ${loop_guard} ]; do
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+                -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+                -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
+        confsyncstatus_results=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        run_time=$((${count} * ${pause}))
+        case "${confsyncstatus_results}" in
+          "Up")
+            echo "`date` INFO: ${APP}-Config-sync is Up, after ${run_time} seconds"
+            break
+            ;;
+        esac
+        ((count++))
+        echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync is: ${confsyncstatus_results}, not yet Up"
+        sleep ${pause}
+      done
+      if [ ${count} -eq ${loop_guard} ]; then
+        echo "`date` ERROR: ${APP}-Config-sync never reached state \"Up\"" >&2
+        exit 1
+      fi
+    fi # if not monitor
+    echo "`date` INFO: ${APP}-Solace Event Broker bringup is complete for this node."
 {{- end }}
-      exit 0
+    exit 0
 
 
   readiness_check.sh: |-
@@ -400,13 +424,14 @@ data:
       query=""
       url=""
       value_search=""
+      test_connection_only=false
       script_name=$0
       verbose=0
-      while getopts "c:n:p:q:u:v:" opt; do
+      while getopts "c:n:p:q:u:v:t" opt; do
           case "$opt" in
           c)  count_search=$OPTARG
               ;;
-          n)  name=$OPTARG
+          n)  username=$OPTARG
               ;;
           p)  password=$OPTARG
               ;;
@@ -415,24 +440,29 @@ data:
           u)  url=$OPTARG
               ;;
           v)  value_search=$OPTARG
-              ;;        
+              ;;
+          t)  test_connection_only=true
+              ;;
           esac
       done
       shift $((OPTIND-1))
       [ "$1" = "--" ] && shift
       verbose=1
-      #echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,name=${name} ,password=xxx query=${query} \
+      #echo "`date` INFO: ${APP}-${script_name}: count_search=${count_search} ,username=${username} ,password=xxx query=${query} \
       #            ,url=${url} ,value_search=${value_search} ,Leftovers: $@" >&2
-      if [[ ${url} = "" || ${name} = "" || ${password} = "" || ${query} = "" ]]; then
-        echo "`date` ERROR: ${APP}-${script_name}: url, name, password and query are madatory fields" >&2
+      if [[ ${url} = "" || ${username} = "" || ${password} = "" ]]; then
+        echo "`date` ERROR: ${APP}-${script_name}: url, username, password are madatory fields" >&2
         echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
         exit 1
       fi
-      if [ `curl --write-out '%{http_code}' --silent --output /dev/null -u ${name}:${password} ${url} -d "<rpc><show><version/></show></rpc>"` != "200" ] ; then
+      if [ `curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url} -d "<rpc><show><version/></show></rpc>"` != "200" ] ; then
         echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
         exit 1
       fi
-      query_response=`curl -sS -u ${name}:${password} ${url} -d "${query}"`
+      if [ "$test_connection_only" = true ] ; then
+        exit 0      # done here, connection is up
+      fi
+      query_response=`curl -sS -u ${username}:${password} ${url} -d "${query}"`
       # Validate first char of response is "<", otherwise no hope of being valid xml
       if [[ ${query_response:0:1} != "<" ]] ; then 
         echo  "<returnInfo><errorInfo>no valid xml returned</errorInfo></returnInfo>"

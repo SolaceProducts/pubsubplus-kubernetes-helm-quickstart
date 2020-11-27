@@ -52,6 +52,19 @@ serviceAccount:
   # name if specified will be used as service account name - must exist if create=false
   # name:
 
+tls:
+  # Enable TLS, default is false (not enabled)
+  enabled: false
+  #
+  # Name of the Secret that contains the certificates - required if TLS enabled, no default
+  # serverCertificatesSecret: 'example-tls-secret'
+  #
+  # Certificate filename, default tls.crt
+  # certFilename: 'tls.crt'
+  #
+  # Certificate Key filename, default tls.key
+  # certKeyFilename: 'tls.key'
+
 service:
   # service.type specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer
