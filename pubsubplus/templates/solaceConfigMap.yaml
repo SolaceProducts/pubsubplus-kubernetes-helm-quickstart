@@ -78,6 +78,7 @@ data:
   startup-broker.sh: |-
     #!/bin/bash
     APP=`basename "$0"`
+    IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
     echo "`date` INFO: ${APP}-Node ordinal: ${node_ordinal}"
     echo "`date` INFO: ${APP}-Waiting for management API to become available"
@@ -99,17 +100,18 @@ data:
       exit 1 
     fi
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
-    cert_results=`curl -k -sS -u admin:${password} https://localhost:1943/SEMP \
-        -d "<rpc><ssl><server-certificate><filename>../../../../../dev/shm/server.cert</filename></server-certificate></ssl></rpc>"`
+    cert_results=$(curl --write-out '%{http_code}' --silent --output /dev/null -k -X PATCH -u admin:${password} https://localhost:1943/SEMP/v2/config/ \
+      -H "content-type: application/json" \
+      -d "{\"tlsServerCertContent\":\"$(cat /dev/shm/server.cert | awk '{printf "%s\\n", $0}')\"}")
     rm /dev/shm/server.cert
-    if ! grep -q '<execute-result code="ok"/>' <<< "$cert_results"; then
+    if [ "${cert_results}" != "200" ]; then
       echo "`date` ERROR: ${APP}-Unable to set the server certificate, exiting"  >&2
       exit 1 
     fi
+    echo "`date` INFO: ${APP}-Server certificate has been configured"
 {{- end }}
 {{- if .Values.solace.redundancy }}
-    IFS='-' read -ra host_array <<< $(hostname)
-    #exclude monitor node from config-sync check
+    # for non-monitor nodes setup redundancy and config-sync
     if [ "${node_ordinal}" != "2" ]; then
       resync_step=""
       role=""
@@ -248,8 +250,8 @@ data:
         exit 1
       fi
     fi # if not monitor
-    echo "`date` INFO: ${APP}-Solace Event Broker bringup is complete for this node."
 {{- end }}
+    echo "`date` INFO: ${APP}-PubSub+ Event Broker bringup is complete for this node."
     exit 0
 
 
