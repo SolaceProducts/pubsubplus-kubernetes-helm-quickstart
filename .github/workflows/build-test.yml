@@ -1,0 +1,123 @@
+name: build
+
+# Controls when the action will run. 
+on:
+  pull_request:
+
+  push:
+
+jobs:
+  deploy:
+    name: K8s QuickStart CI test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Set env and tools
+      run: |
+        echo "TESTCLUSTERNAME=k8s-gha-test-$(date +%s)" >> $GITHUB_ENV
+        echo "TESTRUNBRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        #
+        sudo gem update --system 3.0.6
+        sudo gem install yaml-lint
+        sudo snap install kubectl --classic
+        kubectl version --client
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash # setup Helm 3
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Linting yaml files and chart
+      run: |
+        yaml-lint -n pubsubplus/*.yaml
+        helm lint pubsubplus
+
+    - name: Setup K8s env in GKE
+      run: |
+        mkdir gke_test; pushd gke_test
+        wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
+        chmod +x create_cluster.sh
+        ./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -m e2-standard-2
+        gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project capable-stream-180018
+        popd
+        kubectl get statefulset,svc,pods,pvc,pv
+
+    - name: Deploy HA broker and test
+      run: |
+        REPO=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 1)
+        TAG=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 2)
+        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
+        kubectl get statefulset,svc,pods,pvc,pv --show-labels
+        echo "Waiting for broker to become active"
+        sleep 40; kubectl describe nodes
+        until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
+        kubectl get statefulset,svc,pods,pvc,pv --show-labels
+        bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
+        export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
+        curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
+        tar -xvf SDKPERF_C_LINUX64
+        pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
+        sleep 10
+        curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
+        curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
+        if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
+        helm list
+        helm delete $(helm list | grep deployed | awk '{print $1}')
+        kubectl delete pvc --all
+
+    - name: Create chart variants
+      run: |
+        bash docs/helm-charts/create-chart-variants.sh; # Create chart variants
+        helm lint pubsubplus
+        helm install --generate-name pubsubplus --dry-run
+        helm lint pubsubplus-ha
+        helm install --generate-name pubsubplus-ha --dry-run
+        helm lint pubsubplus-dev
+        helm install --generate-name pubsubplus-dev --dry-run
+
+    - name: Publish artifacts
+      run: |
+        git config --global user.name "GitHub Actions Automation"
+        git config --global user.email "<>"
+        mkdir gh-pages; # Now update gh-pages
+        if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
+          echo "Using master on SolaceProducts"
+          git clone --quiet --branch=gh-pages https:/${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1
+          mv pubsubplus-*.tgz gh-pages/helm-charts/
+          helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+          pushd gh-pages
+          git add -f .
+          git commit -m "Latest helm chart updates on successful gha-test build ${{ github.run_number }} auto-pushed to gh-pages"
+          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart.git > /dev/null 2>&1
+          git push --quiet --set-upstream origin-pages gh-pages
+          popd
+          echo "Updated and pushed GH pages!"
+        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
+          echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1;
+          mv pubsubplus-*.tgz gh-pages/helm-charts/;
+          helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts;
+          pushd gh-pages;
+          git add -f .;
+          git commit -m "Latest helm chart updates on successful gha-test build ${{ github.run_number }} auto-pushed to gh-pages";
+          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git > /dev/null 2>&1;
+          git push --quiet --set-upstream origin-pages gh-pages;
+          popd
+          echo "Updated and pushed GH pages!";
+        fi
+
+    - name: Delete test resources (Cleanup)
+      if: ${{ always() }}
+      run: |
+        gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-east4-a
+        gcloud compute disks list | grep gha-test | sed 1d $rpt | while read -r a b c; do gcloud compute disks delete $a --zone $b --quiet; done
