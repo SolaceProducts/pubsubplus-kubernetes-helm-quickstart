@@ -14,7 +14,7 @@ on:
 
 jobs:
   deploy:
-    name: GKE CI test
+    name: K8s QuickStart CI test
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -24,7 +24,7 @@ jobs:
         echo "TESTCLUSTERNAME=k8s-gha-test-$(date +%s)" >> $GITHUB_ENV
         echo "TESTRUNBRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
         #
-        gem install yaml-lint
+        sudo gem install yaml-lint
         sudo snap install kubectl --classic
         kubectl version --client
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash # setup Helm 3
