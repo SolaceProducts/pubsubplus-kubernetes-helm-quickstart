@@ -51,7 +51,9 @@ jobs:
 
     - name: Deploy HA broker and test
       run: |
-        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin,image.repository=bczoma/solace-pubsub-standard,image.tag=test
+        REPO=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 1)
+        TAG=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 2)
+        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.usernameAdminPassword=admin,image.repository$REPO,image.tag=$TAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active"
         sleep 40; kubectl describe nodes
