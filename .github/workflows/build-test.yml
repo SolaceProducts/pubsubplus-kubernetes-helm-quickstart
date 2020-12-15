@@ -47,7 +47,6 @@ jobs:
 
     - name: Setup K8s env in GKE
       run: |
-        gcloud auth configure-docker --quiet
         mkdir gke_test; pushd gke_test
         wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
         chmod +x create_cluster.sh
