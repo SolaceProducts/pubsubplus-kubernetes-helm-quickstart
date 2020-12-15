@@ -6,12 +6,6 @@ on:
 
   push:
 
-# on:
-#   push:
-
-#   schedule:
-#   - cron: "0/10 * * * *"
-
 jobs:
   deploy:
     name: K8s QuickStart CI test
