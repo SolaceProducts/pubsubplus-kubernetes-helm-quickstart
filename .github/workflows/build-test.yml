@@ -24,7 +24,7 @@ jobs:
         echo "TESTCLUSTERNAME=k8s-gha-test-$(date +%s)" >> $GITHUB_ENV
         echo "TESTRUNBRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
         #
-        sudo gem update --system
+        sudo gem update --system 3.0.6
         sudo gem install yaml-lint
         sudo snap install kubectl --classic
         kubectl version --client
@@ -47,6 +47,7 @@ jobs:
 
     - name: Setup K8s env in GKE
       run: |
+        gcloud auth configure-docker --quiet
         mkdir gke_test; pushd gke_test
         wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
         chmod +x create_cluster.sh
