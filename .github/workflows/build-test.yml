@@ -92,7 +92,7 @@ jobs:
         mkdir gh-pages; # Now update gh-pages
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
           echo "Using master on SolaceProducts"
-          git clone --quiet --branch=gh-pages https:/${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1
           mv pubsubplus-*.tgz gh-pages/helm-charts/
           helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
           pushd gh-pages
@@ -104,16 +104,16 @@ jobs:
           echo "Updated and pushed GH pages!"
         elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
           echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
-          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1;
-          mv pubsubplus-*.tgz gh-pages/helm-charts/;
-          helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts;
-          pushd gh-pages;
-          git add -f .;
-          git commit -m "Latest helm chart updates on successful gha-test build ${{ github.run_number }} auto-pushed to gh-pages";
-          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git > /dev/null 2>&1;
-          git push --quiet --set-upstream origin-pages gh-pages;
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1
+          mv pubsubplus-*.tgz gh-pages/helm-charts/
+          helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+          pushd gh-pages
+          git add -f .
+          git commit -m "Latest helm chart updates on successful gha-test build ${{ github.run_number }} auto-pushed to gh-pages"
+          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git > /dev/null 2>&1
+          git push --quiet --set-upstream origin-pages gh-pages
           popd
-          echo "Updated and pushed GH pages!";
+          echo "Updated and pushed GH pages!"
         fi
 
     - name: Delete test resources (Cleanup)
