@@ -62,12 +62,17 @@ jobs:
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
-        bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
+        if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi
+        #
+        kubectl logs my-release-pubsubplus-0 | grep [.]sh
+        kubectl logs my-release-pubsubplus-1 | grep [.]sh
+        kubectl logs my-release-pubsubplus-2 | grep [.]sh
+        #
         export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
         curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
         tar -xvf SDKPERF_C_LINUX64
         pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
-        sleep 10
+        sleep 30
         curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
         curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
         if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
@@ -120,4 +125,4 @@ jobs:
       if: ${{ always() }}
       run: |
         gcloud container clusters delete $TESTCLUSTERNAME --quiet --zone us-east4-a
-        gcloud compute disks list | grep gha-test | sed 1d $rpt | while read -r a b c; do gcloud compute disks delete $a --zone $b --quiet; done
+        sleep 20; gcloud compute disks list | grep gha-test | sed 1d $rpt | while read -r a b c; do gcloud compute disks delete $a --zone $b --quiet || echo "Run into issues with deleting $a, skipping"; done
