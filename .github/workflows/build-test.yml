@@ -7,7 +7,7 @@ on:
   push:
   schedule:
   - cron: "*/10 * * * *"
-  
+
 jobs:
   deploy:
     name: K8s QuickStart CI test
@@ -64,7 +64,12 @@ jobs:
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
-        bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
+        if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi
+        #
+        kubectl logs my-release-pubsubplus-0 | grep [.]sh
+        kubectl logs my-release-pubsubplus-1 | grep [.]sh
+        kubectl logs my-release-pubsubplus-2 | grep [.]sh
+        #
         export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
         curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
         tar -xvf SDKPERF_C_LINUX64
