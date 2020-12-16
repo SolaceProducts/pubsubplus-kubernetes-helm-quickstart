@@ -67,7 +67,7 @@ jobs:
         curl -O https://sftp.solace.com/download/SDKPERF_C_LINUX64
         tar -xvf SDKPERF_C_LINUX64
         pubSubTools/sdkperf_c -cip=$url -mn=100000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
-        sleep 10
+        sleep 30
         curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
         curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
         if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
