@@ -2,7 +2,7 @@ name: build
 
 # Controls when the action will run. 
 on:
-  pull_request:
+  # pull_request:
 
   push:
 
