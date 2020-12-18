@@ -6,6 +6,13 @@ Watch progress by running:
 
 For troubleshooting, refer to ***TroubleShooting.md***
 
+== TLS support ==
+{{- if not .Values.tls.enabled }}
+TLS has not been enabled for this deployment.
+{{- else }}
+TLS is enabled, using secret {{ .Values.tls.serverCertificatesSecret }} for server certificates configuration.
+{{- end }}
+
 == Admin credentials and access ==
 {{- if not .Values.solace.usernameAdminPassword }}
 *********************************************************************
