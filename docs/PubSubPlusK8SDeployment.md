@@ -20,6 +20,12 @@ Contents:
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
+    + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
+      - [Setting up TLS](#setting-up-tls)
+      - [Rotating the server key](#rotating-the-server-key)
+    + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
+      - [Setting up TLS](#setting-up-tls)
+      - [Rotating the server key](#rotating-the-server-key)
     + [The PubSub+ Docker image](#the-pubsub-software-event-broker-docker-image)
       - [Using a public registry](#using-a-public-registry)
       - [Using private registries](#using-private-registries)
@@ -242,15 +248,11 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
+### Enabling use of TLS to access broker services
 
-************************************************************************************************
+#### Setting up TLS
 
-
-### Enabling to use TLS to access broker services
-
-#### Setting up TLS for use
-
-Default deployment does not have TLS over TCP enabled. Although the exposed `service.ports` include ports for secured TCP, only the insecure ports can be used by default.
+Default deployment does not have TLS over TCP enabled to access broker services. Although the exposed `service.ports` include ports for secured TCP, only the insecure ports can be used by default.
 
 To enable accessing services over TLS a server key and certificate must be configured on the broker.
 
