@@ -72,8 +72,8 @@ jobs:
         pubSubTools/sdkperf_c -cip=tcp://$url:55555 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
         pubSubTools/sdkperf_c -cip=tcps://$url:55443 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
         sleep 30
-        curl -k -sS -u admin:admin http://$url:1943/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
-        curl -k -sS -u admin:admin http://$url:1943/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
+        curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
+        curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
         if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
         helm list
         helm delete $(helm list | grep deployed | awk '{print $1}')
