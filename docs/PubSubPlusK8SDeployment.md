@@ -274,7 +274,7 @@ Note: ensure filenames are matching the files reported from running `kubectl des
 Here is an example new deployment with TLS enabled using default `certFilename` and `certKeyFilename`:
 ```
 helm install my-release solacecharts/pubsubplus \
---set tls.enabled=true,tls.serverCertificatesSecret=my-tls-secret
+--set tls.enabled=true,tls.serverCertificatesSecret=<my-tls-secret>
 ```
 
 Important: it is not possible to update an existing deployment to enable TLS that has been created without TLS enabled, by a simply using the [modify deployment](#modifying-or-upgrading-a-deployment) procedure. In this case, for the first time, certificates need to be [manually loaded and set up](//docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm) on each broker node. After that it is possible to use `helm upgrade` with a secret specified.
