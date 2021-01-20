@@ -253,7 +253,7 @@ Default deployment does not have TLS over TCP enabled to access broker services.
 
 To enable accessing services over TLS a server key and certificate must be configured on the broker.
 
-It is assumed that a provider out of scope of this document will be used to create a server key and certificate for the event broker, that meet the [requirements described in the Solace Documentation](https://docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm).
+It is assumed that a provider out of scope of this document will be used to create a server key and certificate for the event broker, that meet the [requirements described in the Solace Documentation](https://docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm). If the server key is password protected it shall be transformed to an unencrypted key, e.g.:  `openssl rsa -in encryedprivate.key -out unencryed.key`.
 
 The server key and certificate must be packaged in a Kubernetes secret, for example by [creating a TLS secret](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets). Example:
 ```
@@ -284,6 +284,8 @@ Important: it is not possible to update an existing deployment to enable TLS tha
 In the event the server key or certificate need to be rotated a new Kubernetes secret must be created, which may require deleting and recreating the old secret if using the same name.
 
 Next, if using the same secret name, the broker Pods need to be restarted, one at a time waiting to reach `1/1` availability before continuing on the next one: starting with the Monitor (ordinal -2), followed by the node in backup role with `active=false` label, and finally the third node. If using a new secret name, the [modify deployment](#modifying-or-upgrading-a-deployment) procedure can be used and an automatic rolling update will follow these steps restarting the nodes one at a time.
+
+Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
 
 ### The PubSub+ Software Event Broker Docker image
 

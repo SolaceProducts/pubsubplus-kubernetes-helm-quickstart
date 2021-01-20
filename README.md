@@ -26,7 +26,7 @@ Solace PubSub+ Software Event Broker can be deployed in either a three-node High
 
 We recommend using the Helm tool for convenience. An [alternative method](/docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided.
 
-In this quick start we go through the steps to set up a PubSub+ Software Event Broker using [Solace PubSub+ Helm charts](//hub.helm.sh/charts/solace).
+In this quick start we go through the steps to set up a PubSub+ Software Event Broker using [Solace PubSub+ Helm charts](//artifacthub.io/packages/search?ts_query_web=solace).
 
 There are three Helm chart variants available with default small-size configurations:
 1.	`pubsubplus-dev` - recommended PubSub+ Software Event Broker for Developers (standalone) - no guaranteed performance
