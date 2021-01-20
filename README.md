@@ -6,11 +6,11 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software
 
 ## Overview
 
-This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster. The recommended software event broker version is 9.4 or later.
+This project is a best practice template intended for development and demo purposes. The tested and recommended Solace PubSub+ Software Event Broker version is 9.8.
 
-*Detailed* *documentation* is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md).
+This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster.
 
-This quick start is intended mainly for development and demo purposes. Consult the [Deployment Considerations](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
+Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md). Consult the [Deployment Coonsiderations](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other Kubernetes platforms see:
 
