@@ -87,7 +87,7 @@ data:
     pause=10
     count=0
     while [ ${count} -lt ${loop_guard} ]; do 
-      if /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP -t ; then
+      if /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 -t ; then
         break
       fi
       run_time=$((${count} * ${pause}))
@@ -117,7 +117,7 @@ data:
       role=""
       count=0
       while [ ${count} -lt ${loop_guard} ]; do 
-        role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/active-standby-role[text()]"`
         run_time=$((${count} * ${pause}))
@@ -143,7 +143,7 @@ data:
       count=0
       echo "`date` INFO: ${APP}-Management API is up, determined that this node's active-standby role is: ${role}"
       while [ ${count} -lt ${loop_guard} ]; do 
-        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/activity[text()]"`
         local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -177,7 +177,7 @@ data:
         count=0
         echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
         while [ ${count} -lt ${loop_guard} ]; do 
-          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+          online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${role}/status/detail/priority-reported-by-mate/summary[text()]"`
           mate_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -201,7 +201,7 @@ data:
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync connected"
       while [ ${count} -lt ${loop_guard} ]; do
-        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><show><config-sync></config-sync></show></rpc>" \
             -v "/rpc-reply/rpc/show/config-sync/status/client/connection-state"`
         connection_state=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -222,15 +222,15 @@ data:
       fi
       # Now can issue {resync_step} command
       echo "`date` INFO: ${APP}-Initiating ${resync_step}"
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
       # Wait for config-sync results
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync connected"
       while [ ${count} -lt ${loop_guard} ]; do
-        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
                 -q "<rpc><show><config-sync></config-sync></show></rpc>" \
                 -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
         confsyncstatus_results=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
@@ -257,9 +257,15 @@ data:
 
   readiness_check.sh: |-
     #!/bin/bash
+    APP=`basename "$0"`
     LOG_FILE=/usr/sw/var/k8s_readiness_check.log # STDOUT/STDERR goes to k8s event logs but gets cleaned out eventually. This will also persist it.
     tail -n 1000 ${LOG_FILE} > ${LOG_FILE}.tmp; mv -f ${LOG_FILE}.tmp ${LOG_FILE} || :  # Limit logs size
-    exec > >(tee -a ${LOG_FILE}) 2>&1
+    exec > >(tee -a ${LOG_FILE}) 2>&1 # Setup logging
+    FINAL_ACTIVITY_LOGGED_TRACKING_FILE=/tmp/final_activity_state_logged
+    STATE_FILE=/tmp/activity_state
+    if [ ! -f ${STATE_FILE} ]; then  # State file not found, creating
+      echo "unknown" > ${STATE_FILE}
+    fi
 
     # Function to set Kubernetes metadata labels
     set_label () {
@@ -285,19 +291,14 @@ data:
             -H "Content-Type:application/json-patch+json" \
             https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$STATEFULSET_NAMESPACE/pods/$HOSTNAME ; then
             echo "`date` ERROR: ${APP}-Unable to update pod label, check access from pod to K8s API or RBAC authorization" >&2
-            exit 1
+            rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
           fi
         fi
         echo ${2} > ${3} # Track latest value of label
       fi
     }
-    # Main logic: note that there are no re-tries here, if check fails then return not ready.
-    APP=`basename "$0"`
-    state_file=/tmp/activity_state
-    if [ ! -f ${state_file} ]; then  # State file not found, creating
-      echo "unknown" > ${state_file}
-    fi
 
+    # Main logic: note that there are no re-tries here, if check fails then return not ready.
 {{- if .Values.solace.redundancy }}
     # HA config
     IFS='-' read -ra host_array <<< $(hostname)
@@ -310,23 +311,23 @@ data:
     if [ -f ${lastversion_file} ] && [[ $(cat ${lastversion_file}) != $(readlink /usr/sw/loads/currentload) ]] ; then
       echo "`date` INFO: ${APP}-Upgrade detected, running additional checks..."
       # Check redundancy
-      results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+      results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy/></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
       redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
       if [ "${redundancystatus_results}" != "Up" ]; then
         echo "`date` INFO: ${APP}-Redundancy state is not yet up."
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
       # Additionally check config-sync status for non-monitoring nodes
       if [ "${node_ordinal}" != "2" ]; then
-        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
                 -q "<rpc><show><config-sync></config-sync></show></rpc>" \
                 -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
         confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
         if [ "${confsyncstatus_results}" != "Up" ]; then
           echo "`date` INFO: ${APP}-Config-sync state is not yet up."
-          exit 1
+          rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
         fi
       fi
     fi
@@ -334,40 +335,46 @@ data:
     readlink /usr/sw/loads/currentload > ${lastversion_file}
     # For monitor node just check for 3 online nodes in group; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
-      role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+      role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
       if [[ ${role_results} != *"<errorInfo></errorInfo>"* ]]; then
-        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" -` || errorinfo=
+        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" - 2>/dev/null` || errorinfo=
         echo "`date` INFO: ${APP}-Waiting for valid server status response, got ${errorinfo}"
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
       nodes_online=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
       if [ "$nodes_online" -eq "3" ]; then
-        #echo "`date` INFO: ${APP}-Monitor node is redundancy ready"
+        if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
+          echo "`date` INFO: ${APP}-All nodes online, monitor node is redundancy ready"
+          touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
+        fi
         exit 0
       else
         echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, ${nodes_online} of 3 nodes online"
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
     fi # End Monitor Node
     # For Primary or Backup nodes set both service readiness (active label) and k8s readiness (exit return value)
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
     case "${health_result}" in
       "200")
-        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 200, message spool is up"; fi
-        set_label "active" "true" $state_file
+        if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
+          echo "`date` INFO: ${APP}-HA Event Broker health check reported 200, message spool is up"
+          touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
+        fi
+        set_label "active" "true" $STATE_FILE
         exit 0
         ;;
       "503")
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 503"; fi
-        set_label "active" "false" $state_file
+        if [[ $(cat $STATE_FILE) = "true" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 503"; fi
+        set_label "active" "false" $STATE_FILE
         # Further check is required to determine readiness
         ;;
       *)
         echo "`date` WARN: ${APP}-HA Event Broker health check reported unexpected ${health_result}"
-        set_label "active" "false" $state_file
-        exit 1
+        set_label "active" "false" $STATE_FILE
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
     esac
     # At this point analyzing readiness after health check returned 503 - checking if Event Broker is Standby
     case "${node_ordinal}" in
@@ -378,19 +385,22 @@ data:
         config_role="backup"
         ;;
     esac
-    online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080/SEMP \
+    online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     case "${local_activity}" in
       "Mate Active")
-        # Redundancy is up and node is mate Active"
         # Pass readiness check
+        if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
+          echo "`date` INFO: ${APP}-Redundancy is up and node is mate Active"
+          touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
+        fi
         exit 0
         ;;
       *)
         echo "`date` WARN: ${APP}-Health check returned 503 and local activity state is: ${local_activity}, failing readiness check."
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
         ;;
     esac
 {{- else }}
@@ -398,21 +408,24 @@ data:
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
     case "${health_result}" in
       "200")
-        if [[ $(cat $state_file) = "false" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 200, message spool is up"; fi
-        set_label "active" "true" $state_file
+        if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
+          echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 200, message spool is up"
+          touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
+        fi
+        set_label "active" "true" $STATE_FILE
         exit 0
         ;;
       "503")
-        if [[ $(cat $state_file) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 503, message spool is down"; fi
-        set_label "active" "false" $state_file
+        if [[ $(cat $STATE_FILE) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 503, message spool is down"; fi
+        set_label "active" "false" $STATE_FILE
         # Fail readiness check
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
         ;;
       *)
         echo "`date` WARN: ${APP}-nonHA Event Broker health check reported ${health_result}"
-        set_label "active" "false" $state_file
+        set_label "active" "false" $STATE_FILE
         # Fail readiness check
-        exit 1
+        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
     esac
 {{- end }}
   semp_query.sh: |-
@@ -457,14 +470,14 @@ data:
         echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
         exit 1
       fi
-      if [ `curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url} -d "<rpc><show><version/></show></rpc>"` != "200" ] ; then
+      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}`" != "200" ] ; then
         echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
         exit 1
       fi
       if [ "$test_connection_only" = true ] ; then
         exit 0      # done here, connection is up
       fi
-      query_response=`curl -sS -u ${username}:${password} ${url} -d "${query}"`
+      query_response=`curl -sS -u ${username}:${password} ${url}/SEMP -d "${query}"`
       # Validate first char of response is "<", otherwise no hope of being valid xml
       if [[ ${query_response:0:1} != "<" ]] ; then 
         echo  "<returnInfo><errorInfo>no valid xml returned</errorInfo></returnInfo>"
