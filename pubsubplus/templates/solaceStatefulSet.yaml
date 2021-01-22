@@ -133,6 +133,8 @@ spec:
                  killall solacedaemon; 
                  while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
         volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo        
         - name: config-map
           mountPath: /mnt/disks/solace
         - name: secrets
@@ -175,6 +177,12 @@ spec:
           protocol: {{ $item.protocol }}
         {{- end}}
       volumes:
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
         - name: config-map
           configMap:
             name: {{ template "solace.fullname" . }}

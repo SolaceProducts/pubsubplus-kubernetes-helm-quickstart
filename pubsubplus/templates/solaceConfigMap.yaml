@@ -262,21 +262,23 @@ data:
     tail -n 1000 ${LOG_FILE} > ${LOG_FILE}.tmp; mv -f ${LOG_FILE}.tmp ${LOG_FILE} || :  # Limit logs size
     exec > >(tee -a ${LOG_FILE}) 2>&1 # Setup logging
     FINAL_ACTIVITY_LOGGED_TRACKING_FILE=/tmp/final_activity_state_logged
-    STATE_FILE=/tmp/activity_state
-    if [ ! -f ${STATE_FILE} ]; then  # State file not found, creating
-      echo "unknown" > ${STATE_FILE}
-    fi
+
+    # Function to read Kubernetes metadata labels
+    get_label () {
+      # Params: $1 label name
+      echo $(cat /etc/podinfo/labels | awk -F= '$1=="'${1}'"{print $2}' | xargs);
+    }
 
     # Function to set Kubernetes metadata labels
     set_label () {
-      # Params: $2 label set value; $3 file where internal tracking of label value stored
+      # Params: $1 label name, $2 label set value
       #Prevent overdriving Kubernetes infra, don't set activity state to same as previous state
-      previous_state=`cat $3`
+      previous_state=$(get_label "active")
       if [ "${2}" = "${previous_state}" ]; then
         #echo "`date` INFO: ${APP}-Current and Previous state match (${2}), not updating pod label"
         :
       else
-        echo "`date` INFO: ${APP}-Updating pod label using K8s API from `cat ${3}` to ${2}"
+        echo "`date` INFO: ${APP}-Updating pod label using K8s API from ${previous_state} to ${2}"
         echo "[{\"op\": \"add\", \"path\": \"/metadata/labels/${1}\", \"value\": \"${2}\" }]" > /tmp/patch_label.json
         K8S=https://kubernetes.default.svc.cluster.local:$KUBERNETES_SERVICE_PORT
         KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -294,7 +296,6 @@ data:
             rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
           fi
         fi
-        echo ${2} > ${3} # Track latest value of label
       fi
     }
 
@@ -305,10 +306,10 @@ data:
     node_ordinal=${host_array[-1]}
     password=`cat /mnt/disks/secrets/username_admin_password`
 
-    # For upgrade purposes, additional checks are required for readiness state when the pod has been started
-    # This is an upgrade if the lastversion_file exists and contents differ from /usr/sw/loads/currentload
-    lastversion_file=/usr/sw/var/lastBrokerVersionBeforeReboot
-    if [ -f ${lastversion_file} ] && [[ $(cat ${lastversion_file}) != $(readlink /usr/sw/loads/currentload) ]] ; then
+    # For update (includes SolOS upgrade) purposes, additional checks are required for readiness state when the pod has been started
+    # This is an update if the lastversion_file exists and contents differ from /usr/sw/loads/currentload
+    lastversion_file=/usr/sw/var/lastControllerRevisionHashBeforeReboot
+    if [ -f ${lastversion_file} ] && [[ $(cat ${lastversion_file}) != $(get_label "controller-revision-hash") ]] ; then
       echo "`date` INFO: ${APP}-Upgrade detected, running additional checks..."
       # Check redundancy
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
@@ -332,7 +333,7 @@ data:
       fi
     fi
     # Record current version in lastversion_file
-    readlink /usr/sw/loads/currentload > ${lastversion_file}
+    echo $(get_label "controller-revision-hash") > ${lastversion_file}
     # For monitor node just check for 3 online nodes in group; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
@@ -363,17 +364,17 @@ data:
           echo "`date` INFO: ${APP}-HA Event Broker health check reported 200, message spool is up"
           touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
         fi
-        set_label "active" "true" $STATE_FILE
+        set_label "active" "true"
         exit 0
         ;;
       "503")
-        if [[ $(cat $STATE_FILE) = "true" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 503"; fi
-        set_label "active" "false" $STATE_FILE
+        if [[ $(get_label "active") = "true" ]]; then echo "`date` INFO: ${APP}-HA Event Broker health check reported 503"; fi
+        set_label "active" "false"
         # Further check is required to determine readiness
         ;;
       *)
         echo "`date` WARN: ${APP}-HA Event Broker health check reported unexpected ${health_result}"
-        set_label "active" "false" $STATE_FILE
+        set_label "active" "false"
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
     esac
     # At this point analyzing readiness after health check returned 503 - checking if Event Broker is Standby
@@ -412,18 +413,18 @@ data:
           echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 200, message spool is up"
           touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
         fi
-        set_label "active" "true" $STATE_FILE
+        set_label "active" "true"
         exit 0
         ;;
       "503")
-        if [[ $(cat $STATE_FILE) = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 503, message spool is down"; fi
-        set_label "active" "false" $STATE_FILE
+        if [[ $(get_label "active") = "true" ]]; then echo "`date` INFO: ${APP}-nonHA Event Broker health check reported 503, message spool is down"; fi
+        set_label "active" "false"
         # Fail readiness check
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
         ;;
       *)
         echo "`date` WARN: ${APP}-nonHA Event Broker health check reported ${health_result}"
-        set_label "active" "false" $STATE_FILE
+        set_label "active" "false"
         # Fail readiness check
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
     esac
