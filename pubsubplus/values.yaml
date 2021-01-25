@@ -79,67 +79,67 @@ service:
       - servicePort: 2222
         containerPort: 2222
         protocol: TCP
-        name: ssh
+        name: tcp-ssh
       - servicePort: 8080
         containerPort: 8080
         protocol: TCP
-        name: semp
+        name: tcp-semp
       - servicePort: 1943
         containerPort: 1943
         protocol: TCP
-        name: semptls
+        name: tcp-semptls
       - servicePort: 55555
         containerPort: 55555
         protocol: TCP
-        name: smf
+        name: tcp-smf
       - servicePort: 55003
         containerPort: 55003
         protocol: TCP
-        name: smfcomp
+        name: tcp-smfcomp
       - servicePort: 55443
         containerPort: 55443
         protocol: TCP
-        name: smftls
+        name: tcp-smftls
       - servicePort: 8008
         containerPort: 8008
         protocol: TCP
-        name: web
+        name: tcp-web
       - servicePort: 1443
         containerPort: 1443
         protocol: TCP
-        name: webtls
+        name: tcp-webtls
       - servicePort: 5672
         containerPort: 5672
         protocol: TCP
-        name: amqp
+        name: tcp-amqp
       - servicePort: 1883
         containerPort: 1883
         protocol: TCP
-        name: mqtt
+        name: tcp-mqtt
       - servicePort: 9000
         containerPort: 9000
         protocol: TCP
-        name: rest
-  #   - servicePort: 5671
-  #     containerPort: 5671
-  #     protocol: TCP
-  #     name: amqptls
-  #   - servicePort: 8883
-  #     containerPort: 8883
-  #     protocol: TCP
-  #     name: mqtttls
-  #   - servicePort: 8000
-  #     containerPort: 8000
-  #     protocol: TCP
-  #     name: mqttws
-  #   - servicePort: 8443
-  #     containerPort: 8443
-  #     protocol: TCP
-  #     name: mqttwss
-  #   - servicePort: 9443
-  #     containerPort: 9443
-  #     protocol: TCP
-  #     name: resttls
+        name: tcp-rest
+      - servicePort: 5671
+        containerPort: 5671
+        protocol: TCP
+        name: tcp-amqptls
+      - servicePort: 8883
+        containerPort: 8883
+        protocol: TCP
+        name: tcp-mqtttls
+      - servicePort: 8000
+        containerPort: 8000
+        protocol: TCP
+        name: tcp-mqttws
+      - servicePort: 8443
+        containerPort: 8443
+        protocol: TCP
+        name: tcp-mqttwss
+      - servicePort: 9443
+        containerPort: 9443
+        protocol: TCP
+        name: tcp-resttls
 
 storage:
   # storage.persistent set to false will use ephemeral storage and the rest of the storage params will be ignored
