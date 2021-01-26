@@ -143,7 +143,7 @@ spec:
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
         - name: server-certs
           mountPath: /mnt/disks/certs/server
-          readOnly: false
+          readOnly: true
 {{- end }}
         - name: dshm
           mountPath: /dev/shm
