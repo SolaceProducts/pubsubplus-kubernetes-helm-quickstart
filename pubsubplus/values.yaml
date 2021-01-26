@@ -87,7 +87,7 @@ service:
       - servicePort: 1943
         containerPort: 1943
         protocol: TCP
-        name: tcp-semptls
+        name: tls-semp
       - servicePort: 55555
         containerPort: 55555
         protocol: TCP
@@ -99,7 +99,7 @@ service:
       - servicePort: 55443
         containerPort: 55443
         protocol: TCP
-        name: tcp-smftls
+        name: tls-smf
       - servicePort: 8008
         containerPort: 8008
         protocol: TCP
@@ -107,39 +107,39 @@ service:
       - servicePort: 1443
         containerPort: 1443
         protocol: TCP
-        name: tcp-webtls
-      - servicePort: 5672
-        containerPort: 5672
-        protocol: TCP
-        name: tcp-amqp
-      - servicePort: 1883
-        containerPort: 1883
-        protocol: TCP
-        name: tcp-mqtt
+        name: tls-web
       - servicePort: 9000
         containerPort: 9000
         protocol: TCP
         name: tcp-rest
-      - servicePort: 5671
-        containerPort: 5671
-        protocol: TCP
-        name: tcp-amqptls
-      - servicePort: 8883
-        containerPort: 8883
-        protocol: TCP
-        name: tcp-mqtttls
-      - servicePort: 8000
-        containerPort: 8000
-        protocol: TCP
-        name: tcp-mqttws
-      - servicePort: 8443
-        containerPort: 8443
-        protocol: TCP
-        name: tcp-mqttwss
       - servicePort: 9443
         containerPort: 9443
         protocol: TCP
-        name: tcp-resttls
+        name: tls-rest
+      - servicePort: 5672
+        containerPort: 5672
+        protocol: TCP
+        name: tcp-amqp
+      - servicePort: 5671
+        containerPort: 5671
+        protocol: TCP
+        name: tls-amqp
+      - servicePort: 1883
+        containerPort: 1883
+        protocol: TCP
+        name: tcp-mqtt
+      - servicePort: 8883
+        containerPort: 8883
+        protocol: TCP
+        name: tls-mqtt
+      - servicePort: 8000
+        containerPort: 8000
+        protocol: TCP
+        name: tcp-mqttweb
+      - servicePort: 8443
+        containerPort: 8443
+        protocol: TCP
+        name: tls-mqttweb
 
 storage:
   # storage.persistent set to false will use ephemeral storage and the rest of the storage params will be ignored
