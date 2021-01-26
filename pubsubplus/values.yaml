@@ -100,6 +100,10 @@ service:
         containerPort: 55443
         protocol: TCP
         name: tls-smf
+      - servicePort: 55556
+        containerPort: 55556
+        protocol: TCP
+        name: tcp-smfroute
       - servicePort: 8008
         containerPort: 8008
         protocol: TCP
