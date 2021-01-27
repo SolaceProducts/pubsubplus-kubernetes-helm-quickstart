@@ -18,9 +18,12 @@ Contents:
       - [Creating a new storage class](#creating-a-new-storage-class)
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
-    + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-event-broker-services)
+    + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
-    + [The PubSub+ Docker image](#the-pubsub-docker-image)
+    + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
+      - [Setting up TLS](#setting-up-tls)
+      - [Rotating the server key](#rotating-the-server-key)
+    + [The PubSub+ Docker image](#the-pubsub-software-event-broker-docker-image)
       - [Using a public registry](#using-a-public-registry)
       - [Using private registries](#using-private-registries)
       - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
@@ -242,6 +245,48 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
 - the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
 
+### Enabling use of TLS to access broker services
+
+#### Setting up TLS
+
+Default deployment does not have TLS over TCP enabled to access broker services. Although the exposed `service.ports` include ports for secured TCP, only the insecure ports can be used by default.
+
+To enable accessing services over TLS a server key and certificate must be configured on the broker.
+
+It is assumed that a provider out of scope of this document will be used to create a server key and certificate for the event broker, that meet the [requirements described in the Solace Documentation](https://docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm). If the server key is password protected it shall be transformed to an unencrypted key, e.g.:  `openssl rsa -in encryedprivate.key -out unencryed.key`.
+
+The server key and certificate must be packaged in a Kubernetes secret, for example by [creating a TLS secret](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets). Example:
+```
+kubectl create secret tls <my-tls-secret> --key="<my-server-key-file>" --cert="<my-certificate-file>"
+```
+
+This secret name and related parameters shall be specified when deploying the PubSub+ Helm chart:
+```
+tls:
+  enabled: true    # set to false by default
+  serverCertificatesSecret: <my-tls-secret> # replace by the actual name
+  certFilename:    # optional, default if not provided: tls.crt 
+  certKeyFilename: # optional, default if not provided: tls.key
+```
+
+Note: ensure filenames are matching the files reported from running `kubectl describe secret <my-tls-secret>`.
+
+Here is an example new deployment with TLS enabled using default `certFilename` and `certKeyFilename`:
+```
+helm install my-release solacecharts/pubsubplus \
+--set tls.enabled=true,tls.serverCertificatesSecret=<my-tls-secret>
+```
+
+Important: it is not possible to update an existing deployment to enable TLS that has been created without TLS enabled, by a simply using the [modify deployment](#modifying-or-upgrading-a-deployment) procedure. In this case, for the first time, certificates need to be [manually loaded and set up](//docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm) on each broker node. After that it is possible to use `helm upgrade` with a secret specified.
+
+#### Rotating the server key
+
+In the event the server key or certificate need to be rotated a new Kubernetes secret must be created, which may require deleting and recreating the old secret if using the same name.
+
+Next, if using the same secret name, the broker Pods need to be restarted, one at a time waiting to reach `1/1` availability before continuing on the next one: starting with the Monitor (ordinal -2), followed by the node in backup role with `active=false` label, and finally the third node. If using a new secret name, the [modify deployment](#modifying-or-upgrading-a-deployment) procedure can be used and an automatic rolling update will follow these steps restarting the nodes one at a time.
+
+Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
+
 ### The PubSub+ Software Event Broker Docker image
 
 The `image.repository` and `image.tag` parameters combined specify the PubSub+ Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
@@ -318,7 +363,7 @@ If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecur
 
 #### Securing Helm v2
 
-Using current Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default, Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller, and they need to be applied carefully if strict security is required; for example, in a production environment.
+Using Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default, Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller, and they need to be applied carefully if strict security is required; for example, in a production environment.
 
 [Securing your Helm Installation](//v2.helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
 
@@ -329,6 +374,9 @@ Particularly, the [Role-based Access Control section of the Helm documentation](
 Services require [pod label "active"](#using-pod-label-active-to-identify-the-active-event-broker-node) of the serving event broker.
 * In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
 
+#### Securing TLS server key and certificate
+
+Using secrets for TLS server keys and certificates follows Kubernetes recommendations, however, particularly in a production environment, additional steps are required to ensure only authorized access to these secrets following Kubernetes industry best practices, including setting tight RBAC permissions and fixing possible security holes.
 
 ## Deployment Prerequisites
 

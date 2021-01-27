@@ -120,7 +120,7 @@ spec:
            source /mnt/disks/solace/init.sh
            # not using postinstall hooks because of order dependencies
            # launch config check - readiness check script will be launched by readinessProbe
-           nohup /mnt/disks/solace/setup-config-sync.sh &
+           nohup /mnt/disks/solace/startup-broker.sh &
            /usr/sbin/boot.sh
         lifecycle:
           preStop:
@@ -133,11 +133,18 @@ spec:
                  killall solacedaemon; 
                  while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
         volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo        
         - name: config-map
           mountPath: /mnt/disks/solace
         - name: secrets
           mountPath: /mnt/disks/secrets
           readOnly: true
+{{- if and (.Values.tls) (.Values.tls.enabled) }}
+        - name: server-certs
+          mountPath: /mnt/disks/certs/server
+          readOnly: true
+{{- end }}
         - name: dshm
           mountPath: /dev/shm
         - name: data
@@ -170,6 +177,12 @@ spec:
           protocol: {{ $item.protocol }}
         {{- end}}
       volumes:
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
         - name: config-map
           configMap:
             name: {{ template "solace.fullname" . }}
@@ -178,6 +191,12 @@ spec:
           secret:
             secretName: {{ template "solace.fullname" . }}-secrets
             defaultMode: 0400
+{{- if and (.Values.tls) (.Values.tls.enabled) }}
+        - name: server-certs
+          secret:
+            secretName: {{ required "A secret containing the server key and certificates is required when TLS in enabled" .Values.tls.serverCertificatesSecret }}
+            defaultMode: 0400
+{{- end }}
         - name: dshm
           emptyDir:
             medium: Memory

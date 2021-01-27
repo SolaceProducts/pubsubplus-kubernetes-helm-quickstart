@@ -91,6 +91,10 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `securityContext.runAsUser`    | Specifies `runAsUser` in pod security context                                                           | set to default PubSub+ appuser id 1000001 |
 | `serviceAccount.create`        | `true` will create a service account dedicated to the deployment in the namespace                       | `true` |
 | `serviceAccount.name`          | Refer to https://helm.sh/docs/topics/chart_best_practices/rbac/#using-rbac-resources                    | Undefined |
+| `tls.enabled`                  | Enable to use TLS to access exposed broker services                                                     | `false` (not enabled) |
+| `tls.serverCertificatesSecret` | Name of the Kubernetes Secret that contains the certificates - required if TLS is enabled               | Undefined |
+| `tls.certFilename`             | Name of the Certificate file in the `serverCertificatesSecret`                                          | `tls.crt` |
+| `tls.certKeyFilename`          | Name of the Key file in the `serverCertificatesSecret`                                                  | `tls.key` |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
 | `service.annotations`                 | service.annotations allows to add provider-specific service annotations                          | Undefined  |
 | `service.ports`                | Define PubSub+ service ports exposed. servicePorts are external, mapping to cluster-local pod containerPorts | initial set of frequently used ports, refer to values.yaml |

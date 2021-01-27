@@ -13,15 +13,15 @@ metadata:
 spec:
   ports:
   - port: 8080
-    name: semp
+    name: tcp-semp
   - port: 8741
-    name: ha-mate-link
+    name: tcp-ha-mate-link
   - port: 8300
-    name: ha-conf-sync0
+    name: tcp-ha-conf-sync0
   - port: 8301
-    name: ha-conf-sync1
+    name: tcp-ha-conf-sync1
   - port: 8302
-    name: ha-conf-sync2
+    name: tcp-ha-conf-sync2
   clusterIP: None
   selector:
     app.kubernetes.io/name: {{ template "solace.name" . }}
