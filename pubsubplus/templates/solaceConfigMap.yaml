@@ -308,9 +308,9 @@ data:
     password=`cat /mnt/disks/secrets/username_admin_password`
 
     # For update (includes SolOS upgrade) purposes, additional checks are required for readiness state when the pod has been started
-    # This is an update if the lastversion_file exists and contents differ from /usr/sw/loads/currentload
-    lastversion_file=/usr/sw/var/lastControllerRevisionHashBeforeReboot
-    if [ -f ${lastversion_file} ] && [[ $(cat ${lastversion_file}) != $(get_label "controller-revision-hash") ]] ; then
+    # This is an update if the LASTVERSION_FILE with K8s controller-revision-hash exists and contents differ from current value
+    LASTVERSION_FILE=/var/lib/solace/var/lastConfigRevisionBeforeReboot
+    if [ -f ${LASTVERSION_FILE} ] && [[ $(cat ${LASTVERSION_FILE}) != $(get_label "controller-revision-hash") ]] ; then
       echo "`date` INFO: ${APP}-Upgrade detected, running additional checks..."
       # Check redundancy
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
@@ -333,8 +333,8 @@ data:
         fi
       fi
     fi
-    # Record current version in lastversion_file
-    echo $(get_label "controller-revision-hash") > ${lastversion_file}
+    # Record current version in LASTVERSION_FILE
+    echo $(get_label "controller-revision-hash") > ${LASTVERSION_FILE}
     # For monitor node just check for 3 online nodes in group; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
