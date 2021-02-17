@@ -10,7 +10,7 @@ This document is applicable to any platform supporting Kubernetes.
 Contents:
   * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
   * [**Overview**](#overview)
-  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-event-broker-deployment-considerations)
+  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-software-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
     + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
