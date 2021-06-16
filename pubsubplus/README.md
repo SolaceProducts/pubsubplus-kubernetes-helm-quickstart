@@ -103,6 +103,7 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | Undefined |
 | `storage.useStorageClass` <a name="config-storageclass"></a> | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
+| `storage.monsize`              | Size of the monitoring persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `20Gi` |
 
 
 
