@@ -39,6 +39,8 @@ data:
     # node_ordinal=$(STATEFULSET_ORDINAL)
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
+    # Separate Monitor node from main statefulset using -monitor in statefulset name suffix
+    is_monitor=$([ ${host_array[-2]} = "m" ] && echo 1 || echo 0)
     if [[ ! -z `echo $STATEFULSET_NAMESPACE` ]]; then
       namespace=`echo $STATEFULSET_NAMESPACE`
     else
@@ -56,24 +58,29 @@ data:
     export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc:${service_redundancy_firstlistenport}
     export redundancy_group_node_${service_name}1_nodetype=message_routing
     export redundancy_group_node_${service_name}1_connectvia=${service}-1.${service}-discovery.${namespace}.svc:${service_redundancy_firstlistenport}
-    export redundancy_group_node_${service_name}2_nodetype=monitoring
-    export redundancy_group_node_${service_name}2_connectvia=${service}-2.${service}-discovery.${namespace}.svc:${service_redundancy_firstlistenport}
+    export redundancy_group_node_${service_name}m0_nodetype=monitoring
+    export redundancy_group_node_${service_name}m0_connectvia=${service}-m-0.${service}-discovery.${namespace}.svc:${service_redundancy_firstlistenport}
 
-    case ${node_ordinal} in
-    0)
-      export nodetype=message_routing
-      export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
-      export redundancy_activestandbyrole=primary
-      ;;
-    1)
-      export nodetype=message_routing
-      export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
-      export redundancy_activestandbyrole=backup
-      ;;
-    2)
+    # Non Monitor Nodes
+    if [ "${is_monitor}" = "0" ]; then
+      case ${node_ordinal} in
+      0)
+        export nodetype=message_routing
+        export redundancy_matelink_connectvia=${service}-1.${service}-discovery.${namespace}.svc
+        export redundancy_activestandbyrole=primary
+        ;;
+      1)
+        export nodetype=message_routing
+        export redundancy_matelink_connectvia=${service}-0.${service}-discovery.${namespace}.svc
+        export redundancy_activestandbyrole=backup
+        ;;
+      # 2)
+      #   export nodetype=monitoring
+      #   ;;
+      esac
+    else
       export nodetype=monitoring
-      ;;
-    esac
+    fi
 {{- end }}
 
   startup-broker.sh: |-
@@ -113,7 +120,8 @@ data:
 {{- end }}
 {{- if .Values.solace.redundancy }}
     # for non-monitor nodes setup redundancy and config-sync
-    if [ "${node_ordinal}" != "2" ]; then
+    # if [ "${node_ordinal}" != "2" ]; then
+    if [ "${is_monitor}" = "0" ]; then
       resync_step=""
       role=""
       count=0
@@ -305,6 +313,8 @@ data:
     # HA config
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
+    # Monitor node flag
+    is_monitor=$([ ${host_array[-2]} = "m" ] && echo 1 || echo 0)
     password=`cat /mnt/disks/secrets/username_admin_password`
 
     # For update (includes SolOS upgrade) purposes, additional checks are required for readiness state when the pod has been started
@@ -322,7 +332,8 @@ data:
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
       # Additionally check config-sync status for non-monitoring nodes
-      if [ "${node_ordinal}" != "2" ]; then
+      #if [ "${node_ordinal}" != "2" ]; then
+      if [ "${is_monitor}" = "0" ]; then
         results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
                 -q "<rpc><show><config-sync></config-sync></show></rpc>" \
                 -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
@@ -336,7 +347,8 @@ data:
     # Record current version in LASTVERSION_FILE
     echo $(get_label "controller-revision-hash") > ${LASTVERSION_FILE}
     # For monitor node just check for 3 online nodes in group; active label will never be set
-    if [ "${node_ordinal}" = "2" ]; then
+    #if [ "${node_ordinal}" = "2" ]; then
+    if [ "${is_monitor}" = "1" ]; then
       role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
               -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
@@ -379,14 +391,17 @@ data:
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
     esac
     # At this point analyzing readiness after health check returned 503 - checking if Event Broker is Standby
-    case "${node_ordinal}" in
-      "0")
-        config_role="primary"
-        ;;
-      "1")
-        config_role="backup"
-        ;;
-    esac
+    # Non monitor node
+    if [ "${is_monitor}" = "0" ]; then
+      case "${node_ordinal}" in
+        "0")
+          config_role="primary"
+          ;;
+        "1")
+          config_role="backup"
+          ;;
+      esac
+    fi
     online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc><show><redundancy><detail/></redundancy></show></rpc>" \
             -v "/rpc-reply/rpc/show/redundancy/virtual-routers/${config_role}/status/activity[text()]"`

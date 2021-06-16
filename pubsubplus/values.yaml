@@ -166,4 +166,5 @@ storage:
 
   # Refer to the Solace documentation for Minimum Recommended Storage-Element Size per Scaling Tier
   size: 30Gi
+  monsize: 20Gi
 
