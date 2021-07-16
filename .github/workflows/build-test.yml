@@ -56,7 +56,7 @@ jobs:
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=*"
         kubectl create secret tls test-tls --key="tls.key" --cert="tls.crt"
         
-        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
+        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=bczoma/solacetest
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active"
         sleep 40; kubectl describe nodes
