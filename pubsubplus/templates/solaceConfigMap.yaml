@@ -224,9 +224,9 @@ data:
       # Now can issue {resync_step} command
       echo "`date` INFO: ${APP}-Initiating ${resync_step}"
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_9VMR\"><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_9VMR\"><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
       # Wait for config-sync results
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync connected"
