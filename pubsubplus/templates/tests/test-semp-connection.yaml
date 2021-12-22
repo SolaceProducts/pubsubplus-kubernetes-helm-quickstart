@@ -33,12 +33,18 @@ spec:
             secretKeyRef:
               name: {{ template "solace.fullname" . }}-secrets
               key: username_admin_password
+        - name: PORT_MAPPINGS
+          value: "{{ .Values.service.ports | toString }}"
       command:
         - /bin/bash
         - -c
         - |
+          # Get tcp-semp port out of PORT_MAPPINGS
+          portmappings_array=(`awk -F'\]' '{ for(i=1;i<=NF;i++) print $i }' <<< $PORT_MAPPINGS | grep "tcp-semp"`)
+          for i in ${portmappings_array[@]}; do if [[ "$i" == *"servicePort"* ]]; then SEMP_PORT="$(cut -d':' -f2 <<<$i)"; fi ; done
+          echo "SEMP port: $SEMP_PORT"
           echo "Checking for successful SEMP access"
-          if curl --write-out '%{http_code}' -u admin:$SOLACE_PASSWORD $SOLACE_HOST:8080/SEMP | grep 200
+          if curl --write-out '%{http_code}' -u admin:$SOLACE_PASSWORD $SOLACE_HOST:$SEMP_PORT/SEMP | grep 200
             then echo "SEMP access successful"
             else echo "SEMP access failed"; exit 1
           fi
