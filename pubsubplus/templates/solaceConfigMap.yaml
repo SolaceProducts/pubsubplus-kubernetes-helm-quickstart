@@ -472,7 +472,7 @@ data:
         echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
         exit 1
       fi
-      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}`" != "200" ] ; then
+      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}/SEMP`" != "200" ] ; then
         echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
         exit 1
       fi
