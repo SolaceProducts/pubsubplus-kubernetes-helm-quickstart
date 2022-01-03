@@ -40,7 +40,7 @@ spec:
         - -c
         - |
           # Get tcp-semp port out of PORT_MAPPINGS
-          portmappings_array=(`awk -F'\]' '{ for(i=1;i<=NF;i++) print $i }' <<< $PORT_MAPPINGS | grep "tcp-semp"`)
+          portmappings_array=(`awk -F']' '{ for(i=1;i<=NF;i++) print $i }' <<< $PORT_MAPPINGS | grep "tcp-semp"`)
           for i in ${portmappings_array[@]}; do if [[ "$i" == *"servicePort"* ]]; then SEMP_PORT="$(cut -d':' -f2 <<<$i)"; fi ; done
           echo "SEMP port: $SEMP_PORT"
           echo "Checking for successful SEMP access"
