@@ -15,7 +15,7 @@ Detailed documentation is provided in the [Solace PubSub+ Software Event Broker 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other Kubernetes platforms see:
 
 - [Deploying a Solace PubSub+ Software Event Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
-- [Deploying a Solace PubSub+ Software Event Broker HA Group onto an OpenShift 3.11 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
+- [Deploying a Solace PubSub+ Software Event Broker HA Group onto an OpenShift 4 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
 - Deploying a Solace PubSub+ Software Event Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](//docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
 - [Install a Solace PubSub+ Software Event Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
 - Deploying a Solace PubSub+ Software Event Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
