@@ -2,9 +2,18 @@
     "$schema": "http://json-schema.org/schema#",
     "type": "object",
     "properties": {
+        "fullnameOverride": {
+            "type": "string"
+        },
         "image": {
             "type": "object",
             "properties": {
+                "pullPolicy": {
+                    "type": "string"
+                },
+                "pullSecretName": {
+                    "type": "string"
+                },
                 "repository": {
                     "type": "string"
                 },
@@ -12,6 +21,9 @@
                     "type": "string"
                 }
             }
+        },
+        "nameOverride": {
+            "type": "string"
         },
         "securityContext": {
             "type": "object",
@@ -30,6 +42,9 @@
         "service": {
             "type": "object",
             "properties": {
+                "annotations": {
+                    "type": "string"
+                },
                 "ports": {
                     "type": "array",
                     "items": {
@@ -72,18 +87,30 @@
                 "size": {
                     "type": "string"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "usernameAdminPassword": {
-                    "type": "null"
+                    "type": "string"
                 }
             }
         },
         "storage": {
             "type": "object",
             "properties": {
+                "customVolumeMount": {
+                    "type": "string"
+                },
                 "persistent": {
                     "type": "boolean"
                 },
                 "size": {
+                    "type": "string"
+                },
+                "slow": {
+                    "type": "boolean"
+                },
+                "useStorageClass": {
                     "type": "string"
                 }
             }
@@ -91,8 +118,17 @@
         "tls": {
             "type": "object",
             "properties": {
+                "certFilename": {
+                    "type": "string"
+                },
+                "certKeyFilename": {
+                    "type": "string"
+                },
                 "enabled": {
                     "type": "boolean"
+                },
+                "serverCertificatesSecret": {
+                    "type": "string"
                 }
             }
         }
