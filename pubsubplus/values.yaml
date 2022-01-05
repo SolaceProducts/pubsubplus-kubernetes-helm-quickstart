@@ -1,3 +1,5 @@
+# Notes: ensure to keep the schema 'values.schema.json' in sync with this file
+
 # If defined Kubernetes object names will be <release-name>-nameOverride
 #   Default is <release-name>-<chart-name>
 # nameOverride:
