@@ -91,7 +91,7 @@
                     "type": "string"
                 },
                 "usernameAdminPassword": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             }
         },
