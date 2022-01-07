@@ -113,25 +113,42 @@ spec:
           value: {{ printf "%s/%s" ":/usr/share/zoneinfo" (default "UTC" .Values.solace.timezone) }}
         - name: UMASK
           value: "0022"
+{{- if .Values.solace.extraEnvVars }}
+      {{- range $item := .Values.solace.extraEnvVars }}
+        - name: {{ $item.name }}
+          value: {{ $item.value | quote }}
+      {{- end }}
+{{- end }}
+{{- if or .Values.solace.extraEnvVarsCM .Values.solace.extraEnvVarsSecret }}
+        envFrom:
+          {{- if .Values.solace.extraEnvVarsCM }}
+          - configMapRef:
+              name: {{ tpl .Values.solace.extraEnvVarsCM . | quote }}
+          {{- end }}
+          {{- if .Values.solace.extraEnvVarsSecret }}
+          - secretRef:
+              name: {{ tpl .Values.solace.extraEnvVarsSecret . | quote }}
+          {{- end }}
+{{- end }}
         command:
-         - bash
-         - "-ec"
-         - |
-           source /mnt/disks/solace/init.sh
-           # not using postinstall hooks because of order dependencies
-           # launch config check - readiness check script will be launched by readinessProbe
-           nohup /mnt/disks/solace/startup-broker.sh &
-           /usr/sbin/boot.sh
+          - bash
+          - "-ec"
+          - |
+            source /mnt/disks/solace/init.sh
+            # not using postinstall hooks because of order dependencies
+            # launch config check - readiness check script will be launched by readinessProbe
+            nohup /mnt/disks/solace/startup-broker.sh &
+            /usr/sbin/boot.sh
         lifecycle:
           preStop:
             exec:
               command:
-               - bash
-               - "-ec"
-               - |
-                 while ! pgrep solacedaemon ; do sleep 1; done
-                 killall solacedaemon; 
-                 while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
+                - bash
+                - "-ec"
+                - |
+                  while ! pgrep solacedaemon ; do sleep 1; done
+                  killall solacedaemon; 
+                  while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo        
