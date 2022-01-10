@@ -34,3 +34,15 @@ sed -i 's/description:.*$/description: Deploy a single-node non-HA Solace PubSub
 # no need to update values.yaml solace.redundancy, solace.size and storage.size
 sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps a single-node deployment/g' pubsubplus/README.md
 helm package pubsubplus
+
+# For OpenShift
+# the change for all charts is to update securityContext.enabled=false (from true)
+# and the default image
+cp -r pubsubplus/ pubsubplus-openshift/
+sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift/values.yaml
+
+cp -r pubsubplus-ha/ pubsubplus-openshift-ha/
+sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-ha/values.yaml
+
+cp -r pubsubplus-dev/ pubsubplus-openshift-dev/
+sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-dev/values.yaml

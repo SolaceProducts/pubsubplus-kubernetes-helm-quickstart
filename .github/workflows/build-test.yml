@@ -110,6 +110,8 @@ jobs:
         elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
           echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1
+          mkdir -p gh-pages/helm-charts-openshift
+          mv pubsubplus-openshift-*.tgz gh-pages/helm-charts-openshift/
           mv pubsubplus-*.tgz gh-pages/helm-charts/
           helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts
           pushd gh-pages
