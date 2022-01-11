@@ -89,6 +89,12 @@ jobs:
         helm install --generate-name pubsubplus-ha --dry-run
         helm lint pubsubplus-dev
         helm install --generate-name pubsubplus-dev --dry-run
+        helm lint pubsubplus-openshift
+        helm install --generate-name pubsubplus-openshift --dry-run
+        helm lint pubsubplus-openshift-ha
+        helm install --generate-name pubsubplus-openshift-ha --dry-run
+        helm lint pubsubplus-openshift-dev
+        helm install --generate-name pubsubplus-openshift-dev --dry-run
 
     - name: Publish artifacts
       run: |

@@ -36,13 +36,16 @@ sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart boots
 helm package pubsubplus
 
 # For OpenShift
-# the change for all charts is to update securityContext.enabled=false (from true)
-# and the default image
+# the change for all charts is to update default securityContext.enabled=false (from true)
+# and the default image (future)
 cp -r pubsubplus/ pubsubplus-openshift/
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift/values.yaml
+helm package pubsubplus-openshift
 
 cp -r pubsubplus-ha/ pubsubplus-openshift-ha/
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-ha/values.yaml
+helm package pubsubplus-openshift-ha
 
 cp -r pubsubplus-dev/ pubsubplus-openshift-dev/
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-dev/values.yaml
+helm package pubsubplus-openshift-dev
