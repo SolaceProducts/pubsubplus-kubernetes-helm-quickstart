@@ -39,13 +39,19 @@ helm package pubsubplus
 # the change for all charts is to update default securityContext.enabled=false (from true)
 # and the default image (future)
 cp -r pubsubplus/ pubsubplus-openshift/
+sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift/Chart.yaml
+sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift/Chart.yaml
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift/values.yaml
 helm package pubsubplus-openshift
 
 cp -r pubsubplus-ha/ pubsubplus-openshift-ha/
+sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift-ha/Chart.yaml
+sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift-ha/Chart.yaml
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-ha/values.yaml
 helm package pubsubplus-openshift-ha
 
 cp -r pubsubplus-dev/ pubsubplus-openshift-dev/
+sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift-dev/Chart.yaml
+sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift-dev/Chart.yaml
 sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-dev/values.yaml
 helm package pubsubplus-openshift-dev
