@@ -45,42 +45,42 @@ spec:
           requests:
 {{- if eq .Values.solace.size "dev" }}
             cpu: "1"
-            memory: 3.4Gi
+            memory: 3.651G
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "2"
-            memory: 3.4Gi
+            memory: 3.651G
 {{- else if eq .Values.solace.size "prod1k" }}
             cpu: "2"
-            memory: 6.5Gi
+            memory: 6.980G
 {{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
-            memory: 13.9Gi
+            memory: 14.926G
 {{- else if eq .Values.solace.size "prod100k" }}
             cpu: "8"
-            memory: 30.3Gi
+            memory: 32.535G
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
-            memory: 53.5Gi
+            memory: 57.446G
 {{- end }}
           limits:
 {{- if eq .Values.solace.size "dev" }}
             cpu: "2"
-            memory: 3.4Gi
+            memory: 3.651G
 {{- else if eq .Values.solace.size "prod100" }}
             cpu: "2"
-            memory: 3.4Gi
+            memory: 3.651G
 {{- else if eq .Values.solace.size "prod1k" }}
             cpu: "2"
-            memory: 6.5Gi
+            memory: 6.980G
 {{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
-            memory: 13.9Gi
+            memory: 14.925G
 {{- else if eq .Values.solace.size "prod100k" }}
             cpu: "8"
-            memory: 30.3Gi
+            memory: 32.535G
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
-            memory: 53.5Gi
+            memory: 57.446G
 {{- end }}
         livenessProbe:
           tcpSocket:
