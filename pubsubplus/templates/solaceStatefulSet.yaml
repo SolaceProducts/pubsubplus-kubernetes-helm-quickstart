@@ -60,7 +60,7 @@ spec:
             memory: 30925Mi
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
-            memory: 52037Mi
+            memory: 52581Mi
 {{- end }}
           limits:
 {{- if eq .Values.solace.size "dev" }}
@@ -80,7 +80,7 @@ spec:
             memory: 30925Mi
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
-            memory: 52037Mi
+            memory: 52581Mi
 {{- end }}
         livenessProbe:
           tcpSocket:
