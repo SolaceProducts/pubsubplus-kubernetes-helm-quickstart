@@ -6,12 +6,12 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software
 
 This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
 * Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
-* Helm package manager v2 or v3 client installed and configured with Tiller deployed if using Helm v2. Helm v3 is recommended, examples in this document use v3.
+* Helm package manager v3 client installed
 * If using a private Docker registry, load the PubSub+ Software Event Broker Docker image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster

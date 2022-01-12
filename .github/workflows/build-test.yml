@@ -98,6 +98,9 @@ jobs:
 
     - name: Publish artifacts
       run: |
+        # Two groups of Helm repos are created:
+        # 1 - for general Helm charts that are hosted by Solace from gh-pages
+        # 2 - for OpenShift variants that will be further submitted to OpenShift repo
         git config --global user.name "GitHub Actions Automation"
         git config --global user.email "<>"
         mkdir gh-pages; # Now update gh-pages
