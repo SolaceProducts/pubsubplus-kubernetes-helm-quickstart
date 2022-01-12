@@ -10,7 +10,7 @@ sed -i 's/description:.*$/description: Deploy an HA redundancy group of Solace P
 sed -i '/name:/ s/pubsubplus/pubsubplus-ha/g' pubsubplus-ha/Chart.yaml
 # no need to update solace.size and storage.size
 sed -i 's/redundancy:.*$/redundancy: true/g' pubsubplus-ha/values.yaml
-sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps an HA redundancy group deployment/g' pubsubplus-ha/README.md
+sed -i 's/This chart bootstraps a single-node or HA deployment/This chart bootstraps an HA redundancy group deployment/g' pubsubplus-ha/README.md
 sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-ha@g' pubsubplus-ha/README.md
 sed -i '/`solace.redundancy`/ s/`false`/`true`/g' pubsubplus-ha/README.md
 helm package pubsubplus-ha
@@ -22,7 +22,7 @@ sed -i '/name:/ s/pubsubplus/pubsubplus-dev/g' pubsubplus-dev/Chart.yaml
 sed -i 's/size: prod.*$/size: dev/g' pubsubplus-dev/values.yaml
 sed -i 's/size: .*Gi/size: 10Gi/g' pubsubplus-dev/values.yaml
 sed -i 's/# Solace PubSub+ Message Broker Helm Chart/# Solace PubSub+ Message Broker Helm Chart for Developers/g' pubsubplus-dev/README.md
-sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps single-node deployment for Developers/g' pubsubplus-dev/README.md
+sed -i 's/This chart bootstraps a single-node or HA deployment/This chart bootstraps single-node deployment for Developers/g' pubsubplus-dev/README.md
 sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-dev@g' pubsubplus-dev/README.md
 sed -i '/`solace.size`/ s/| `prod.*` |/| `dev` |/g' pubsubplus-dev/README.md
 sed -i '/`storage.size`/ s/| `..Gi` |/| `10Gi` |/g' pubsubplus-dev/README.md
@@ -32,26 +32,21 @@ helm package pubsubplus-dev
 # no need to update Chart.yaml name
 sed -i 's/description:.*$/description: Deploy a single-node non-HA Solace PubSub+ Event Broker Software onto a Kubernetes Cluster/g' pubsubplus/Chart.yaml
 # no need to update values.yaml solace.redundancy, solace.size and storage.size
-sed -i 's/This chart bootstraps a single-node or HA deployment$/This chart bootstraps a single-node deployment/g' pubsubplus/README.md
+sed -i 's/This chart bootstraps a single-node or HA deployment/This chart bootstraps a single-node deployment/g' pubsubplus/README.md
 helm package pubsubplus
 
 # For OpenShift
 # the change for all charts is to update default securityContext.enabled=false (from true)
 # and the default image (future)
-cp -r pubsubplus/ pubsubplus-openshift/
-sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift/Chart.yaml
-sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift/Chart.yaml
-sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift/values.yaml
-helm package pubsubplus-openshift
-
-cp -r pubsubplus-ha/ pubsubplus-openshift-ha/
-sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift-ha/Chart.yaml
-sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift-ha/Chart.yaml
-sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-ha/values.yaml
-helm package pubsubplus-openshift-ha
-
-cp -r pubsubplus-dev/ pubsubplus-openshift-dev/
-sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift-dev/Chart.yaml
-sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift-dev/Chart.yaml
-sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift-dev/values.yaml
-helm package pubsubplus-openshift-dev
+for variant in '' '-dev' '-ha' ;
+  do
+    cp -r pubsubplus"$variant"/ pubsubplus-openshift"$variant"/
+    sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift"$variant"/Chart.yaml
+    sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift"$variant"/Chart.yaml
+    sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift"$variant"/values.yaml
+    sed -i 's%\[Solace PubSub+ Software Event Broker on Kubernetes Documentation\].*[.]%[Solace PubSub+ Software Event Broker on OpenShift Documentation](https://github.com/SolaceProducts/pubsubplus-openshift-quickstart/blob/master/docs/PubSubPlusOpenShiftDeployment.md).%g' pubsubplus-openshift"$variant"/README.md
+    sed -i '/`securityContext.enabled`/ s/| `true` meaning.* |/| `false` |/g' pubsubplus-openshift"$variant"/README.md
+    sed -i 's%helm repo add.*%helm repo add openshift-helm-charts https://charts.openshift.io%g' pubsubplus-openshift"$variant"/README.md
+    sed -i 's%solacecharts/pubsubplus%openshift-helm-charts/pubsubplus-openshift%g' pubsubplus-openshift"$variant"/README.md
+    helm package pubsubplus-openshift"$variant"
+  done
