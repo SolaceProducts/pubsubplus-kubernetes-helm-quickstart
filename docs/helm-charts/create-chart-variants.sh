@@ -12,7 +12,7 @@ sed -i '/name:/ s/pubsubplus/pubsubplus-ha/g' pubsubplus-ha/Chart.yaml
 sed -i 's/redundancy:.*$/redundancy: true/g' pubsubplus-ha/values.yaml
 sed -i 's/This chart bootstraps a single-node or HA deployment/This chart bootstraps an HA redundancy group deployment/g' pubsubplus-ha/README.md
 sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-ha@g' pubsubplus-ha/README.md
-sed -i '/`solace.redundancy`/ s/`false`/`true`/g' pubsubplus-ha/README.md
+sed -i '/`solace.redundancy`/ s/| `false` |/| `true` |/g' pubsubplus-ha/README.md
 helm package pubsubplus-ha
 
 # Customize pubsubplus-dev
