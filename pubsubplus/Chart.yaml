@@ -25,3 +25,5 @@ keywords:
 - data streaming
 - event integration
 - middleware
+annotations:
+  charts.openshift.io/name: PubSub+ Event Broker
