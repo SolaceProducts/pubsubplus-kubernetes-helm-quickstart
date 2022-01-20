@@ -80,7 +80,7 @@ jobs:
     - name: Upgrade HA broker and test
       run: |
         REPO=solace/solace-pubsub-standard
-        UPGRADETAG==latest
+        UPGRADETAG=latest
         helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
