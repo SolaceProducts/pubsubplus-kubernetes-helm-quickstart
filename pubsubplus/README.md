@@ -25,6 +25,8 @@ helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernete
 helm install my-release solacecharts/pubsubplus
 ```
 
+> Note: the release name is not recommended to exceed 28 characters
+
 ## Use a deployment
 
 Obtain information about the deployment and services:
