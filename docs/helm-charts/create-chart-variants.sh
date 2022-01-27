@@ -47,9 +47,11 @@ for variant in '' '-dev' '-ha' ;
     sed -i 's/onto a Kubernetes Cluster/on OpenShift/g' pubsubplus-openshift"$variant"/Chart.yaml
     sed -i '/name:/ s/pubsubplus/pubsubplus-openshift/g' pubsubplus-openshift"$variant"/Chart.yaml
     sed -i '/securityContext/,/enabled: true/  s/enabled: true/enabled: false/' pubsubplus-openshift"$variant"/values.yaml
+    sed -i 's@solace/solace-pubsub-standard@registry.connect.redhat.com/solace/pubsubplus-standard@g' pubsubplus-openshift"$variant"/values.yaml
     sed -i 's%\[Solace PubSub+ Software Event Broker on Kubernetes Documentation\].*[.]%[Solace PubSub+ Software Event Broker on OpenShift Documentation](https://github.com/SolaceProducts/pubsubplus-openshift-quickstart/blob/master/docs/PubSubPlusOpenShiftDeployment.md).%g' pubsubplus-openshift"$variant"/README.md
     sed -i '/`securityContext.enabled`/ s/| `true` meaning.* |/| `false` |/g' pubsubplus-openshift"$variant"/README.md
     sed -i 's%helm repo add.*%helm repo add openshift-helm-charts https://charts.openshift.io%g' pubsubplus-openshift"$variant"/README.md
     sed -i 's%solacecharts/pubsubplus%openshift-helm-charts/pubsubplus-openshift%g' pubsubplus-openshift"$variant"/README.md
+    sed -i 's@`solace/solace-pubsub-standard`@`registry.connect.redhat.com/solace/pubsubplus-standard`@g' pubsubplus-openshift"$variant"/README.md
     helm package pubsubplus-openshift"$variant"
   done
