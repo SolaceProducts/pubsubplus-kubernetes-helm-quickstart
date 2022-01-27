@@ -41,7 +41,7 @@ solace:
   #extraEnvVarsSecret: ""
 
 image:
-  # Default repository is the public Solace DockerHub repo
+  # Default repository
   repository: solace/solace-pubsub-standard
   # Recommending to use a specific version tag for production
   tag: latest

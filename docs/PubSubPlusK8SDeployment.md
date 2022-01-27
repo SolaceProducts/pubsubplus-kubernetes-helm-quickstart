@@ -730,7 +730,7 @@ solace:
   redundancy: true
   size: dev
 ```
-**Important:** this will not show, but be aware of an additional non-default parameter:
+**Important:** this may not show, but be aware of an additional non-default parameter:
 ```
 solace:
   usernameAdminPassword: jMzKoW39zz   # The value is just an example
