@@ -12,7 +12,7 @@ Detailed documentation is provided in the [Solace PubSub+ Software Event Broker 
 
 * Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v3 client installed
-* If using a private Docker registry, load the PubSub+ Software Event Broker Docker image and for signed images create an image pull secret
+* If using a private container image registry, load the PubSub+ Software Event Broker container image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
@@ -87,10 +87,10 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `solace.extraEnvVars`              | List of extra environment variables to be added to the PubSub+ container. A primary use case is to specify [configuration keys](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Docker-Tasks/Config-SW-Broker-Container-Cfg-Keys.htm). Important: env variables defined here will not override the ones defined in solaceConfigMap. | Undefined |
 | `solace.extraEnvVarsCM`              | The name of an existing ConfigMap containing extra environment variables | Undefined |
 | `solace.extraEnvVarsSecret`              | The name of an existing Secret containing extra environment variables (in case of sensitive data) | Undefined |
-| `image.repository`             | The docker repo name and path to the PubSub+ container image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
+| `image.repository`             | The image repo name and path to the PubSub+ container image                                                | `solace/solace-pubsub-standard` |
 | `image.tag`                    | The Solace container image tag. It is recommended to specify an explicit tag for production use For possible tags, refer to the [Solace Docker Hub repo](https://hub.docker.com/r/solace/solace-pubsub-standard/tags) | `latest`                                                |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
-| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | Undefined, meaning no ImagePullSecret used                |
+| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the PubSub+ container image registry                                         | Undefined, meaning no ImagePullSecret used                |
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used |
 | `securityContext.fsGroup`      | Specifies `fsGroup` in pod security context                                                             | set to default non-zero id 1000002 |
 | `securityContext.runAsUser`    | Specifies `runAsUser` in pod security context                                                           | set to default PubSub+ appuser id 1000001 |
