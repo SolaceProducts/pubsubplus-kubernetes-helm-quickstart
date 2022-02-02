@@ -130,6 +130,9 @@ jobs:
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
           echo "Using master on SolaceProducts"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1
+          rm -rf gh-pages/helm-charts-openshift; mkdir -p gh-pages/helm-charts-openshift
+          mv pubsubplus-openshift-*.tgz gh-pages/helm-charts-openshift/
+          helm repo index gh-pages/helm-charts-openshift/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift
           mv pubsubplus-*.tgz gh-pages/helm-charts/
           helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
           pushd gh-pages
