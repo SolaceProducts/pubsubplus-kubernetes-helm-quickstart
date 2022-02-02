@@ -84,7 +84,8 @@ jobs:
         helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
-        sleep 40; kubectl describe nodes
+        statefulset_name=$(kubectl get statefulset | grep pubsubplus |  awk '{print $1}')
+        until kubectl rollout status statefulset $statefulset_name -w | grep "rolling update complete"; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
@@ -95,7 +96,7 @@ jobs:
         export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
         pubSubTools/sdkperf_c -cip=tcp://$url:55555 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
         pubSubTools/sdkperf_c -cip=tcps://$url:55443 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
-        sleep 30
+        sleep 10
         curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
         curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
         if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
