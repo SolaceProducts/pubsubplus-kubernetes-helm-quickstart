@@ -1,0 +1,15 @@
+# These overrides are appropriate defaults for deploying this chart on OpenShift
+
+# This will reference a RedHat certified image when available
+# image:
+  # Default repository is the public Solace DockerHub repo
+  repository: registry.connect.redhat.com/solace/pubsubplus-standard
+  # Recommending to use a specific version tag for production
+  tag: latest
+
+securityContext:
+  # securityContext.enabled=true sets the pod security context
+  #   to defined securityContext.fsGroup (required) and runAsUser (optional)
+  #   ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  # OpenShift takes care of setting the pod security context (except for the "default" project, which use is not recommended)
+  enabled: false

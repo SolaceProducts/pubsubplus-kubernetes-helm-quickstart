@@ -226,7 +226,7 @@ data:
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
             -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><vpn-name>default</vpn-name></${resync_step}></config-sync></admin></rpc>"
+            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><vpn-name>*</vpn-name></${resync_step}></config-sync></admin></rpc>"
       # Wait for config-sync results
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync connected"
@@ -472,7 +472,7 @@ data:
         echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
         exit 1
       fi
-      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}`" != "200" ] ; then
+      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}/SEMP`" != "200" ] ; then
         echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
         exit 1
       fi

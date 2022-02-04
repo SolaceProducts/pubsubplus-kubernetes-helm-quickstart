@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "solace.fullname" . }}-test"
+  labels:
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+{{- if .Values.image.pullSecretName }}
+  imagePullSecrets:
+  - name: {{ .Values.image.pullSecretName}}
+{{- end}}
+{{- if .Values.securityContext.enabled }}
+  securityContext:
+    fsGroup: {{ .Values.securityContext.fsGroup | int64 }}
+  {{- if and (.Values.securityContext.runAsUser) }}
+    runAsUser: {{ .Values.securityContext.runAsUser | int64 }}
+  {{- end }}
+{{- end }}
+  containers:
+    - name: {{ template "solace.fullname" . }}-test
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+      imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+      env:
+        - name: SOLACE_HOST
+          value: {{ template "solace.fullname" . }}
+        - name: SOLACE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "solace.fullname" . }}-secrets
+              key: username_admin_password
+        - name: PORT_MAPPINGS
+          value: "{{ .Values.service.ports | toString }}"
+      command:
+        - /bin/bash
+        - -c
+        - |
+          # Get tcp-semp port out of PORT_MAPPINGS
+          portmappings_array=(`awk -F']' '{ for(i=1;i<=NF;i++) print $i }' <<< $PORT_MAPPINGS | grep "tcp-semp"`)
+          for i in ${portmappings_array[@]}; do if [[ "$i" == *"servicePort"* ]]; then SEMP_PORT="$(cut -d':' -f2 <<<$i)"; fi ; done
+          echo "SEMP port: $SEMP_PORT"
+          echo "Checking for successful SEMP access"
+          if curl --write-out '%{http_code}' -u admin:$SOLACE_PASSWORD $SOLACE_HOST:$SEMP_PORT/SEMP | grep 200
+            then echo "SEMP access successful"
+            else echo "SEMP access failed"; exit 1
+          fi
+          exit 0
+  restartPolicy: Never

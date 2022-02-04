@@ -10,7 +10,7 @@ This document is applicable to any platform supporting Kubernetes.
 Contents:
   * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
   * [**Overview**](#overview)
-  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-event-broker-deployment-considerations)
+  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-software-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
     + [CPU and Memory Requirements](#cpu-and-memory-requirements)
     + [Disk Storage](#disk-storage)
@@ -29,15 +29,12 @@ Contents:
       - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
     + [Security considerations](#security-considerations)
       - [Using Security Context](#using-security-context)
-      - [Securing Helm v2](#securing-helm-v2)
       - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
   * [**Deployment Prerequisites**](#deployment-prerequisites)
     + [Platform and tools setup](#platform-and-tools-setup)
       - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
       - [Perform any necessary Kubernetes platform-specific setup](#perform-any-necessary-kubernetes-platform-specific-setup)
       - [Install and setup the Helm package manager](#install-and-setup-the-helm-package-manager)
-        * [Helm v2](#helm-v2)
-        * [Helm v3](#helm-v3)
   * [**Deployment steps**](#deployment-steps)
     + [Deployment steps using Helm](#deployment-steps-using-helm)
     + [Alternative Deployment with generating templates for the Kubernetes `kubectl` tool](#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool)
@@ -269,7 +266,7 @@ tls:
   certKeyFilename: # optional, default if not provided: tls.key
 ```
 
-Note: ensure filenames are matching the files reported from running `kubectl describe secret <my-tls-secret>`.
+> Note: ensure filenames are matching the files reported from running `kubectl describe secret <my-tls-secret>`.
 
 Here is an example new deployment with TLS enabled using default `certFilename` and `certKeyFilename`:
 ```
@@ -285,7 +282,7 @@ In the event the server key or certificate need to be rotated a new Kubernetes s
 
 Next, if using the same secret name, the broker Pods need to be restarted, one at a time waiting to reach `1/1` availability before continuing on the next one: starting with the Monitor (ordinal -2), followed by the node in backup role with `active=false` label, and finally the third node. If using a new secret name, the [modify deployment](#modifying-or-upgrading-a-deployment) procedure can be used and an automatic rolling update will follow these steps restarting the nodes one at a time.
 
-Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
+> Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
 
 ### The PubSub+ Software Event Broker Docker image
 
@@ -361,14 +358,6 @@ If `securityContext.enabled` is `true` (default) then the `securityContext.fsGro
 
 If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecurityPolicy](//kubernetes.io/docs/concepts/policy/pod-security-policy/) or an Openshift "restricted" SCC, `securityContext.enabled` shall be set to `false` or ensure specified values do not conflict with the policy settings.
 
-#### Securing Helm v2
-
-Using Helm v2, Helm's server-side component Tiller must be installed in your Kubernetes environment with rights granted to manage deployments. By default, Tiller is deployed in a permissive configuration. There are best practices to secure Helm and Tiller, and they need to be applied carefully if strict security is required; for example, in a production environment.
-
-[Securing your Helm Installation](//v2.helm.sh/docs/using_helm/#securing-your-helm-installation ) provides an overview of the Tiller-related security issues and recommended best practices.
-
-Particularly, the [Role-based Access Control section of the Helm documentation](//v2.helm.sh/docs/using_helm/#role-based-access-control) provides options that should be used in RBAC-enabled Kubernetes environments (v1.6+).
-
 #### Enabling pod label "active" in a tight security environment
 
 Services require [pod label "active"](#using-pod-label-active-to-identify-the-active-event-broker-node) of the serving event broker.
@@ -400,35 +389,10 @@ Check your platform running the `kubectl get nodes` command from your command-li
 
 #### Install and setup the Helm package manager
 
-The event broker can be deployed using both Helm v2 and Helm v3. Helm v3 is recommended as it offers better security and it is actively maintained.
+The event broker can be deployed using Helm v3.
+> Note: For Helm v2 support refer to [earlier versions of this quickstart](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/releases).
 
-If `helm version` fails on your command-line client then this may involve installing Helm and/or if using Helm v2 then also deploying/redeploying Tiller, its in-cluster operator.
-
-##### Helm v2
-
-1. Install the Helm client following [your platform-specific instructions](//v2.helm.sh/docs/using_helm/#installing-the-helm-client ). For Linux, you can use:
-```shell
-curl -sSL https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
-```
-
-2. Deploy Tiller to manage your deployment. The following script is based on [the Example: Service account with cluster-admin role](//v2.helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role ).
-
-**Important:** this will grant Tiller `cluster-admin` privileges to enable getting started on most platforms. This should be more secured for Production environments and may already fail in a restricted security environment. For options, see section [Security considerations](#security-considerations).
-
-```shell
-kubectl -n kube-system create serviceaccount tiller
-kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-helm init --wait --service-account=tiller  --upgrade
-```
-
-If you are connecting to an environment where Helm was already installed from another command line client, just re-run the init part:
- ```shell
-helm init --wait --service-account=tiller  --upgrade
-```
-
-##### Helm v3
-
-The Helm v3 executable is available from https://github.com/helm/helm/releases . Installation of Tiller is no longer required. Ensure that your v3 installation does not conflict with an existing Helm v2 installation. Further documentation is available from https://helm.sh/.
+The Helm v3 executable is available from https://github.com/helm/helm/releases . Further documentation is available from https://helm.sh/.
 
 ```shell
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -452,9 +416,6 @@ helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernete
 helm repo update solacecharts
 
 # Install from the repo
-## Using Helm v2:
-helm install  --name my-release solacecharts/pubsubplus
-## Or using Helm v3:
 helm install my-release solacecharts/pubsubplus
 ```
 
@@ -480,15 +441,13 @@ helm install ./pubsubplus
 
 ### Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
-This is for users who don't wish to install the Helm v2 server-side Tiller on the Kubernetes cluster.
-
 This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
 
 Note that later sections of this document about modifying, upgrading or deleting a Deployment using the Helm tool do not apply.
 
 **Step 1: Generate Kubernetes templates for Solace event broker deployment**
 
-1) Ensure [Helm v2] i(#helm-v2) is locally installed. Note that this is the local client only, no server-side deployment of Tiller is necessary.
+1) Ensure Helm is locally installed.
 
 2) Add or refresh a local Solace `solacecharts` repo:
 ```bash
@@ -504,19 +463,19 @@ First, consider if any [configurations](/pubsubplus/README.md#configuration) are
 If this is the case then you can add overrides as additional `--set ...` parameters to the `helm template` command, or use an override YAML file.
 
 ```sh
-# Create local copy - in Helm v2 "helm template" only works with local repositories.
+# Create local copy
 helm fetch solacecharts/pubsubplus --untar
 # Create location for the generated templates
 mkdir generated-templates
 # In one of next sample commands replace my-release to the desired release name
 #   a) Using all defaults:
-helm template --name my-release --output-dir ./generated-templates ./pubsubplus
+helm template my-release --output-dir ./generated-templates ./pubsubplus
 #   b) Example with configuration using --set
-helm template --name my-release --output-dir ./generated-templates \
+helm template my-release --output-dir ./generated-templates \
   --set solace.redundancy=true \
   ./pubsubplus
 #   c) Example with configuration using --set
-helm template --name my-release --output-dir ./generated-templates \
+helm template my-release --output-dir ./generated-templates \
   -f my-values.yaml \
   ./pubsubplus
 
@@ -771,7 +730,7 @@ solace:
   redundancy: true
   size: dev
 ```
-**Important:** this will not show, but be aware of an additional non-default parameter:
+**Important:** this may not show, but be aware of an additional non-default parameter:
 ```
 solace:
   usernameAdminPassword: jMzKoW39zz   # The value is just an example

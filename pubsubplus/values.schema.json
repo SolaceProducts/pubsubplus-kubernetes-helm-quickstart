@@ -1,0 +1,156 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "image": {
+            "type": "object",
+            "properties": {
+                "pullPolicy": {
+                    "type": "string"
+                },
+                "pullSecretName": {
+                    "type": "string"
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "securityContext": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "fsGroup": {
+                    "type": "integer"
+                },
+                "runAsUser": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "string"
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "containerPort": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "protocol": {
+                                "type": "string"
+                            },
+                            "servicePort": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "serviceAccount": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "solace": {
+            "type": "object",
+            "properties": {
+                "extraEnvVars": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "extraEnvVarsCM": {
+                    "type": "string"
+                },
+                "extraEnvVarsSecret": {
+                    "type": "string"
+                },
+                "redundancy": {
+                    "type": "boolean"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "usernameAdminPassword": {
+                    "type": ["string", "null"]
+                }
+            }
+        },
+        "storage": {
+            "type": "object",
+            "properties": {
+                "customVolumeMount": {
+                    "type": "string"
+                },
+                "persistent": {
+                    "type": "boolean"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "slow": {
+                    "type": "boolean"
+                },
+                "useStorageClass": {
+                    "type": "string"
+                }
+            }
+        },
+        "tls": {
+            "type": "object",
+            "properties": {
+                "certFilename": {
+                    "type": "string"
+                },
+                "certKeyFilename": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "serverCertificatesSecret": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

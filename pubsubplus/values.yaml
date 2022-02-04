@@ -1,3 +1,5 @@
+# Notes: ensure to keep the schema 'values.schema.json' in sync with this file
+
 # If defined Kubernetes object names will be <release-name>-nameOverride
 #   Default is <release-name>-<chart-name>
 # nameOverride:
@@ -10,7 +12,7 @@ solace:
   #  true will create an HA deployment with Primary, Backup and Monitor nodes.
   redundancy: false
 
-  # Deployment scaling tier with max # of connections, see README for valid options
+  # size defines deployment scaling tier with max # of connections, see README for valid options
   #  dev uses minimum resources but performance is not guaranteed; use prod for production-ready
   size: prod100
 
@@ -24,8 +26,22 @@ solace:
   # timezone setting for the PubSub+ container, if undefined default is UTC. Valid values are tz database time zone names.
   # timezone: UTC
 
+  # extraEnvVars can be used to add extra environment variables to the PubSub+ container
+  # Important: env variables defined here will not override the ones defined in solaceConfigMap
+  # A primary use case is to specify configuration keys (Note that configuration keys are only evaluated upon initial startup)
+  #  refer to: https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Docker-Tasks/Config-SW-Broker-Container-Cfg-Keys.htm
+  #extraEnvVars:
+  #  - name: env_variable_name
+  #    value: "env_variable_value"
+
+  # extraEnvVarsCM specifies the name of existing ConfigMap containing extra environment variables
+  #extraEnvVarsCM: ""
+
+  # extraEnvVarsSecret specifies the name of existing Secret containing extra environment variables (in case of sensitive data)
+  #extraEnvVarsSecret: ""
+
 image:
-  # Default repository is the public Solace DockerHub repo
+  # Default repository
   repository: solace/solace-pubsub-standard
   # Recommending to use a specific version tag for production
   tag: latest
@@ -70,7 +86,7 @@ service:
   type: LoadBalancer
 
   # service.annotations allows to add provider-specific service annotations, see example below
-  # annotations: cloud.google.com/load-balancer-type: "internal"
+  # annotations: 'cloud.google.com/load-balancer-type: "internal"'
 
   # List here all ports to be exposed as external service.
   #    "containerPorts" (from the PubSub+ container) will be exposed as external "servicePorts",

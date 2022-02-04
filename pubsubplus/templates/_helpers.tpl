@@ -7,14 +7,14 @@ Expand the name of the chart.
 {{- end -}}
 {{/*
 Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+We truncate at 53 chars because some Kubernetes name fields are limited (by the DNS naming spec).
 */}}
 {{- define "solace.fullname" -}}
   {{- if .Values.fullnameOverride -}}
-    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+    {{- .Values.fullnameOverride | trunc 53 | trimSuffix "-" -}}
   {{- else -}}
     {{- $name := default .Chart.Name .Values.nameOverride -}}
-    {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+    {{- printf "%s-%s" .Release.Name $name | trunc 53 | trimSuffix "-" -}}
   {{- end -}}
 {{- end -}}
 {{/*

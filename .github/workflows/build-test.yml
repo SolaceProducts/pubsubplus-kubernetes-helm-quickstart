@@ -10,7 +10,7 @@ jobs:
   deploy:
     name: K8s QuickStart CI test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
     - name: Set env and tools
@@ -51,11 +51,10 @@ jobs:
 
     - name: Deploy HA broker and test
       run: |
-        REPO=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 1)
-        TAG=$(echo ${{ secrets.BROKER_DOCKER_IMAGE_REF }} | cut -d ":" -f 2)
+        REPO=solace/solace-pubsub-standard
+        TAG=latest
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=*"
         kubectl create secret tls test-tls --key="tls.key" --cert="tls.crt"
-        
         helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active"
@@ -64,6 +63,7 @@ jobs:
         until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
+        helm test my-release | grep Phase | grep Succeeded
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
         export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
@@ -72,6 +72,31 @@ jobs:
         pubSubTools/sdkperf_c -cip=tcp://$url:55555 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
         pubSubTools/sdkperf_c -cip=tcps://$url:55443 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
         sleep 30
+        curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
+        curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
+        if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
+        helm list
+
+    - name: Upgrade HA broker and test
+      run: |
+        REPO=solace/solace-pubsub-standard
+        UPGRADETAG=$(wget -q https://registry.hub.docker.com/v1/repositories/solace/solace-pubsub-standard/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | sort -t "." -k1,1n -k2,2n -k3,3n | tail -1)
+        helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG
+        kubectl get statefulset,svc,pods,pvc,pv --show-labels
+        echo "Waiting for broker to become active after upgrade"
+        statefulset_name=$(kubectl get statefulset | grep pubsubplus |  awk '{print $1}')
+        until kubectl rollout status statefulset $statefulset_name -w | grep "rolling update complete"; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
+        helm test my-release | grep Phase | grep Succeeded
+        kubectl get statefulset,svc,pods,pvc,pv --show-labels
+        bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
+        export url="$(kubectl get statefulset,svc,pods,pvc,pv --show-labels | grep LoadBalancer | awk '{print $4}')"; echo $url
+        pubSubTools/sdkperf_c -cip=tcp://$url:55555 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
+        pubSubTools/sdkperf_c -cip=tcps://$url:55443 -mn=10000 -mr=0 -ptl=t1 -stl=t1 | grep "Total Messages"
+        sleep 10
         curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><redundancy></redundancy></show></rpc>"
         curl -k -sS -u admin:admin https://$url:1943/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>"
         if [[ -z `curl -sS -u admin:admin http://$url:8080/SEMP -d "<rpc><show><config-sync></config-sync></show></rpc>" | grep "<oper-status>Up</oper-status>"` ]] ; then echo "config-sync not up!"; exit 1; fi
@@ -88,15 +113,27 @@ jobs:
         helm install --generate-name pubsubplus-ha --dry-run
         helm lint pubsubplus-dev
         helm install --generate-name pubsubplus-dev --dry-run
+        helm lint pubsubplus-openshift
+        helm install --generate-name pubsubplus-openshift --dry-run
+        helm lint pubsubplus-openshift-ha
+        helm install --generate-name pubsubplus-openshift-ha --dry-run
+        helm lint pubsubplus-openshift-dev
+        helm install --generate-name pubsubplus-openshift-dev --dry-run
 
     - name: Publish artifacts
       run: |
+        # Two groups of Helm repos are created:
+        # 1 - for general Helm charts that are hosted by Solace from gh-pages
+        # 2 - for OpenShift variants that will be further submitted to OpenShift repo
         git config --global user.name "GitHub Actions Automation"
         git config --global user.email "<>"
         mkdir gh-pages; # Now update gh-pages
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
           echo "Using master on SolaceProducts"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-kubernetes-quickstart gh-pages > /dev/null 2>&1
+          rm -rf gh-pages/helm-charts-openshift; mkdir -p gh-pages/helm-charts-openshift
+          mv pubsubplus-openshift-*.tgz gh-pages/helm-charts-openshift/
+          helm repo index gh-pages/helm-charts-openshift/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift
           mv pubsubplus-*.tgz gh-pages/helm-charts/
           helm repo index gh-pages/helm-charts/ --url https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
           pushd gh-pages
@@ -109,6 +146,9 @@ jobs:
         elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
           echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1
+          rm -rf gh-pages/helm-charts-openshift; mkdir -p gh-pages/helm-charts-openshift
+          mv pubsubplus-openshift-*.tgz gh-pages/helm-charts-openshift/
+          helm repo index gh-pages/helm-charts-openshift/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift
           mv pubsubplus-*.tgz gh-pages/helm-charts/
           helm repo index gh-pages/helm-charts/ --url https://solacedev.github.io/pubsubplus-kubernetes-quickstart/helm-charts
           pushd gh-pages
