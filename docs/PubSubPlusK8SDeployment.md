@@ -1,11 +1,11 @@
 # Solace PubSub+ Software Event Broker on Kubernetes Deployment Documentation
 
-This document provide detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
+This document provides detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
 * For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
-This document is applicable to any platform supporting Kubernetes.
+This document is applicable to any platform provider supporting Kubernetes.
 
 Contents:
   * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
@@ -60,7 +60,6 @@ Contents:
       - [Modification example](#modification-example)
   * [**Re-installing a Deployment**](#re-installing-a-deployment)
   * [**Deleting a Deployment**](#deleting-a-deployment)
-
 
 
 
@@ -216,11 +215,15 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 
 ### Exposing the PubSub+ Software Event Broker Services
 
-[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+#### Specifying Service Type
 
-* LoadBalancer - an external load balancer (default)
-* NodePort
-* ClusterIP
+[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the following [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+
+* LoadBalancer (default) - a load balancer, typically externally accessible depending on the K8s provider.
+* NodePort - maps PubSub+ services to a port on a Kubernetes node; external access depends on access to the node.
+* ClusterIP - internal access only from within K8s.
+
+Additionally, for all above service types, external access can be configured through K8s Ingress (see next section).
 
 To support [Internal load balancers](//kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer), provider-specific service annotation may be added through defining the `service.annotations` parameter.
 
@@ -229,6 +232,133 @@ The `service.ports` parameter defines the services exposed. It specifies the eve
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
 A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. **Important**: service means here [Guaranteed Messaging level of  Quality-of-Service (QoS) of event messages persistence](//docs.solace.com/PubSub-Basics/Guaranteed-Messages.htm). Messaging traffic will not be forwarded if service level is degraded to [Direct Messages](//docs.solace.com/PubSub-Basics/Direct-Messages.htm) only.
+
+#### Using Ingress to access event broker services
+
+The `LoadBalancer` or `NodePort` service types can expose all PubSub+ services. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) can be used to provide efficient external access to specific PubSub+ services.
+
+The following table provides an overview of how external access can be configured for PubSub+ services via Ingress.
+
+| PubSub+ service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
+| -- | -- | -- | -- | -- |
+| Notes: | -- | Requires TLS config on Ingress-controller | Requires TLS config on broker AND TLS config on Ingress-controller | Requires TLS config on broker. Client must use SNI to provide target host |
+| REST, WebSockets, MQTT over WebSockets | Supported | Supported | Supported | Supported (routing via SNI) |
+| SEMP | - | Supported with restrictions: (1) Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation; (2) Non-TLS access to SEMP must be enabled on broker | Supported with restrictions: - Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation | Supported (routing via SNI) |
+| SMF, SMF compressed, AMQP, MQTT | - | - | - | Supported (routing via SNI) |
+| SSH* | - | - | - | - |
+
+*SSH has been listed here for completeness only, external exposure not recommended.
+
+##### Configuration examples
+
+All examples assume NGINX used as ingress controller ([documented here](https://kubernetes.github.io/ingress-nginx/)), as NGINX is supported by most K8s providers. For [other ingress controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers) refer to their respective documentation.
+
+To deploy the NGINX Ingress Controller, refer to the [Quick start in the NGINX documentation](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start). After successful deployment get the ingress External-IP or FQDN with the following command:
+
+`kubectl get service ingress-nginx-controller --namespace=ingress-nginx`
+
+This is where external clients shall target their request and any additional DNS-resolvable hostnames, used for name-based virtual host routing, must also be configured to resolve to this IP address. If using TLS then the host certificate Common Name (CN) and/or Subject Alternative Name (SAN) must be configured to match the respective FQDN.
+
+For options to expose multiple services, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
+ 
+###### HTTP, no TLS
+
+The following example configures ingress to access PubSub+ REST service. Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). 
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-plaintext-example
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /testpath
+        pathType: Prefix
+        backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tcp-rest
+```
+
+External requests shall be targeted to the ingress External-IP at the HTTP port (80) and the specified path.
+
+##### HTTPS with TLS terminate at ingress
+
+Additional to above, this requires specifying a target virtual DNS-resolvable host (here `https-example.foo.com`), which resolves to the ingress External-IP, and a `tls` section. The `tls` section provides the possible hosts and corresponding [TLS secret](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls) that includes a private key and a certificate. The certificate must include the virtual host FQDN in its CN and/or SAN, as described above. Hint: [TLS secrets can be easily created from existing files](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets).
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: https-ingress-terminated-tls-example
+spec:
+  tls:
+  - hosts:
+      - https-example.foo.com
+    secretName: testsecret-tls
+  rules:
+  - host: https-example.foo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tcp-rest
+```
+
+External requests shall be targeted to the ingress External-IP at the TLS port (443) and the specified path.
+
+
+##### HTTPS with TLS re-encrypt at ingress
+
+This only differs from above in that the request is forwarded to a TLS-encrypted PubSub+ service port. The broker must have TLS configured but there are no specific requirements for the broker certificate as the ingress does not enforce it.
+
+The difference in the Ingress manifest is the service target port in the last line - it refers now to a TLS backend port:
+
+```yaml
+              :
+            port:
+              name: tls-rest
+```
+
+##### General TCP over TLS with passthrough to broker
+
+In this case the ingress only provides routing to the broker Pod based on the hostname provided in the SNI extension of the Client Hello at TLS connection setup. Since it will pass through TLS traffic directly to the broker as opaque data, this enables the use of ingress for any TCP-based protocol using TLS as transport.
+
+The TLS passthrough capability must be explicitly enabled on the NGINX ingress controller, as it is off by default. This can be done by editing the `ingress-nginx-controller` Deployment in the `ingress-nginx` namespace.
+1. Open the controller for editing: `kubectl edit deployment ingress-nginx-controller --namespace ingress-nginx`
+1. Search where the `nginx-ingress-controller` arguments are provided, insert `--enable-ssl-passthrough` to the list and save. For more information refer to the [NGINX User Guide](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough). Also note the potential performance impact of using SSL Passthrough mentioned here.
+
+The deployed PubSub+ broker(s) must have TLS configured with a certificate that includes appropriate DNS names in CN and/or SAN. The protocol client must support SNI but it depends on the client if it uses CN or SAN for server certificate host name validation. Most recent clients require SAN, for example the PubSub+ Java API requires host DNS names in the SAN when using SNI.
+
+With above, an ingress example looks following:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-passthrough-tls-example
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: smf.broker1.bar.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tls-smf
+        path: /
+        pathType: ImplementationSpecific
+```
+In this case the broker server certificate can specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1` distinguished by host fully qualified name.
 
 #### Using pod label "active" to identify the active event broker node
 
