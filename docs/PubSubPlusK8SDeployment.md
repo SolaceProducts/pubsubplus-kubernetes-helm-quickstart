@@ -19,6 +19,13 @@ Contents:
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
+      - [Specifying Service Type](#specifying-service-type)
+      - [Using Ingress to access event broker services](#using-ingress-to-access-event-broker-services)
+        * [Configuration examples](#configuration-examples)
+        * [HTTP, no TLS](#http-no-tls)
+        * [HTTPS with TLS terminate at ingress](#https-with-tls-terminate-at-ingress)
+        * [HTTPS with TLS re-encrypt at ingress](#https-with-tls-re-encrypt-at-ingress)
+        * [General TCP over TLS with passthrough to broker](#general-tcp-over-tls-with-passthrough-to-broker)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
     + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
       - [Setting up TLS](#setting-up-tls)
@@ -261,7 +268,7 @@ This is the IP (or the IP address the FQDN resolves to) of the ingress where ext
 
 For options to expose multiple services from potentially multiple brokers, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
  
-###### HTTP, no TLS
+##### HTTP, no TLS
 
 The following example configures ingress to access PubSub+ REST service. Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). 
 
