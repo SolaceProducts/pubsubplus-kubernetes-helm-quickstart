@@ -235,7 +235,7 @@ A deployment is ready for service requests when there is a Solace pod that is ru
 
 #### Using Ingress to access event broker services
 
-The `LoadBalancer` or `NodePort` service types can expose all PubSub+ services. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) can be used to provide efficient external access to specific PubSub+ services.
+The `LoadBalancer` or `NodePort` service types can expose all services from one PubSub+ broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) can be used to provide efficient external access to specific PubSub+ services, potentially from multiple brokers.
 
 The following table provides an overview of how external access can be configured for PubSub+ services via Ingress.
 
@@ -251,15 +251,15 @@ The following table provides an overview of how external access can be configure
 
 ##### Configuration examples
 
-All examples assume NGINX used as ingress controller ([documented here](https://kubernetes.github.io/ingress-nginx/)), as NGINX is supported by most K8s providers. For [other ingress controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers) refer to their respective documentation.
+All examples assume NGINX used as ingress controller ([documented here](https://kubernetes.github.io/ingress-nginx/)), selected because NGINX is supported by most K8s providers. For [other ingress controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers) refer to their respective documentation.
 
 To deploy the NGINX Ingress Controller, refer to the [Quick start in the NGINX documentation](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start). After successful deployment get the ingress External-IP or FQDN with the following command:
 
 `kubectl get service ingress-nginx-controller --namespace=ingress-nginx`
 
-This is where external clients shall target their request and any additional DNS-resolvable hostnames, used for name-based virtual host routing, must also be configured to resolve to this IP address. If using TLS then the host certificate Common Name (CN) and/or Subject Alternative Name (SAN) must be configured to match the respective FQDN.
+This is the IP (or the IP address the FQDN resolves to) of the ingress where external clients shall target their request and any additional DNS-resolvable hostnames, used for name-based virtual host routing, must also be configured to resolve to this IP address. If using TLS then the host certificate Common Name (CN) and/or Subject Alternative Name (SAN) must be configured to match the respective FQDN.
 
-For options to expose multiple services, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
+For options to expose multiple services from potentially multiple brokers, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
  
 ###### HTTP, no TLS
 
@@ -312,7 +312,7 @@ spec:
               name: tcp-rest
 ```
 
-External requests shall be targeted to the ingress External-IP at the TLS port (443) and the specified path.
+External requests shall be targeted to the ingress External-IP through the defined hostname (here `https-example.foo.com`) at the TLS port (443) and the specified path.
 
 
 ##### HTTPS with TLS re-encrypt at ingress
@@ -329,13 +329,17 @@ The difference in the Ingress manifest is the service target port in the last li
 
 ##### General TCP over TLS with passthrough to broker
 
-In this case the ingress only provides routing to the broker Pod based on the hostname provided in the SNI extension of the Client Hello at TLS connection setup. Since it will pass through TLS traffic directly to the broker as opaque data, this enables the use of ingress for any TCP-based protocol using TLS as transport.
+In this case the ingress does not terminate TLS, only provides routing to the broker Pod based on the hostname provided in the SNI extension of the Client Hello at TLS connection setup. Since it will pass through TLS traffic directly to the broker as opaque data, this enables the use of ingress for any TCP-based protocol using TLS as transport.
 
-The TLS passthrough capability must be explicitly enabled on the NGINX ingress controller, as it is off by default. This can be done by editing the `ingress-nginx-controller` Deployment in the `ingress-nginx` namespace.
+The TLS passthrough capability must be explicitly enabled on the NGINX ingress controller, as it is off by default. This can be done by editing the `ingress-nginx-controller` "Deployment" in the `ingress-nginx` namespace.
 1. Open the controller for editing: `kubectl edit deployment ingress-nginx-controller --namespace ingress-nginx`
-1. Search where the `nginx-ingress-controller` arguments are provided, insert `--enable-ssl-passthrough` to the list and save. For more information refer to the [NGINX User Guide](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough). Also note the potential performance impact of using SSL Passthrough mentioned here.
+2. Search where the `nginx-ingress-controller` arguments are provided, insert `--enable-ssl-passthrough` to the list and save. For more information refer to the [NGINX User Guide](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough). Also note the potential performance impact of using SSL Passthrough mentioned here.
 
-The deployed PubSub+ broker(s) must have TLS configured with a certificate that includes appropriate DNS names in CN and/or SAN. The protocol client must support SNI but it depends on the client if it uses CN or SAN for server certificate host name validation. Most recent clients require SAN, for example the PubSub+ Java API requires host DNS names in the SAN when using SNI.
+The Ingress manifest specifies "passthrough" by adding the `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` annotation.
+
+The deployed PubSub+ broker(s) must have TLS configured with a certificate that includes DNS names in CN and/or SAN, that match the host used. In the example the broker server certificate may specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1`, distinguished by the host FQDN.
+
+The protocol client must support SNI. It depends on the client if it uses the server certificate CN or SAN for host name validation. Most recent clients use SAN, for example the PubSub+ Java API requires host DNS names in the SAN when using SNI.
 
 With above, an ingress example looks following:
 
@@ -344,6 +348,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-passthrough-tls-example
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -358,7 +364,7 @@ spec:
         path: /
         pathType: ImplementationSpecific
 ```
-In this case the broker server certificate can specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1` distinguished by host fully qualified name.
+External requests shall be targeted to the ingress External-IP through the defined hostname (here `smf.broker1.bar.com`) at the TLS port (443) with no path required.
 
 #### Using pod label "active" to identify the active event broker node
 
