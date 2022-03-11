@@ -242,9 +242,9 @@ A deployment is ready for service requests when there is a Solace pod that is ru
 
 #### Using Ingress to access event broker services
 
-The `LoadBalancer` or `NodePort` service types can expose all services from one PubSub+ broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) can be used to provide efficient external access to specific PubSub+ services, potentially from multiple brokers.
+The `LoadBalancer` or `NodePort` service types can be used to expose all services from one PubSub+ broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) may be used to enable efficient external access from a single external IP address to specific PubSub+ services, potentially provided by multiple brokers.
 
-The following table provides an overview of how external access can be configured for PubSub+ services via Ingress.
+The following table gives an overview of how external access can be configured for PubSub+ services via Ingress.
 
 | PubSub+ service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
 | -- | -- | -- | -- | -- |
@@ -270,7 +270,7 @@ For options to expose multiple services from potentially multiple brokers, revie
  
 ##### HTTP, no TLS
 
-The following example configures ingress to access PubSub+ REST service. Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). 
+The following example configures ingress to access PubSub+ REST service. Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the PubSub+ `values.yaml` file.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
