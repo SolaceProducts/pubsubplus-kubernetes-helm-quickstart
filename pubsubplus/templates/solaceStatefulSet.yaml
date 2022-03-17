@@ -64,6 +64,8 @@ spec:
 {{- else if eq .Values.solace.size "prod200k" }}
             cpu: "12"
             memory: 52581Mi
+{{- else }}
+          {{- fail "Invalid solace.size" }}
 {{- end }}
           limits:
 {{- if .Values.solace.systemScaling }}
