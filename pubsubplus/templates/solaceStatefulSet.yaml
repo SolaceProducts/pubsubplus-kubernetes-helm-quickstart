@@ -43,7 +43,10 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
         resources:
           requests:
-{{- if eq .Values.solace.size "dev" }}
+{{- if .Values.solace.systemScaling }}
+            cpu: {{ required "A valid cpu parameter required!" .Values.solace.systemScaling.cpu | quote }}
+            memory: {{ required "A valid memory parameter required!" .Values.solace.systemScaling.memory }}
+{{- else if eq .Values.solace.size "dev" }}
             cpu: "1"
             memory: 3410Mi
 {{- else if eq .Values.solace.size "prod100" }}
@@ -63,7 +66,10 @@ spec:
             memory: 52581Mi
 {{- end }}
           limits:
-{{- if eq .Values.solace.size "dev" }}
+{{- if .Values.solace.systemScaling }}
+            cpu: {{ .Values.solace.systemScaling.cpu | quote }}
+            memory: {{ .Values.solace.systemScaling.memory }}
+{{- else if eq .Values.solace.size "dev" }}
             cpu: "2"
             memory: 3410Mi
 {{- else if eq .Values.solace.size "prod100" }}

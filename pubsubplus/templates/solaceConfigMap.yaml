@@ -16,7 +16,11 @@ data:
     export service_webtransport_tlsport='1443'
     export service_semp_tlsport='1943'
     export logging_debug_output=all
-{{- if eq .Values.solace.size "dev" }}
+{{- if .Values.solace.systemScaling }}
+    export system_scaling_maxconnectioncount={{ required "A valid maxConnections required!" .Values.solace.systemScaling.maxConnections | quote }}
+    export system_scaling_maxqueuemessagecount={{ required "A valid maxQueueMessages required!" .Values.solace.systemScaling.maxQueueMessages | quote }}
+    export messagespool_maxspoolusage={{ required "A valid maxSpoolUsage required!" .Values.solace.systemScaling.maxSpoolUsage | quote }}
+{{- else if eq .Values.solace.size "dev" }}
     export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod100" }}
     export system_scaling_maxconnectioncount="100"
