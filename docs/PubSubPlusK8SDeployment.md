@@ -12,7 +12,8 @@ Contents:
   * [**Overview**](#overview)
   * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-software-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
-    + [CPU and Memory Requirements](#cpu-and-memory-requirements)
+      - [Simplified vertical scaling](#simplified-vertical-scaling)
+      - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
     + [Disk Storage](#disk-storage)
       - [Using the default or an existing storage class](#using-the-default-or-an-existing-storage-class)
       - [Creating a new storage class](#creating-a-new-storage-class)
@@ -100,16 +101,16 @@ All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Ev
 ### Deployment scaling
 
 Solace PubSub+ Software Event Broker can be scaled vertically by specifying either:
-* `solace.size` - simple sizing along the maximum number of client connections; or
+* `solace.size` - simplified sizing along the maximum number of client connections; or
 * `solace.systemScaling` - enables defining all scaling parameters and pod resources
 
 Depending on the `solace.redundancy` parameter, one event router pod is deployed in a single-node standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
 
 Horizontal scaling is possible through [connecting multiple deployments](//docs.solace.com/Overviews/DMR-Overview.htm).
 
-#### Simple vertical sizing
+#### Simplified vertical scaling
 
-The broker nodes are sized by the [maximum number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
+The broker nodes are scaled by the [maximum number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
 
 The broker Pod CPU and memory resource requirements are assigned according to the tier, and are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `solace.size` parameter values:
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 3.4 GiB memory
@@ -119,9 +120,9 @@ The broker Pod CPU and memory resource requirements are assigned according to th
 * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 30.3 GiB memory
 * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 51.4 GiB memory
 
-#### Detailed vertical sizing
+#### Comprehensive vertical scaling
 
-This option overrides simple vertical sizing. It enables specifying each supported broker scaling parameter, currently:
+This option overrides simplified vertical scaling. It enables specifying each supported broker scaling parameter, currently:
 * "maxConnections", in `solace.systemScaling.maxConnections` parameter
 * "maxQueueMessages", in `solace.systemScaling.maxQueueMessages` parameter
 * "maxSpoolUsage", in `solace.systemScaling.maxSpoolUsage` parameter
@@ -134,7 +135,7 @@ Also note that required storage size (see next section) depends significantly es
 
 The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
 
-If using [Simple vertical sizing](#simple-vertical-sizing), set following storage size (`storage.size` parameter) for the scaling tiers:
+If using [simplified vertical scaling](#simplified-vertical-scaling), set following storage size (`storage.size` parameter) for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB
 * `prod100`: up to 100 connections, 7GB
 * `prod1k`: up to 1,000 connections, 14GB
@@ -142,7 +143,7 @@ If using [Simple vertical sizing](#simple-vertical-sizing), set following storag
 * `prod100k`: up to 100,000 connections, 30GB
 * `prod200k`: up to 200,000 connections, 34GB
 
-If using [Detailed vertical sizing](#detailed-vertical-sizing), use the [calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine storage size.
+If using [Comprehensive vertical sizing](#comprehensive-vertical-sizing), use the [calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine storage size.
 
 Using a persistent storage is recommended, otherwise if pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set to `true` by default.
 
