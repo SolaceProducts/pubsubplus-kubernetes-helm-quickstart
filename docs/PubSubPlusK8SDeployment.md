@@ -129,7 +129,7 @@ This option overrides simplified vertical scaling. It enables specifying each su
 
 Additionally, CPU and memory must be sized and provided in `solace.systemScaling.cpu` and `solace.systemScaling.memory` parameters. Use the [Solace online System Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine CPU and memory requirements for the selected scaling parameters.
 
-Also note that required storage size (see next section) depends significantly especially on "maxSpoolUsage". The calculator can be used to determine that as well.
+Also note that required storage size (see next section) depends significantly on scaling. The calculator can be used to determine that as well.
 
 ### Disk Storage
 
@@ -143,7 +143,7 @@ If using [simplified vertical scaling](#simplified-vertical-scaling), set follow
 * `prod100k`: up to 100,000 connections, 30GB
 * `prod200k`: up to 200,000 connections, 34GB
 
-If using [Comprehensive vertical sizing](#comprehensive-vertical-sizing), use the [calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine storage size.
+If using [Comprehensive vertical scaling](#comprehensive-vertical-scaling), use the [calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine storage size.
 
 Using a persistent storage is recommended, otherwise if pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set to `true` by default.
 
