@@ -112,7 +112,7 @@ Horizontal scaling is possible through [connecting multiple deployments](//docs.
 
 The broker nodes are scaled by the [maximum number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
 
-The broker Pod CPU and memory resource requirements are assigned according to the tier, and are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `solace.size` parameter values:
+The broker container CPU and memory resource requirements are assigned according to the tier, and are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `solace.size` parameter values:
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 3.4 GiB memory
 * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 3.4 GiB memory
 * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 6.4 GiB memory
@@ -129,11 +129,13 @@ This option overrides simplified vertical scaling. It enables specifying each su
 
 Additionally, CPU and memory must be sized and provided in `solace.systemScaling.cpu` and `solace.systemScaling.memory` parameters. Use the [Solace online System Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine CPU and memory requirements for the selected scaling parameters.
 
-Also note that required storage size (see next section) depends significantly on scaling. The calculator can be used to determine that as well.
+Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. The calculator can be used to determine that as well.
 
 ### Disk Storage
 
 The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
+
+Broker versions prior to 9.12 required separate volumes mounted for each storage functionality, making up a [storage-group from individual storage-elements](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Configuring-Storage.htm). Versions 9.12 and later can have a single mount storage-group that will be divided up internally, but they still support the legacy mounting of storage-elements. It is recommended to set the parameter `storage.useStorageGroup=true` if using recent broker versions.
 
 If using [simplified vertical scaling](#simplified-vertical-scaling), set following storage size (`storage.size` parameter) for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB

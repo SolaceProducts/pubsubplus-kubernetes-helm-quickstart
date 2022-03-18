@@ -108,7 +108,8 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `storage.slow`                 | `true` to indicate slow storage used, e.g. for NFS.                                                    | `false` |
 | `storage.customVolumeMount`    | customVolumeMount can be used to specify a YAML fragment how the data volume should be mounted  instead of using a storage class. | Undefined |
 | `storage.useStorageClass` <a name="config-storageclass"></a> | Name of the StorageClass to be used to request persistent storage volumes                               | Undefined, meaning to use the "default" StorageClass for the Kubernetes cluster |
-| `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `30Gi` |
+| `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation and [online calculator](https://docs.solace.com/Assistance-Tools/Resource-Calculator/pubsubplus-resource-calculator.html) for storage size requirements | `30Gi` |
+| `storage.useStorageGroup`      | `true` to use a single mount point storage-group, as recommended from PubSub+ version 9.12. Undefined or `false` is legacy behavior. Note: legacy mount still works for newer versions but may be deprecated in the future. | Undefined |
 
 
 

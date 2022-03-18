@@ -157,6 +157,11 @@ spec:
                   while ! pgrep solacedaemon ; do sleep 1; done
                   killall solacedaemon; 
                   while [ ! -d /usr/sw/var/db.upgrade ]; do sleep 1; done;
+        ports:
+          {{- range $item := .Values.service.ports }}
+          - containerPort: {{ $item.containerPort }}
+            protocol: {{ $item.protocol }}
+          {{- end}}
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo        
@@ -172,6 +177,17 @@ spec:
 {{- end }}
         - name: dshm
           mountPath: /dev/shm
+{{- if and (.Values.storage) (.Values.storage.useStorageGroup) }}
+        # use single mount point storage-group
+        - name: data
+          mountPath: /var/lib/solace
+        {{- if ( .Values.storage.slow) }}
+        # mount ephemeral when using slow storage
+        - name: soft-adb-ephemeral
+          mountPath: /var/lib/solace/spool-cache
+        {{- end }}
+{{- else }}
+        # use legacy multiple storage elements
         - name: data
           mountPath: /usr/sw/jail
           subPath: jail
@@ -187,20 +203,16 @@ spec:
         - name: data
           mountPath: /var/lib/solace/diags
           subPath: diags
-{{- if (not .Values.storage.slow) }}
-        # only mount when not using slow storage
+        {{- if (not .Values.storage.slow) }}
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
-{{- else }}
+        {{- else }}
+        # mount ephemeral when using slow storage
         - name: soft-adb-ephemeral
           mountPath: /usr/sw/internalSpool/softAdb
+        {{- end }}
 {{- end }}
-        ports:
-        {{- range $item := .Values.service.ports }}
-        - containerPort: {{ $item.containerPort }}
-          protocol: {{ $item.protocol }}
-        {{- end}}
       volumes:
         - name: podinfo
           downwardAPI:
@@ -238,7 +250,6 @@ spec:
 {{ tpl . $ | indent 10 }}
           {{- end }}
 {{- else }}
-
   # This is the default way to acquire volume for the data mount
   volumeClaimTemplates:
   - metadata:

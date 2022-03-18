@@ -200,6 +200,10 @@ storage:
   # If not defined, the deployment will try to use the default storage class for the k8s cluster.
   # useStorageClass: standard
 
-  # Refer to the Solace documentation for Minimum Recommended Storage-Element Size per Scaling Tier
+  # storage.size: refer to the System Resource Requirements in Solace documentation for minimum storage requirements
   size: 30Gi
 
+  #storage.useStorageGroup: use a single mount point storage-group, as recommended from PubSub+ version 9.12
+  #  if undefined or set to false, the legacy behavior is to individually mount storage-elements in subdirectories.
+  #  Note: legacy mount still works for broker version 9.12 and later but may be deprecated in the future.
+  # useStorageGroup: true
