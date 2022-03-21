@@ -44,6 +44,14 @@ For production purposes it is recommended to use persistent storage.
 {{- end }}
 
 == Performance and resource requirements ==
+{{- if .Values.solace.systemScaling }}
+Max supported number of client connections: {{ .Values.solace.systemScaling.maxConnections }}
+Max number of queue messages, in millions of messages: {{ .Values.solace.systemScaling.maxQueueMessages }}
+Max spool usage, in MB: {{ .Values.solace.systemScaling.maxSpoolUsage }}
+Requested cpu, in cores: {{ .Values.solace.systemScaling.cpu }}
+Requested memory: {{ .Values.solace.systemScaling.memory }}
+Requested storage: {{ .Values.storage.size }}
+{{- else }}
 {{- if contains "dev" .Values.solace.size }}
 This is a minimum footprint deployment for development purposes. For guaranteed performance, specify a different solace.size value.
 {{- else }}
@@ -51,6 +59,7 @@ The requested connection scaling tier for this deployment is: max {{ substr 4 10
 {{- end }}
 Following resources have been requested per PubSub+ pod:
     echo `kubectl get statefulset --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="Minimum resources: {.spec.template.spec.containers[0].resources.requests}"`
+{{- end }}
 
 == Services access ==
 To access services from pods within the k8s cluster, use these addresses:

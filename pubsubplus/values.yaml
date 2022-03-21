@@ -28,7 +28,7 @@ solace:
   #   maxSpoolUsage: 1500
   #   # cpu: CPUs in cores
   #   cpu: 2
-  #   # memory: host Virtual Memory, in MiB
+  #   # memory: host Virtual Memory
   #   memory: 3410Mi
 
   # solace.size defines deployment scaling tier with max # of connections, see README for valid options
