@@ -86,7 +86,8 @@ service:
   type: LoadBalancer
 
   # service.annotations allows to add provider-specific service annotations, see example below
-  # annotations: 'cloud.google.com/load-balancer-type: "internal"'
+  # annotations:
+  #   cloud.google.com/load-balancer-type: "internal"
 
   # List here all ports to be exposed as external service.
   #    "containerPorts" (from the PubSub+ container) will be exposed as external "servicePorts",
