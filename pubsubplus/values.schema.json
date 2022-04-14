@@ -43,7 +43,7 @@
             "type": "object",
             "properties": {
                 "annotations": {
-                    "type": "string"
+                    "type": "object"
                 },
                 "ports": {
                     "type": "array",
