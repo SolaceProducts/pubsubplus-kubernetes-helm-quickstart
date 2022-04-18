@@ -1,0 +1,23 @@
+{{- if and  .Values.solace.redundancy .Values.storage.monitorStorageSize }}
+# This is a pre-install hook to create a minimum-size PVC for Monitor pods in an HA deployment
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-{{ template "solace.fullname" . }}-2
+  labels:
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  {{- if .Values.storage.useStorageClass }}
+  storageClassName: {{ .Values.storage.useStorageClass }}
+  {{- end}}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.monitorStorageSize }}
+{{- end }}

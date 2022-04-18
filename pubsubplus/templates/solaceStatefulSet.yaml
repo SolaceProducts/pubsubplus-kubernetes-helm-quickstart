@@ -23,6 +23,12 @@ spec:
       labels:
         app.kubernetes.io/name: {{ template "solace.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if .Values.solace.podModifierEnabled }}
+      annotations:
+        pod-modifier.solace.com/modify: "true"
+        pod-modifier.solace.com/modify.podDefinition: |
+          {"Pods":[{"metadata":{"name":"{{ template "solace.fullname" . }}-2"},"spec":{"containers": [{"name": "pubsubplus","resources": {"requests": {"cpu": "1","memory": "1965Mi"},"limits": {"cpu": "1","memory": "1965Mi"} }} ] } } ]}
+{{- end}}
     spec:
 {{- if .Values.image.pullSecretName }}
       imagePullSecrets:
@@ -38,7 +44,7 @@ spec:
       serviceAccountName: {{ template "solace.serviceAccountName" . }}
       terminationGracePeriodSeconds: 1200
       containers:
-      - name: {{ .Chart.Name }}
+      - name: pubsubplus
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
         resources:

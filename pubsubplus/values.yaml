@@ -9,7 +9,7 @@
 
 solace:
   # solace.redundancy=false will create a single-node non-HA deployment;
-  #  true will create an HA deployment with Primary, Backup and Monitor nodes.
+  #  true will create an HA deployment with Primary, Backup and Monitoring nodes.
   redundancy: false
 
   # solace.systemScaling provides exact fine-grained specification of the event broker scaling parameters
@@ -30,6 +30,10 @@ solace:
   #   cpu: 2
   #   # memory: host Virtual Memory
   #   memory: 3410Mi
+
+  # solace.podModifierEnabled=true enables modifying (reducing) CPU and memory resources for Monitoring nodes in an HA deployment
+  # this must be provided and set to true to enable adjustments by the solace-pod-modifier admission plugin
+  # podModifierEnabled: true
 
   # solace.size defines deployment scaling tier with max # of connections, see README for valid options
   #  dev uses minimum resources but performance is not guaranteed; use prod for production-ready
@@ -202,6 +206,9 @@ storage:
 
   # storage.size: refer to the System Resource Requirements in Solace documentation for minimum storage requirements
   size: 30Gi
+
+  # storage.monitorStorageSize: if provided this will create and assign the minimum recommended storage to Monitor pods. For initial deployments only.
+  monitorStorageSize: 1500M
 
   #storage.useStorageGroup: use a single mount point storage-group, as recommended from PubSub+ version 9.12
   #  if undefined or set to false, the legacy behavior is to individually mount storage-elements in subdirectories.
