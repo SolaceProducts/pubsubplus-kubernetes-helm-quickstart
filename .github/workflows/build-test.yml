@@ -23,6 +23,8 @@ jobs:
         sudo snap install kubectl --classic
         kubectl version --client
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash # setup Helm 3
+        docker ps
+        go version
 
     - name: Checkout
       uses: actions/checkout@v2
@@ -33,6 +35,12 @@ jobs:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         export_default_credentials: true
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Linting yaml files and chart
       run: |
@@ -49,13 +57,24 @@ jobs:
         popd
         kubectl get statefulset,svc,pods,pvc,pv
 
+    - name: Setup pod modifier
+      run: |
+        pushd solace-pod-modifier-admission-plugin
+        make image-build image-push IMAGE=${{ secrets.DOCKERHUB_TEST_IMAGE }}
+        make deploy IMAGE=${{ secrets.DOCKERHUB_TEST_IMAGE }}
+        sleep 2
+        timeout 20 bash -c 'while ! kubectl get pods -n solace-pod-modifier | grep Running ; do sleep 1; done'
+        timeout 20 bash -c 'while ! kubectl get MutatingWebhookConfiguration | grep pod-modifier.solace.com ; do sleep 1; done'
+        kubectl label namespace default pod-modifier.solace.com=enabled    # prep namespace for use
+        popd
+
     - name: Deploy HA broker and test
       run: |
         REPO=solace/solace-pubsub-standard
         TAG=latest
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=*"
         kubectl create secret tls test-tls --key="tls.key" --cert="tls.crt"
-        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
+        helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active"
         sleep 40; kubectl describe nodes
@@ -63,6 +82,8 @@ jobs:
         until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
+        kubectl get pods -o yaml | grep "memory: 1965Mi" # test small monitor memory
+        kubectl get pvc | grep 2Gi # test small monitor storage
         helm test my-release | grep Phase | grep Succeeded
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         bash -c 'if [[ `kubectl get po --show-labels | grep -c "1/1"` -ne 3 ]]; then echo "Some pods are not ready!"; kubectl get po --show-labels; exit 1; fi'
@@ -81,7 +102,7 @@ jobs:
       run: |
         REPO=solace/solace-pubsub-standard
         UPGRADETAG=$(wget -q https://registry.hub.docker.com/v1/repositories/solace/solace-pubsub-standard/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | sort -t "." -k1,1n -k2,2n -k3,3n | tail -1)
-        helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG
+        helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
         statefulset_name=$(kubectl get statefulset | grep pubsubplus |  awk '{print $1}')
