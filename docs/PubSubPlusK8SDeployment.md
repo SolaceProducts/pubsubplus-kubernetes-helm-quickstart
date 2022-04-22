@@ -103,7 +103,7 @@ All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Ev
 ### Deployment scaling
 
 Solace PubSub+ Software Event Broker can be scaled vertically by specifying either:
-* `solace.size` - simplified sizing along the maximum number of client connections; or
+* `solace.size` - simplified scaling along the maximum number of client connections; or
 * `solace.systemScaling` - enables defining all scaling parameters and pod resources
 
 Depending on the `solace.redundancy` parameter, one event router pod is deployed in a single-node standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
@@ -133,6 +133,8 @@ Additionally, CPU and memory must be sized and provided in `solace.systemScaling
 
 Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. The calculator can be used to determine that as well.
 
+Also note, that specifying maxConnections, maxQueueMessages and maxSpoolUsage on initial deployment will overwrite the broker’s default values. On the other hand, doing the same using Helm upgrade on an existing deployment will not overwrite these values on brokers configuration, but it can be used to prepare (first step) for a manual scale up through CLI where these parameters can be actually changed (second step).
+
 #### Reducing resource requirements of Monitoring Nodes in an HA deployment
 
 The Kubernetes StatefulSet which controls the pods that make up a PubSub+ broker [deployment in an HA redundancy group](#deployment-scaling) does not distinguish between PubSub+ HA node types: it assigns the same CPU and memory resources to pods hosting worker and monitoring node types, even though monitoring nodes have minimal resource requirements.
@@ -149,7 +151,7 @@ Refer to the [Readme of the plugin](/solace-pod-modifier-admission-plugin/README
 
 The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
 
-Broker versions prior to 9.12 required separate volumes mounted for each storage functionality, making up a [storage-group from individual storage-elements](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Configuring-Storage.htm). Versions 9.12 and later can have a single mount storage-group that will be divided up internally, but they still support the legacy mounting of storage-elements. It is recommended to set the parameter `storage.useStorageGroup=true` if using recent broker versions.
+Broker versions prior to 9.12 required separate volumes mounted for each storage functionality, making up a [storage-group from individual storage-elements](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Configuring-Storage.htm). Versions 9.12 and later can have a single mount storage-group that will be divided up internally, but they still support the legacy mounting of storage-elements. It is recommended to set the parameter `storage.useStorageGroup=true` if using broker version 9.12 or later - do not use it on earlier versions.
 
 If using [simplified vertical scaling](#simplified-vertical-scaling), set following storage size (`storage.size` parameter) for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB
@@ -286,9 +288,10 @@ The following table gives an overview of how external access can be configured f
 
 | PubSub+ service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
 | -- | -- | -- | -- | -- |
-| Notes: | -- | Requires TLS config on Ingress-controller | Requires TLS config on broker AND TLS config on Ingress-controller | Requires TLS config on broker. Client must use SNI to provide target host |
-| REST, WebSockets, MQTT over WebSockets | Supported | Supported | Supported | Supported (routing via SNI) |
-| SEMP | - | Supported with restrictions: (1) Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation; (2) Non-TLS access to SEMP must be enabled on broker | Supported with restrictions: - Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation | Supported (routing via SNI) |
+| **Notes:** | -- | Requires TLS config on Ingress-controller | Requires TLS config on broker AND TLS config on Ingress-controller | Requires TLS config on broker. Client must use SNI to provide target host |
+| WebSockets, MQTT over WebSockets | Supported | Supported | Supported | Supported (routing via SNI) |
+| REST | Supported with restrictions: if publishing to a Queue, only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation. For Topics, the initial path would make it to the topic name. | Supported, see prev. note | Supported, see prev. note | Supported (routing via SNI) |
+| SEMP | Not recommended to expose management services without TLS | Supported with restrictions: (1) Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation; (2) Non-TLS access to SEMP [must be enabled](https://docs.solace.com/Configuring-and-Managing/configure-TLS-broker-manager.htm) on broker | Supported with restrictions: only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation | Supported (routing via SNI) |
 | SMF, SMF compressed, AMQP, MQTT | - | - | - | Supported (routing via SNI) |
 | SSH* | - | - | - | - |
 
@@ -306,9 +309,19 @@ This is the IP (or the IP address the FQDN resolves to) of the ingress where ext
 
 For options to expose multiple services from potentially multiple brokers, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
  
+The next examples provide Ingress manifests that can be applied using `kubectl apply -f <manifest-yaml>`. Then check that an external IP address (ingress controller external IP) has been assigned to the rule/service and also that the host/external IP is ready for use as it could take a some time for the address to be populated.
+
+```
+kubectl get ingress
+NAME                              CLASS   HOSTS
+ADDRESS         PORTS   AGE
+example.address                   nginx   frontend.host
+20.120.69.200   80      43m
+```
+
 ##### HTTP, no TLS
 
-The following example configures ingress to access PubSub+ REST service. Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the PubSub+ `values.yaml` file.
+The following example configures ingress to [access PubSub+ REST service](https://docs.solace.com/RESTMessagingPrtl/Solace-REST-Example.htm#cURL). Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the PubSub+ `values.yaml` file.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -316,10 +329,11 @@ kind: Ingress
 metadata:
   name: http-plaintext-example
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /testpath
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -340,6 +354,7 @@ kind: Ingress
 metadata:
   name: https-ingress-terminated-tls-example
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
       - https-example.foo.com
@@ -364,10 +379,18 @@ External requests shall be targeted to the ingress External-IP through the defin
 
 This only differs from above in that the request is forwarded to a TLS-encrypted PubSub+ service port. The broker must have TLS configured but there are no specific requirements for the broker certificate as the ingress does not enforce it.
 
-The difference in the Ingress manifest is the service target port in the last line - it refers now to a TLS backend port:
+The difference in the Ingress manifest is an NGINX-specific annotation marking that the backend is using TLS, and the service target port in the last line - it refers now to a TLS backend port:
 
 ```yaml
-              :
+metadata:
+  :
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+  :
+spec:
+  :
+  rules:
+  :
             port:
               name: tls-rest
 ```
