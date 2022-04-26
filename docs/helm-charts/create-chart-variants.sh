@@ -53,5 +53,6 @@ for variant in '' '-dev' '-ha' ;
     sed -i 's%helm repo add.*%helm repo add openshift-helm-charts https://charts.openshift.io%g' pubsubplus-openshift"$variant"/README.md
     sed -i 's%solacecharts/pubsubplus%openshift-helm-charts/pubsubplus-openshift%g' pubsubplus-openshift"$variant"/README.md
     sed -i 's@`solace/solace-pubsub-standard`@`registry.connect.redhat.com/solace/pubsubplus-standard`@g' pubsubplus-openshift"$variant"/README.md
+    sed -i 's/kubectl/oc/g' pubsubplus-openshift"$variant"/templates/NOTES.txt
     helm package pubsubplus-openshift"$variant"
   done
