@@ -92,7 +92,7 @@ Deployment options:
 * Container image: as above, the container image is directly provided in the `make` command
 * Image pull secrets: if required, uncomment and edit in `deploy/deployment.yaml`
 * Number of webhook pod replicas: adjust in `deploy/deployment.yaml`. Default settings is two replicas.
-* Namespace name: default is `solace-pod-modifier`, adjust in `deploy/kustomization.yaml`
+* Namespace name: default is `solace-pod-modifier`, adjust in `deploy/kustomization.yaml`. *Important:* if using OpenShift, do not use the `default` namespace (project).
 
 4. Verify the webhook pods are up and running in the `solace-pod-modifier` namespace and the `MutatingWebhookConfiguration` object has been created:
 
