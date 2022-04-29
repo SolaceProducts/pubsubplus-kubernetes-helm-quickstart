@@ -16,7 +16,7 @@ Contents:
       - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
       - [Reducing resource requirements of Monitoring Nodes in an HA deployment](#reducing-resource-requirements-of-monitoring-nodes-in-an-ha-deployment)
     + [Disk Storage](#disk-storage)
-      - [Allocating smaller storage to Monitor pods in an HA deployment](#reducing-resource-requirements-of-monitoring-nodes-in-an-ha-deployment)
+      - [Allocating smaller storage to Monitor pods in an HA deployment](#allocating-smaller-storage-to-monitor-pods-in-an-ha-deployment)
       - [Using the default or an existing storage class](#using-the-default-or-an-existing-storage-class)
       - [Creating a new storage class](#creating-a-new-storage-class)
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
