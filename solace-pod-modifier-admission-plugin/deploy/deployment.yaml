@@ -6,7 +6,7 @@ metadata:
     app: solace-pod-modifier-webhook
 spec:
   # provide multiple replicas for redundancy
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: solace-pod-modifier-webhook
