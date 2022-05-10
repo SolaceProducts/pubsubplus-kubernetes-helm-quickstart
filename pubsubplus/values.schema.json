@@ -43,7 +43,7 @@
             "type": "object",
             "properties": {
                 "annotations": {
-                    "type": "string"
+                    "type": "object"
                 },
                 "ports": {
                     "type": "array",
@@ -127,7 +127,13 @@
                 "size": {
                     "type": "string"
                 },
+                "monitorStorageSize": {
+                    "type": "string"
+                },
                 "slow": {
+                    "type": "boolean"
+                },
+                "useStorageGroup": {
                     "type": "boolean"
                 },
                 "useStorageClass": {

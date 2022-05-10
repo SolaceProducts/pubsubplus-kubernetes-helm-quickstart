@@ -1,0 +1,10 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: solace-mutating-webhook-configurer
+  labels:
+    app: solace-pod-modifier-webhook
+rules:
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["mutatingwebhookconfigurations"]
+  verbs: ["create", "get", "delete", "list", "patch", "update", "watch"]

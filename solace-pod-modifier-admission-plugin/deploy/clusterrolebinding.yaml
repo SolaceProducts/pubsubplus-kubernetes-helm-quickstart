@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: solace-mutating-webhook-configurer-to-sa
+  labels:
+    app: solace-pod-modifier-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: solace-mutating-webhook-configurer
+subjects:
+- kind: ServiceAccount
+  name: solace-mutating-webhook-configurer-sa

@@ -1,24 +1,34 @@
 # Solace PubSub+ Software Event Broker on Kubernetes Deployment Documentation
 
-This document provide detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
+This document provides detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
 * For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
-This document is applicable to any platform supporting Kubernetes.
+This document is applicable to any platform provider supporting Kubernetes.
 
 Contents:
   * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
   * [**Overview**](#overview)
   * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-software-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
-    + [CPU and Memory Requirements](#cpu-and-memory-requirements)
+      - [Simplified vertical scaling](#simplified-vertical-scaling)
+      - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
+      - [Reducing resource requirements of Monitoring Nodes in an HA deployment](#reducing-resource-requirements-of-monitoring-nodes-in-an-ha-deployment)
     + [Disk Storage](#disk-storage)
+      - [Allocating smaller storage to Monitor pods in an HA deployment](#allocating-smaller-storage-to-monitor-pods-in-an-ha-deployment)
       - [Using the default or an existing storage class](#using-the-default-or-an-existing-storage-class)
       - [Creating a new storage class](#creating-a-new-storage-class)
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
+      - [Specifying Service Type](#specifying-service-type)
+      - [Using Ingress to access event broker services](#using-ingress-to-access-event-broker-services)
+        * [Configuration examples](#configuration-examples)
+        * [HTTP, no TLS](#http-no-tls)
+        * [HTTPS with TLS terminate at ingress](#https-with-tls-terminate-at-ingress)
+        * [HTTPS with TLS re-encrypt at ingress](#https-with-tls-re-encrypt-at-ingress)
+        * [General TCP over TLS with passthrough to broker](#general-tcp-over-tls-with-passthrough-to-broker)
       - [Using pod label "active" to identify the active event broker node](#using-pod-label-active-to-identify-the-active-event-broker-node)
     + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
       - [Setting up TLS](#setting-up-tls)
@@ -63,7 +73,6 @@ Contents:
 
 
 
-
 ## The Solace PubSub+ Software Event Broker
 
 The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
@@ -93,15 +102,19 @@ All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Ev
 
 ### Deployment scaling
 
-Solace PubSub+ Software Event Broker event broker can be vertically scaled by specifying the [number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
+Solace PubSub+ Software Event Broker can be scaled vertically by specifying either:
+* `solace.size` - simplified scaling along the maximum number of client connections; or
+* `solace.systemScaling` - enables defining all scaling parameters and pod resources
 
 Depending on the `solace.redundancy` parameter, one event router pod is deployed in a single-node standalone deployment or three pods if deploying a [High-Availability (HA) group](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm).
 
 Horizontal scaling is possible through [connecting multiple deployments](//docs.solace.com/Overviews/DMR-Overview.htm).
 
-### CPU and Memory Requirements
+#### Simplified vertical scaling
 
-The following CPU and memory requirements (for each pod) are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `pubsubplus` chart `solace.size` parameter values:
+The broker nodes are scaled by the [maximum number of concurrent client connections](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Scaling-Parameters.htm#max-client-connections), controlled by the `solace.size` chart parameter.
+
+The broker container CPU and memory resource requirements are assigned according to the tier, and are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `solace.size` parameter values:
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 3.4 GiB memory
 * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 3.4 GiB memory
 * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 6.4 GiB memory
@@ -109,17 +122,46 @@ The following CPU and memory requirements (for each pod) are summarized here fro
 * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 30.3 GiB memory
 * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 51.4 GiB memory
 
+#### Comprehensive vertical scaling
+
+This option overrides simplified vertical scaling. It enables specifying each supported broker scaling parameter, currently:
+* "maxConnections", in `solace.systemScaling.maxConnections` parameter
+* "maxQueueMessages", in `solace.systemScaling.maxQueueMessages` parameter
+* "maxSpoolUsage", in `solace.systemScaling.maxSpoolUsage` parameter
+
+Additionally, CPU and memory must be sized and provided in `solace.systemScaling.cpu` and `solace.systemScaling.memory` parameters. Use the [Solace online System Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine CPU and memory requirements for the selected scaling parameters.
+
+Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. The calculator can be used to determine that as well.
+
+Also note, that specifying maxConnections, maxQueueMessages and maxSpoolUsage on initial deployment will overwrite the broker’s default values. On the other hand, doing the same using Helm upgrade on an existing deployment will not overwrite these values on brokers configuration, but it can be used to prepare (first step) for a manual scale up through CLI where these parameters can be actually changed (second step).
+
+#### Reducing resource requirements of Monitoring Nodes in an HA deployment
+
+The Kubernetes StatefulSet which controls the pods that make up a PubSub+ broker [deployment in an HA redundancy group](#deployment-scaling) does not distinguish between PubSub+ HA node types: it assigns the same CPU and memory resources to pods hosting worker and monitoring node types, even though monitoring nodes have minimal resource requirements.
+
+To address this, a "solace-pod-modifier" Kubernetes admission plugin is provided as part of this repo: when deployed it intercepts pod create requests and can set the lower resource requirements for broker monitoring nodes only.
+
+Also ensure to define the Helm chart parameter `solace.podModifierEnabled: true` to provide the necessary annotations to the PubSub+ broker pods, which acts as a "control switch" to enable the monitoring pod resource modification.
+
+Refer to the [Readme of the plugin](/solace-pod-modifier-admission-plugin/README.md) for details on how to activate and use it. Note: the plugin requires Kubernetes v1.16 or later.
+
+> Note: the use of the "solace-pod-modifier" Kubernetes admission plugin is not mandatory. If it is not activated or not working then the default behavior applies: monitoring nodes will have the same resource requirements as the worker nodes. If "solace-pod-modifier" is activated later, then as long as the monitoring node pods have the correct annotations they can be deleted and the reduced resources will apply after they are recreated .
+
 ### Disk Storage
 
 The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
 
-Storage size (`storage.size` parameter) requirements for the scaling tiers:
+Broker versions prior to 9.12 required separate volumes mounted for each storage functionality, making up a [storage-group from individual storage-elements](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Configuring-Storage.htm). Versions 9.12 and later can have a single mount storage-group that will be divided up internally, but they still support the legacy mounting of storage-elements. It is recommended to set the parameter `storage.useStorageGroup=true` if using broker version 9.12 or later - do not use it on earlier versions.
+
+If using [simplified vertical scaling](#simplified-vertical-scaling), set following storage size (`storage.size` parameter) for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB
 * `prod100`: up to 100 connections, 7GB
 * `prod1k`: up to 1,000 connections, 14GB
 * `prod10k`: up to 10,000 connections, 18GB
 * `prod100k`: up to 100,000 connections, 30GB
 * `prod200k`: up to 200,000 connections, 34GB
+
+If using [Comprehensive vertical scaling](#comprehensive-vertical-scaling), use the [calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine storage size.
 
 Using a persistent storage is recommended, otherwise if pod-local storage is used data will be lost with the loss of a pod. The `storage.persistent` parameter is set to `true` by default.
 
@@ -130,6 +172,10 @@ The recommended default allocation is to use Kubernetes [Storage Classes](//kube
 Instead of using a storage class, the `pubsubplus` chart also allows you describe how to assign storage by adding your own YAML fragment in the `storage.customVolumeMount` parameter. The fragment is inserted for the `data` volume in the `{spec.template.spec.volumes}` section of the ConfigMap. Note that in this case the `storage.useStorageClass` parameter is ignored.
 
 Followings are examples of how to specify parameter values in common use cases:
+
+#### Allocating smaller storage to Monitor pods in an HA deployment
+
+When deploying PubSub+ in an HA redundancy group, monitoring nodes have minimal storage requirements compared to working nodes. The default `storage.monitorStorageSize` Helm chart value enables setting and creating smaller storage for Monitor pods hosting monitoring nodes as a pre-install hook in an HA deployment (`solace.redundancy=true`), before larger storage would be automatically created. Note that this setting is effective for initial deployments only, cannot be used to upgrade an existing deployment with storage already allocated for monitoring nodes. A workaround is to mark the Monitor pod storage for delete (will not delete it immediately, only after the Monitor pod has been deleted) then follow the steps to [recreate the deployment](#re-installing-a-deployment): `kubectl delete pvc <monitoring-pod-pvc>`.
 
 #### Using the default or an existing storage class
 
@@ -216,11 +262,15 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 
 ### Exposing the PubSub+ Software Event Broker Services
 
-[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+#### Specifying Service Type
 
-* LoadBalancer - an external load balancer (default)
-* NodePort
-* ClusterIP
+[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the following [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+
+* LoadBalancer (default) - a load balancer, typically externally accessible depending on the K8s provider.
+* NodePort - maps PubSub+ services to a port on a Kubernetes node; external access depends on access to the node.
+* ClusterIP - internal access only from within K8s.
+
+Additionally, for all above service types, external access can be configured through K8s Ingress (see next section).
 
 To support [Internal load balancers](//kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer), provider-specific service annotation may be added through defining the `service.annotations` parameter.
 
@@ -229,6 +279,160 @@ The `service.ports` parameter defines the services exposed. It specifies the eve
 When using Helm to initiate a deployment, notes will be provided on the screen about how to obtain the service addresses and ports specific to your deployment - follow the "Services access" section of the notes. 
 
 A deployment is ready for service requests when there is a Solace pod that is running, `1/1` ready, and the pod's label is "active=true." The exposed `pubsubplus` service will forward traffic to that active event broker node. **Important**: service means here [Guaranteed Messaging level of  Quality-of-Service (QoS) of event messages persistence](//docs.solace.com/PubSub-Basics/Guaranteed-Messages.htm). Messaging traffic will not be forwarded if service level is degraded to [Direct Messages](//docs.solace.com/PubSub-Basics/Direct-Messages.htm) only.
+
+#### Using Ingress to access event broker services
+
+The `LoadBalancer` or `NodePort` service types can be used to expose all services from one PubSub+ broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) may be used to enable efficient external access from a single external IP address to specific PubSub+ services, potentially provided by multiple brokers.
+
+The following table gives an overview of how external access can be configured for PubSub+ services via Ingress.
+
+| PubSub+ service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
+| -- | -- | -- | -- | -- |
+| **Notes:** | -- | Requires TLS config on Ingress-controller | Requires TLS config on broker AND TLS config on Ingress-controller | Requires TLS config on broker. Client must use SNI to provide target host |
+| WebSockets, MQTT over WebSockets | Supported | Supported | Supported | Supported (routing via SNI) |
+| REST | Supported with restrictions: if publishing to a Queue, only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation. For Topics, the initial path would make it to the topic name. | Supported, see prev. note | Supported, see prev. note | Supported (routing via SNI) |
+| SEMP | Not recommended to expose management services without TLS | Supported with restrictions: (1) Only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation; (2) Non-TLS access to SEMP [must be enabled](https://docs.solace.com/Configuring-and-Managing/configure-TLS-broker-manager.htm) on broker | Supported with restrictions: only root path is supported in Ingress rule or must use [rewrite target](https://github.com/kubernetes/ingress-nginx/blob/main/docs/examples/rewrite/README.md) annotation | Supported (routing via SNI) |
+| SMF, SMF compressed, AMQP, MQTT | - | - | - | Supported (routing via SNI) |
+| SSH* | - | - | - | - |
+
+*SSH has been listed here for completeness only, external exposure not recommended.
+
+##### Configuration examples
+
+All examples assume NGINX used as ingress controller ([documented here](https://kubernetes.github.io/ingress-nginx/)), selected because NGINX is supported by most K8s providers. For [other ingress controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers) refer to their respective documentation.
+
+To deploy the NGINX Ingress Controller, refer to the [Quick start in the NGINX documentation](https://kubernetes.github.io/ingress-nginx/deploy/#quick-start). After successful deployment get the ingress External-IP or FQDN with the following command:
+
+`kubectl get service ingress-nginx-controller --namespace=ingress-nginx`
+
+This is the IP (or the IP address the FQDN resolves to) of the ingress where external clients shall target their request and any additional DNS-resolvable hostnames, used for name-based virtual host routing, must also be configured to resolve to this IP address. If using TLS then the host certificate Common Name (CN) and/or Subject Alternative Name (SAN) must be configured to match the respective FQDN.
+
+For options to expose multiple services from potentially multiple brokers, review the [Types of Ingress from the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#types-of-ingress).
+ 
+The next examples provide Ingress manifests that can be applied using `kubectl apply -f <manifest-yaml>`. Then check that an external IP address (ingress controller external IP) has been assigned to the rule/service and also that the host/external IP is ready for use as it could take a some time for the address to be populated.
+
+```
+kubectl get ingress
+NAME                              CLASS   HOSTS
+ADDRESS         PORTS   AGE
+example.address                   nginx   frontend.host
+20.120.69.200   80      43m
+```
+
+##### HTTP, no TLS
+
+The following example configures ingress to [access PubSub+ REST service](https://docs.solace.com/RESTMessagingPrtl/Solace-REST-Example.htm#cURL). Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the PubSub+ `values.yaml` file.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-plaintext-example
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tcp-rest
+```
+
+External requests shall be targeted to the ingress External-IP at the HTTP port (80) and the specified path.
+
+##### HTTPS with TLS terminate at ingress
+
+Additional to above, this requires specifying a target virtual DNS-resolvable host (here `https-example.foo.com`), which resolves to the ingress External-IP, and a `tls` section. The `tls` section provides the possible hosts and corresponding [TLS secret](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls) that includes a private key and a certificate. The certificate must include the virtual host FQDN in its CN and/or SAN, as described above. Hint: [TLS secrets can be easily created from existing files](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets).
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: https-ingress-terminated-tls-example
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+      - https-example.foo.com
+    secretName: testsecret-tls
+  rules:
+  - host: https-example.foo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tcp-rest
+```
+
+External requests shall be targeted to the ingress External-IP through the defined hostname (here `https-example.foo.com`) at the TLS port (443) and the specified path.
+
+
+##### HTTPS with TLS re-encrypt at ingress
+
+This only differs from above in that the request is forwarded to a TLS-encrypted PubSub+ service port. The broker must have TLS configured but there are no specific requirements for the broker certificate as the ingress does not enforce it.
+
+The difference in the Ingress manifest is an NGINX-specific annotation marking that the backend is using TLS, and the service target port in the last line - it refers now to a TLS backend port:
+
+```yaml
+metadata:
+  :
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+  :
+spec:
+  :
+  rules:
+  :
+            port:
+              name: tls-rest
+```
+
+##### General TCP over TLS with passthrough to broker
+
+In this case the ingress does not terminate TLS, only provides routing to the broker Pod based on the hostname provided in the SNI extension of the Client Hello at TLS connection setup. Since it will pass through TLS traffic directly to the broker as opaque data, this enables the use of ingress for any TCP-based protocol using TLS as transport.
+
+The TLS passthrough capability must be explicitly enabled on the NGINX ingress controller, as it is off by default. This can be done by editing the `ingress-nginx-controller` "Deployment" in the `ingress-nginx` namespace.
+1. Open the controller for editing: `kubectl edit deployment ingress-nginx-controller --namespace ingress-nginx`
+2. Search where the `nginx-ingress-controller` arguments are provided, insert `--enable-ssl-passthrough` to the list and save. For more information refer to the [NGINX User Guide](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough). Also note the potential performance impact of using SSL Passthrough mentioned here.
+
+The Ingress manifest specifies "passthrough" by adding the `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` annotation.
+
+The deployed PubSub+ broker(s) must have TLS configured with a certificate that includes DNS names in CN and/or SAN, that match the host used. In the example the broker server certificate may specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1`, distinguished by the host FQDN.
+
+The protocol client must support SNI. It depends on the client if it uses the server certificate CN or SAN for host name validation. Most recent clients use SAN, for example the PubSub+ Java API requires host DNS names in the SAN when using SNI.
+
+With above, an ingress example looks following:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-passthrough-tls-example
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: smf.broker1.bar.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: <my-pubsubplus-service>
+            port:
+              name: tls-smf
+        path: /
+        pathType: ImplementationSpecific
+```
+External requests shall be targeted to the ingress External-IP through the defined hostname (here `smf.broker1.bar.com`) at the TLS port (443) with no path required.
 
 #### Using pod label "active" to identify the active event broker node
 
