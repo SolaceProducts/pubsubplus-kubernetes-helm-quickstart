@@ -12,6 +12,11 @@ solace:
   #  true will create an HA deployment with Primary, Backup and Monitoring nodes.
   redundancy: false
 
+  # See `kubectl explain poddisruptionbudget.spec` for more
+  # ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  # Default value `false`, for this to be `true` `solace.redundancy` has to also be `true`.
+  podDisruptionBudgetForHA: false
+
   # solace.systemScaling provides exact fine-grained specification of the event broker scaling parameters
   #   and the assigned CPU / memory resources to the Pod
   # if provided, these settings will OVERRIDE solace.size
