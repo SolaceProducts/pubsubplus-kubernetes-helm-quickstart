@@ -88,6 +88,7 @@ data:
     echo "`date` INFO: ${APP}-Node ordinal: ${node_ordinal}"
     echo "`date` INFO: ${APP}-Waiting for management API to become available"
     password=`cat /mnt/disks/secrets/username_admin_password`
+    INITIAL_STARTUP_FILE=/var/lib/solace/var/k8s_initial_startup_marker
     loop_guard=60
     pause=10
     count=0
@@ -118,7 +119,7 @@ data:
 {{- if .Values.solace.redundancy }}
     # for non-monitor nodes setup redundancy and config-sync
     if [ "${node_ordinal}" != "2" ]; then
-      resync_step=""
+      resync_step_required=""
       role=""
       count=0
       while [ ${count} -lt ${loop_guard} ]; do 
@@ -156,16 +157,18 @@ data:
         case "${local_activity}" in
           "Local Active")
             echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
-            # We should only be here on new cluster create, if not likely a bug
-            # Need to issue assert master to get back into sync"
-            resync_step="assert-master"
+            # We should only be here on new cluster create, if not this is an indication of unexpected HA procedures
+            if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
+                # Need to issue assert master to get back into sync only one time when the PubSub+ Event Broker starts the first time
+                echo "`date` INFO: ${APP}-Broker initial startup detected. This node will assert config-sync configuration over its mate"
+                resync_step_required="true"
+            else
+               echo "`date` WARN: ${APP}-Unexpected state: this is not an initial startup of the broker and this node reports Local Active. Normally expected nodes are Mate Active after restart"
+            fi
             break
             ;;
           "Mate Active")
             echo "`date` INFO: ${APP}-Node activity status is Mate Active, after ${run_time} seconds"
-            # This is normal state if we are backup or recreated later on
-            # will issue a resync master to get back into sync
-            resync_step="resync-master"
             break
             ;;
         esac
@@ -178,7 +181,7 @@ data:
         exit 1 
       fi
       # If we need to assert master, then we need to wait for mate to reconcile
-      if [ "${resync_step}" = "assert-master" ]; then
+      if [ "${resync_step_required}" = "true" ]; then
         count=0
         echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
         while [ ${count} -lt ${loop_guard} ]; do 
@@ -225,15 +228,17 @@ data:
         echo "`date` ERROR: ${APP}-Config-sync connection state never reached Connected" >&2
         exit 1
       fi
-      # Now can issue {resync_step} command
-      echo "`date` INFO: ${APP}-Initiating ${resync_step}"
+      # Now can issue assert-master command
+      if [ "${resync_step_required}" = "true" ]; then
+      echo "`date` INFO: ${APP}-Initiating assert-master"
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><router/></${resync_step}></config-sync></admin></rpc>"
+            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><router/></assert-master></config-sync></admin></rpc>"
       /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><${resync_step}><vpn-name>*</vpn-name></${resync_step}></config-sync></admin></rpc>"
+            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><vpn-name>*</vpn-name></assert-master></config-sync></admin></rpc>"
       # Wait for config-sync results
+      fi
       count=0
-      echo "`date` INFO: ${APP}-Waiting for config-sync connected"
+      echo "`date` INFO: ${APP}-Waiting for config-sync results"
       while [ ${count} -lt ${loop_guard} ]; do
         online_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
                 -q "<rpc><show><config-sync></config-sync></show></rpc>" \
@@ -257,6 +262,10 @@ data:
     fi # if not monitor
 {{- end }}
     echo "`date` INFO: ${APP}-PubSub+ Event Broker bringup is complete for this node."
+    # create startup file after PubSub+ Event Broker is up and running.  Create only if it does not exists
+    if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
+        echo "PubSub+ Event Broker initial startup completed on `date`" > ${INITIAL_STARTUP_FILE}
+    fi
     exit 0
 
 
