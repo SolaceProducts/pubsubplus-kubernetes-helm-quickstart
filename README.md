@@ -6,7 +6,7 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software
 
 ## Overview
 
-This project is a best practice template intended for development and demo purposes. The tested and recommended Solace PubSub+ Software Event Broker version is 9.10.
+This project is a best practice template intended for development and demo purposes. The tested and recommended Solace PubSub+ Software Event Broker version is 10.0.
 
 This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster.
 
