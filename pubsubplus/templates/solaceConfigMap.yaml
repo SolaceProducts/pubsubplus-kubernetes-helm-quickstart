@@ -417,6 +417,28 @@ data:
     local_activity=`echo ${online_results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
     case "${local_activity}" in
       "Mate Active")
+        # Check redundancy
+        echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
+        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc><show><redundancy/></show></rpc>" \
+                -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
+        redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "${redundancystatus_results}" != "Up" ]; then
+          echo "`date` INFO: ${APP}-Redundancy state is not yet up."
+          rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+        fi
+        # Additionally check config-sync status for non-monitoring nodes
+        echo "`date` INFO: ${APP}-Running checks. Config-sync state check started..."
+        if [ "${node_ordinal}" != "2" ]; then
+          results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                  -q "<rpc><show><config-sync></config-sync></show></rpc>" \
+                  -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
+          confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+          if [ "${confsyncstatus_results}" != "Up" ]; then
+            echo "`date` INFO: ${APP}-Config-sync state is not yet up."
+            rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+          fi
+        fi
         # Pass readiness check
         if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
           echo "`date` INFO: ${APP}-Redundancy is up and node is mate Active"
