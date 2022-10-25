@@ -325,8 +325,8 @@ data:
     # For update (includes SolOS upgrade) purposes, additional checks are required for readiness state when the pod has been started
     # This is an update if the LASTVERSION_FILE with K8s controller-revision-hash exists and contents differ from current value
     LASTVERSION_FILE=/var/lib/solace/var/lastConfigRevisionBeforeReboot
-    if [ -f ${LASTVERSION_FILE} ] && [[ $(cat ${LASTVERSION_FILE}) != $(get_label "controller-revision-hash") ]] ; then
-      echo "`date` INFO: ${APP}-Upgrade detected, running additional checks..."
+    if [ ! -f ${LASTVERSION_FILE} ] || [[ $(cat ${LASTVERSION_FILE}) != $(get_label "controller-revision-hash") ]] ; then
+      echo "`date` INFO: ${APP}-Initial startup or Upgrade detected, running additional checks..."
       # Check redundancy
       echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
@@ -418,7 +418,7 @@ data:
     case "${local_activity}" in
       "Mate Active")
         # Check redundancy
-        echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
+        echo "`date` INFO: ${APP}-Running additional checks for standby broker. Redundancy state check started..."
         results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
                 -q "<rpc><show><redundancy/></show></rpc>" \
                 -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
