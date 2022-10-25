@@ -105,9 +105,9 @@ jobs:
       run: |
         REPO=solace/solace-pubsub-standard
         # grab a tag from Docker Hub that has the same SHA as "latest", so upgrade is easy
-        GITHUBRESULTS=`curl --silent "https://hub.docker.com/v2/repositories/$REPO/tags?page_size=1000" | jq -r '.results[] | "\(.digest) \(.name)"' | sort`
-        SHA=`echo "$GITHUBRESULTS" | grep latest | awk '{print $1;}'`
-        UPGRADETAG=`echo "$GITHUBRESULTS" | grep $SHA | head -n 1 | awk '{print $2;}'`
+        DOCKERHUBRESULTS=`curl --silent "https://hub.docker.com/v2/repositories/$REPO/tags?page_size=1000" | jq -r '.results[] | "\(.digest) \(.name)"' | sort`
+        SHA=`echo "$DOCKERHUBRESULTS" | grep latest | awk '{print $1;}'`
+        UPGRADETAG=`echo "$DOCKERHUBRESULTS" | grep $SHA | head -n 1 | awk '{print $2;}'`
         helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podDisruptionBudgetForHA=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG,storage.useStorageGroup=true
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
