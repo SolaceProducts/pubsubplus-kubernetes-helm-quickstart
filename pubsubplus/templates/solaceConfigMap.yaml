@@ -355,27 +355,23 @@ data:
     # For monitor node just check for 3 online nodes in group; active label will never be set
     echo "`date` INFO: ${APP}-Running checks. Server status check started..."
     if [ "${node_ordinal}" = "2" ]; then
-      role_results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-              -q "<rpc><show><redundancy><group/></redundancy></show></rpc>" \
-              -c "/rpc-reply/rpc/show/redundancy/group-node/status[text() = \"Online\"]"`
-      if [[ ${role_results} != *"<errorInfo></errorInfo>"* ]]; then
-        errorinfo=`echo ${results} | xmllint -xpath "string(returnInfo/errorInfo)" - 2>/dev/null` || errorinfo=
-        echo "`date` INFO: ${APP}-Waiting for valid server status response, got ${errorinfo}"
+      # Check redundancy
+      echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
+      results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+              -q "<rpc><show><redundancy/></show></rpc>" \
+              -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
+      redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+      if [ "${redundancystatus_results}" != "Up" ]; then
+        echo "`date` INFO: ${APP}-Redundancy state is not yet up."
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
-      nodes_online=`echo ${role_results} |  xmllint -xpath "string(returnInfo/countSearchResult)" -`
-      if [ "$nodes_online" -eq "3" ]; then
-        if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
-          echo "`date` INFO: ${APP}-All nodes online, monitor node is redundancy ready"
-          touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
-          echo "`date` INFO: ${APP}-Server status check complete for this broker node"
-          exit 1
-        fi
-        exit 0
-      else
-        echo "`date` INFO: ${APP}-Monitor node is not redundancy ready, ${nodes_online} of 3 nodes online"
-        rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+      if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
+        echo "`date` INFO: ${APP}-All nodes online, monitor node is redundancy ready"
+        touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
+        echo "`date` INFO: ${APP}-Server status check complete for this broker node"
+        exit 1
       fi
+      exit 0
     fi # End Monitor Node
     # For Primary or Backup nodes set both service readiness (active label) and k8s readiness (exit return value)
     health_result=`curl -s -o /dev/null -w "%{http_code}"  http://localhost:5550/health-check/guaranteed-active`
