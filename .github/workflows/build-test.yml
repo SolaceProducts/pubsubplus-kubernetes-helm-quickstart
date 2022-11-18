@@ -18,7 +18,6 @@ jobs:
         echo "TESTCLUSTERNAME=k8s-gha-test-$(date +%s)" >> $GITHUB_ENV
         echo "TESTRUNBRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
         #
-        sudo gem update --system 3.0.6
         sudo gem install yaml-lint
         sudo snap install kubectl --classic
         kubectl version --client
