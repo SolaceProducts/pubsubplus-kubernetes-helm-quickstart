@@ -48,10 +48,13 @@ jobs:
 
     - name: Setup K8s env in GKE
       run: |
+        gcloud components install gke-gcloud-auth-plugin --quiet
+        gcloud components update
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
         mkdir gke_test; pushd gke_test
         wget https://raw.githubusercontent.com/SolaceProducts/solace-gke-quickstart/master/scripts/create_cluster.sh
         chmod +x create_cluster.sh
-        ./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -i COS_CONTAINERD -m e2-standard-2
+        ./create_cluster.sh -z us-east4-a,us-east4-b,us-east4-c -c $TESTCLUSTERNAME -i COS_CONTAINERD -m e2-standard-4
         gcloud container clusters get-credentials $TESTCLUSTERNAME --zone us-east4-a --project capable-stream-180018
         popd
         kubectl get statefulset,svc,pods,pvc,pv
