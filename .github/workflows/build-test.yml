@@ -107,6 +107,7 @@ jobs:
         helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG,storage.useStorageGroup=true
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
+        sleep 10
         statefulset_name=$(kubectl get statefulset | grep pubsubplus |  awk '{print $1}')
         until kubectl rollout status statefulset $statefulset_name -w | grep "rolling update complete"; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
