@@ -230,13 +230,13 @@ data:
       fi
       # Now can issue assert-master command
       if [ "${resync_step_required}" = "true" ]; then
-      echo "`date` INFO: ${APP}-Initiating assert-master"
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><router/></assert-master></config-sync></admin></rpc>"
-      /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-            -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><vpn-name>*</vpn-name></assert-master></config-sync></admin></rpc>"
-      # Wait for config-sync results
+          echo "`date` INFO: ${APP}-Initiating assert-master"
+          /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><router/></assert-master></config-sync></admin></rpc>"
+          /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><vpn-name>*</vpn-name></assert-master></config-sync></admin></rpc>"
       fi
+      # Wait for config-sync results
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync results"
       while [ ${count} -lt ${loop_guard} ]; do
@@ -262,7 +262,7 @@ data:
     fi # if not monitor
 {{- end }}
     echo "`date` INFO: ${APP}-PubSub+ Event Broker bringup is complete for this node."
-    # create startup file after PubSub+ Event Broker is up and running.  Create only if it does not exists
+    # create startup file after PubSub+ Event Broker is up and running.  Create only if it does not exist
     if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
         echo "PubSub+ Event Broker initial startup completed on `date`" > ${INITIAL_STARTUP_FILE}
     fi
@@ -352,7 +352,7 @@ data:
     fi
     # Record current version in LASTVERSION_FILE
     echo $(get_label "controller-revision-hash") > ${LASTVERSION_FILE}
-    # For monitor node just check for 3 online nodes in group; active label will never be set
+    # For monitor node just check for redundancy; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
       # Check redundancy
       echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
@@ -381,7 +381,7 @@ data:
           touch ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}
           echo "`date` INFO: ${APP}-Server status check complete for this broker node"
           echo "`date` INFO: ${APP}-Changing pod label to active"
-          exit 1
+          #exit 1 Removing as this may delay activity switch by 5 seconds
         fi
         set_label "active" "true"
         exit 0
