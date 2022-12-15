@@ -104,6 +104,9 @@
                 "redundancy": {
                     "type": "boolean"
                 },
+                "podDisruptionBudgetForHA": {
+                    "type": "boolean"
+                },
                 "size": {
                     "type": "string"
                 },
@@ -113,7 +116,14 @@
                 "usernameAdminPassword": {
                     "type": ["string", "null"]
                 }
-            }
+            },
+            "if": {
+                "properties": {
+                    "podDisruptionBudgetForHA": { "const": true }
+                },
+                "required": ["podDisruptionBudgetForHA"]
+            },
+            "then": { "required": ["redundancy"] }
         },
         "storage": {
             "type": "object",

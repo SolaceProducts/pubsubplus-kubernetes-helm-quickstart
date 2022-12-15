@@ -14,6 +14,7 @@ Contents:
     + [Deployment scaling](#deployment-scaling)
       - [Simplified vertical scaling](#simplified-vertical-scaling)
       - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
+      - [Enabling a Disruption Budget for HA deployment](#enabling-a-disruption-budget-for-ha-deployment)
       - [Reducing resource requirements of Monitoring Nodes in an HA deployment](#reducing-resource-requirements-of-monitoring-nodes-in-an-ha-deployment)
     + [Disk Storage](#disk-storage)
       - [Allocating smaller storage to Monitor pods in an HA deployment](#allocating-smaller-storage-to-monitor-pods-in-an-ha-deployment)
@@ -21,6 +22,7 @@ Contents:
       - [Creating a new storage class](#creating-a-new-storage-class)
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
+      - [Tested storage environments and providers](#tested-storage-environments-and-providers)
     + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
       - [Specifying Service Type](#specifying-service-type)
       - [Using Ingress to access event broker services](#using-ingress-to-access-event-broker-services)
@@ -89,6 +91,10 @@ There are two deployment options described in this document:
 * The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can also manage your deployment's lifecycle, including upgrade and delete.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
+It is also important to know that Helm is a templating tool that helps package PubSub+ Software Event Broker deployment into charts.
+It is most useful when first setting up broker nodes on the Kubernetes cluster. It can handle the install-update-delete lifecycle for the broker nodes deployed to the cluster.
+It can not be used to scale-up, scale down or apply custom configuration to an already deployed PubSub+ Software Event Broker.
+
 The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
 ## PubSub+ Software Event Broker Deployment Considerations
@@ -134,6 +140,17 @@ Additionally, CPU and memory must be sized and provided in `solace.systemScaling
 Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. The calculator can be used to determine that as well.
 
 Also note, that specifying maxConnections, maxQueueMessages and maxSpoolUsage on initial deployment will overwrite the broker’s default values. On the other hand, doing the same using Helm upgrade on an existing deployment will not overwrite these values on brokers configuration, but it can be used to prepare (first step) for a manual scale up through CLI where these parameters can be actually changed (second step).
+
+#### Enabling a Disruption Budget for HA deployment
+
+One of the important parameters available to configure PubSub+ Software Event Broker HA is the [`podDisruptionBudget`](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
+This helps you control and limit the disruption to your application when its pods need to be rescheduled for upgrades, maintenance or any other reason.
+This is only available when we have the PubSub+ Software Event Broker deployed in [high-availability (HA) mode](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm), that is, `solace.redundancy=true`.
+
+In an HA deployment with Primary, Backup and Monitor nodes, we require a minimum of 2 nodes to reach a quorum. The pod disruption budget defaults to a minimum of two nodes when enabled.
+
+To enable this functionality you have to set  `solace.podDisruptionBudgetForHA=true` and `solace.redundancy=true`.
+
 
 #### Reducing resource requirements of Monitoring Nodes in an HA deployment
 
@@ -259,6 +276,12 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
       # this field is optional
       type: Directory
 ```
+#### Tested storage environments and providers
+
+The PubSub+ Software Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
+However, note that for [EKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-eks-specific-req.htm) and [GKE](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-gke-specific-req.htm#storage-class), `xfs` produced the best results during tests.
+[AKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-aks-specific-req.htm) users can opt for `Local Redundant Storage (LRS)` redundancy. This is because they produce the best results
+when compared with the other types available on Azure.
 
 ### Exposing the PubSub+ Software Event Broker Services
 
