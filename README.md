@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/actions?query=workflow%3Abuild+branch%3Amaster)
+[![Actions Status](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/actions?query=workflow%3Abuild+branch%3Amaster)
 
 # Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster
 
@@ -10,7 +10,7 @@ This project is a best practice template intended for development and demo purpo
 
 This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster.
 
-Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md). Consult the [Deployment Coonsiderations](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
+Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md). Consult the [Deployment Coonsiderations](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other Kubernetes platforms see:
 
@@ -51,7 +51,7 @@ kubectl get nodes
 ### 2. Install and configure Helm
 
 Follow the [Helm Installation notes of your target release](https://github.com/helm/helm/releases) for your platform.
-Note: Helm v2 is no longer supported. For Helm v2 support refer to [earlier versions of the chart](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/releases).
+Note: Helm v2 is no longer supported. For Helm v2 support refer to [earlier versions of the chart](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/releases).
 
 On Linux a simple option to set up the latest stable release is to run:
 
@@ -66,7 +66,7 @@ Helm is configured properly if the command `helm version` returns no error.
 
 - Add the Solace Helm charts to your local Helm repo:
 ```bash
-  helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+  helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 ```
 - By default the publicly available [latest Docker image of PubSub+ Software Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a non-default image, add the `--set image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the commands below.
 - Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
@@ -97,10 +97,10 @@ The above options will start the deployment and write related information and no
 Wait for the deployment to complete following the information printed on the console.
 
 Refer to the detailed PubSub+ Kubernetes documentation for:
-* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
-* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
-* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
-* [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
+* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
+* [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
 
 ## Contributing
 
@@ -108,7 +108,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Authors
 
-See the list of [contributors](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/graphs/contributors) who participated in this project.
+See the list of [contributors](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/graphs/contributors) who participated in this project.
 
 ## License
 

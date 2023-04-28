@@ -617,7 +617,7 @@ Check your platform running the `kubectl get nodes` command from your command-li
 #### Install and setup the Helm package manager
 
 The event broker can be deployed using Helm v3.
-> Note: For Helm v2 support refer to [earlier versions of this quickstart](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/releases).
+> Note: For Helm v2 support refer to [earlier versions of this quickstart](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/releases).
 
 The Helm v3 executable is available from https://github.com/helm/helm/releases . Further documentation is available from https://helm.sh/.
 
@@ -638,7 +638,7 @@ The recommended way is to make use of published pre-packaged PubSub+ charts from
 Add or refresh a local Solace `solacecharts` repo:
 ```bash
 # Add new "solacecharts" repo
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
 
@@ -664,7 +664,7 @@ helm fetch solacecharts/pubsubplus --untar
 # Use the Helm chart from this directory
 helm install ./pubsubplus
 ```
-> Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/issues/new) to possibly contribute your enhancements back to the project.
+> Note: it is encouraged to raise a [GitHub issue](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/issues/new) to possibly contribute your enhancements back to the project.
 
 ### Alternative Deployment with generating templates for the Kubernetes `kubectl` tool
 
@@ -679,7 +679,7 @@ Note that later sections of this document about modifying, upgrading or deleting
 2) Add or refresh a local Solace `solacecharts` repo:
 ```bash
 # Add new "solacecharts" repo
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 # Refresh if needed, e.g.: to use a recently published chart version
 helm repo update solacecharts
 ```

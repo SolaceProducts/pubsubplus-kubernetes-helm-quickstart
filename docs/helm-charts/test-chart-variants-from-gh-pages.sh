@@ -55,7 +55,7 @@ helm init --wait --service-account=tiller --upgrade # this may take some time
 helm version
 
 # test charts
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 helm repo list
 
 testDeployHelmv2 pubsubplus-dev
@@ -74,7 +74,7 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 helm version
 
 # test charts
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 helm repo list
 
 testDeployHelmv3 pubsubplus-dev
