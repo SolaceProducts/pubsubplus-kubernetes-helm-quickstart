@@ -4,12 +4,12 @@ entries:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, non-HA
     apiVersion: v2
-    created: "2022-12-15T14:29:40.244676272Z"
+    created: "2023-04-28T18:33:08.129102623Z"
     description: Deploy a single-node non-HA Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: 3e8c2830f6d5e96496d91a710ba8f7aa5597b4a3b17f2dab013abfd431731153
+    digest: 3666228226816af96343c3fc0a5a4f5ee595da32af3824fd7bdf043db5baa7b4
     home: https://dev.solace.com
-    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -31,20 +31,20 @@ entries:
       url: https://solace.com/support/
     name: pubsubplus-openshift
     sources:
-    - https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart
+    - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift/pubsubplus-openshift-3.2.0.tgz
+    - https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-3.2.0.tgz
     version: 3.2.0
   pubsubplus-openshift-dev:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker for Developers
     apiVersion: v2
-    created: "2022-12-15T14:29:40.246145668Z"
+    created: "2023-04-28T18:33:08.131763462Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ Event
       Broker Software on OpenShift for development purposes
-    digest: 0e36c06dd6d68a4bbb7ff19e9ba70f7c79e0ab6674926f9c79331aaee78dd8a0
+    digest: bd1391a826a8b291aaeebb1a2a584553d796b492c0ef1af5835ecb7065d1aeec
     home: https://dev.solace.com
-    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -66,20 +66,20 @@ entries:
       url: https://solace.com/support/
     name: pubsubplus-openshift-dev
     sources:
-    - https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart
+    - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift/pubsubplus-openshift-dev-3.2.0.tgz
+    - https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-dev-3.2.0.tgz
     version: 3.2.0
   pubsubplus-openshift-ha:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, HA
     apiVersion: v2
-    created: "2022-12-15T14:29:40.247658463Z"
+    created: "2023-04-28T18:33:08.133413885Z"
     description: Deploy an HA redundancy group of Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: e0222a5841d242b3f680b4da18480ce81251ad8dae90433dc90635b64d67055b
+    digest: b7eb22383dca4ee9a2b96912251d7174e056e42b6de3eecf628ef68dc3fb2195
     home: https://dev.solace.com
-    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
+    icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
     - solace
     - pubsubplus
@@ -101,8 +101,8 @@ entries:
       url: https://solace.com/support/
     name: pubsubplus-openshift-ha
     sources:
-    - https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart
+    - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts-openshift/pubsubplus-openshift-ha-3.2.0.tgz
+    - https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-ha-3.2.0.tgz
     version: 3.2.0
-generated: "2022-12-15T14:29:40.243002277Z"
+generated: "2023-04-28T18:33:08.127379098Z"
