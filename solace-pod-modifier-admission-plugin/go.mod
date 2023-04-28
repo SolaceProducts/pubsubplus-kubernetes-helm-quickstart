@@ -1,6 +1,6 @@
 module github.com/solacedev/kube-pod-modifier
 
-go 1.17
+go 1.18
 
 require (
 	gopkg.in/yaml.v2 v2.4.0
@@ -26,7 +26,7 @@ require (
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6 // indirect
 	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect

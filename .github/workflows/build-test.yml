@@ -46,6 +46,15 @@ jobs:
         yaml-lint -n pubsubplus/*.yaml
         helm lint pubsubplus
 
+    - name: Run Whitesource Action
+      uses: SolaceDev/Mend-Scan-GHA@v1.0.0
+      with:
+        wssURL: https://saas.whitesourcesoftware.com/agent
+        apiKey: ${{ secrets.WSS_API_KEY }}
+        productName: 'pubsubplus-kubernetes-helm'
+        projectName: 'pubsubplus-kubernetes-helm'
+        configFile: 'ci/whitesource/whitesource-agent.config'
+
     - name: Setup K8s env in GKE
       run: |
         gcloud components install gke-gcloud-auth-plugin --quiet
