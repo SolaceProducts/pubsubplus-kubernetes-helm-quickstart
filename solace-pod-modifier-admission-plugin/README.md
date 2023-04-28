@@ -71,8 +71,8 @@ The Kubernetes deployment templates are provided in the `deploy` subdirectory:
 1. Clone this project to your local machine
 
 ```
-git clone https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart.git
-cd pubsubplus-kubernetes-quickstart/solace-pod-modifier-admission-plugin
+git clone https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart.git
+cd pubsubplus-kubernetes-helm-quickstart/solace-pod-modifier-admission-plugin
 ```
 
 2. Build and push container image:

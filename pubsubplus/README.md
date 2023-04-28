@@ -6,22 +6,22 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software
 
 This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
-* Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
+* Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v3 client installed
 * If using a private container image registry, load the PubSub+ Software Event Broker container image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
-Also review additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-software-event-broker-deployment-considerations).
+Also review additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-software-event-broker-deployment-considerations).
 
 ## Create a deployment
 
 ```bash
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/helm-charts
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 helm install my-release solacecharts/pubsubplus
 ```
 
@@ -36,9 +36,9 @@ helm status my-release
 ```
 
 Refer to the detailed PubSub+ Kubernetes documentation for:
-* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
-* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
-* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
+* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
 
 ## Delete a deployment
 
@@ -51,7 +51,7 @@ kubectl get pvc | grep data-my-release
 
 ## Configuration
 
-The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ Kubernetes documentation.
+The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ Kubernetes documentation.
 
 There are several ways to customize the deployment:
 
@@ -72,7 +72,7 @@ solace:
 # Now use the file:
 helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
 ```
-> Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceProducts/pubsubplus-kubernetes-quickstart/master/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
+> Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/master/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
 
 For more ways to override default chart values, refer to [Customizing the Helm Chart Before Installing](//helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
 
@@ -84,7 +84,7 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `solace.podDisruptionBudgetForHA`  | `true` will set up a [Pod disruption budget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the PubSub+ broker in HA deployment, `false` does not set up a pod disruption budget. HA deployment with Primary, Backup and Monitor nodes requires a minimum of 2 nodes to reach a quorum, the pod disruption budget is defaulted to `2` minimum nodes when enabled.                                       | `false`                |
 | `solace.size`                  | Event broker simple vertical scaling by number of client connections. **Ignored** if `solace.systemScaling` is set. Options: `dev` (requires minimum resources but no guaranteed performance), `prod100`, `prod1k`, `prod10k`, `prod100k`, `prod200k`. | `prod100` |
 | `solace.systemScaling.*`       | Event broker fine-grained vertical scaling definition. If defined, all sub-settings must be provided and these settings will **override** `solace.size`. For scaling documentation, look for "system scaling" at [docs.solace.com](https://docs.solace.com/Search.htm?q=system%20scaling). Use the [online calculator](https://docs.solace.com/Assistance-Tools/Resource-Calculator/pubsubplus-resource-calculator.html) to determine CPU, Memory and Storage requirements for "Container (messaging)" type. </br> `maxConnections`: max supported number of client connections </br> `maxQueueMessages`: max number of queue messages, in millions of messages </br> `maxSpoolUsage`: max Spool Usage, in MB. Also ensure adequate storage.size parameter, use the calculator </br> `cpu`: CPUs in cores </br> `memory`: host Virtual Memory, in MiB | Undefined |
-| `solace.podModifierEnabled`    | Enables modifying (reducing) CPU and memory resources for Monitoring nodes in an HA deployment. Also requires the ["solace-pod-modifier" Kubernetes admission plugin](https://github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/solace-pod-modifier-admission-plugin/README.md#how-to-use) deployed to work.  | Undefined, meaning not enabled. |
+| `solace.podModifierEnabled`    | Enables modifying (reducing) CPU and memory resources for Monitoring nodes in an HA deployment. Also requires the ["solace-pod-modifier" Kubernetes admission plugin](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/solace-pod-modifier-admission-plugin/README.md#how-to-use) deployed to work.  | Undefined, meaning not enabled. |
 | `solace.usernameAdminPassword` | The password for the "admin" management user. Will autogenerate it if not provided. **Important:** refer to the the information from `helm status` how to retrieve it and use it for `helm upgrade`. | Undefined, meaning autogenerate |
 | `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | Undefined, default is UTC |
 | `solace.extraEnvVars`              | List of extra environment variables to be added to the PubSub+ container. A primary use case is to specify [configuration keys](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Docker-Tasks/Config-SW-Broker-Container-Cfg-Keys.htm). Important: env variables defined here will not override the ones defined in solaceConfigMap. | Undefined |
