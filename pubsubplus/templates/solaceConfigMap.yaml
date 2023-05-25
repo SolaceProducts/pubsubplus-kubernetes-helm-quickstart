@@ -117,6 +117,15 @@ data:
     echo "`date` INFO: ${APP}-Server certificate has been configured"
 {{- end }}
 {{- if .Values.solace.redundancy }}
+    # Function to get remote sync state
+    get_router_remote_config_state() {
+      # Params: $1 is property of config to return for router
+      routerresults=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc><show><config-sync><database/><router/><remote/></config-sync></show></rpc>" \
+                -v "/rpc-reply/rpc/show/config-sync/database/remote/tables/table[1]/source-router/${1}"`
+      routerremotesync_result=`echo ${routerresults} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+      echo $routerremotesync_result
+    }
     # for non-monitor nodes setup redundancy and config-sync
     if [ "${node_ordinal}" != "2" ]; then
       resync_step_required=""
@@ -159,7 +168,7 @@ data:
             echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
             # We should only be here on new cluster create, if not this is an indication of unexpected HA procedures
             if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
-                # Need to issue assert master to get back into sync only one time when the PubSub+ Event Broker starts the first time
+                # Need to issue assert leader to get back into sync only one time when the PubSub+ Event Broker starts the first time
                 echo "`date` INFO: ${APP}-Broker initial startup detected. This node will assert config-sync configuration over its mate"
                 resync_step_required="true"
             else
@@ -180,7 +189,7 @@ data:
         echo "`date` ERROR: ${APP}-Local activity state never become Local Active or Mate Active"  >&2
         exit 1 
       fi
-      # If we need to assert master, then we need to wait for mate to reconcile
+      # If we need to assert leader, then we need to wait for mate to reconcile
       if [ "${resync_step_required}" = "true" ]; then
         count=0
         echo "`date` INFO: ${APP}-Waiting for mate activity state to be 'Standby'"
@@ -204,7 +213,7 @@ data:
           echo "`date` ERROR: ${APP}-Mate not in sync, never reached Standby" >&2
           exit 1 
         fi
-      fi # if assert-master
+      fi # if assert-leader
       # Ensure Config-sync connection state is Connected before proceeding
       count=0
       echo "`date` INFO: ${APP}-Waiting for config-sync connected"
@@ -228,13 +237,13 @@ data:
         echo "`date` ERROR: ${APP}-Config-sync connection state never reached Connected" >&2
         exit 1
       fi
-      # Now can issue assert-master command
+      # Now can issue assert-leader command
       if [ "${resync_step_required}" = "true" ]; then
-          echo "`date` INFO: ${APP}-Initiating assert-master"
+          echo "`date` INFO: ${APP}-Initiating assert-leader"
           /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-                -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><router/></assert-master></config-sync></admin></rpc>"
+                -q "<rpc><admin><config-sync><assert-leader><router/></assert-leader></config-sync></admin></rpc>"
           /mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-                -q "<rpc semp-version=\"soltr/9_8VMR\"><admin><config-sync><assert-master><vpn-name>*</vpn-name></assert-master></config-sync></admin></rpc>"
+                -q "<rpc><admin><config-sync><assert-leader><vpn-name>*</vpn-name></assert-leader></config-sync></admin></rpc>"
       fi
       # Wait for config-sync results
       count=0
@@ -253,7 +262,44 @@ data:
         esac
         ((count++))
         echo "`date` INFO: ${APP}-Waited ${run_time} seconds, Config-sync is: ${confsyncstatus_results}, not yet Up"
-        sleep ${pause}
+
+        # Additional check to confirm config-sync
+        echo "`date` INFO: ${APP}-Checking Config-sync Setup. Starting additional checks to confirm config-sync locally..."
+        messagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+              -q "<rpc><show><config-sync><database/><detail/></config-sync></show></rpc>" \
+              -v "count(/rpc-reply/rpc/show/config-sync/database/local/tables/table)"`
+        messagevpn_total=`echo ${messagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+        # Count message_vpns in-sync and compare with total
+        localmessagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+              -q "<rpc><show><config-sync><database/></config-sync></show></rpc>" \
+              -v "count(//table[sync-state='In-Sync'])"`
+        local_messagevpn_total_insync=`echo ${localmessagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "$messagevpn_total" -ne "$local_messagevpn_total_insync" ]; then
+          echo "`date` INFO: ${APP}-Config-sync state is not in-sync locally."
+          sleep ${pause}
+          continue
+        fi
+
+        echo "`date` INFO: ${APP}-Checking Config-sync Setup. Remote config-sync state check starting..."
+        vpnremotehamate_result=$(get_router_remote_config_state "name")
+
+        remote_messagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+              -q "<rpc><show><config-sync><database/><remote/></config-sync></show></rpc>" \
+              -v "count(//table/source-router[name='$vpnremotehamate_result'])"`
+        remote_messagevpn_total=`echo ${remote_messagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+        #Count message_vpns in-sync, not stale and compare with total
+        remotemessagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+              -q "<rpc><show><config-sync><database/><remote/></config-sync></show></rpc>" \
+              -v "count(//table/source-router[name='$vpnremotehamate_result' and sync-state='In-Sync' and stale='No'])"`
+        remote_messagevpn_total_insync=`echo ${remotemessagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "$remote_messagevpn_total" -ne "$remote_messagevpn_total_insync" ]; then
+          echo "`date` INFO: ${APP}-Config-sync state is not in-sync for remote."
+          sleep ${pause}
+          continue
+        fi
+        break
       done
       if [ ${count} -eq ${loop_guard} ]; then
         echo "`date` ERROR: ${APP}-Config-sync never reached state \"Up\"" >&2
@@ -315,6 +361,17 @@ data:
       fi
     }
 
+
+    # Function to get remote sync state
+    get_router_remote_config_state() {
+      # Params: $1 is property of config to return for router
+      routerresults=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc><show><config-sync><database/><router/><remote/></config-sync></show></rpc>" \
+                -v "/rpc-reply/rpc/show/config-sync/database/remote/tables/table[1]/source-router/${1}"`
+      routerremotesync_result=`echo ${routerresults} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+      echo $routerremotesync_result
+    }
+
     # Main logic: note that there are no re-tries here, if check fails then return not ready.
 {{- if .Values.solace.redundancy }}
     # HA config
@@ -337,18 +394,7 @@ data:
         echo "`date` INFO: ${APP}-Redundancy state is not yet up."
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
-      # Additionally check config-sync status for non-monitoring nodes
-      echo "`date` INFO: ${APP}-Running checks. Config-sync state check started..."
-      if [ "${node_ordinal}" != "2" ]; then
-        results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
-                -q "<rpc><show><config-sync></config-sync></show></rpc>" \
-                -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
-        confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
-        if [ "${confsyncstatus_results}" != "Up" ]; then
-          echo "`date` INFO: ${APP}-Config-sync state is not yet up."
-          rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
-        fi
-      fi
+
     fi
     # Record current version in LASTVERSION_FILE
     echo $(get_label "controller-revision-hash") > ${LASTVERSION_FILE}
@@ -428,8 +474,42 @@ data:
                   -v "/rpc-reply/rpc/show/config-sync/status/oper-status"`
           confsyncstatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
           if [ "${confsyncstatus_results}" != "Up" ]; then
-            echo "`date` INFO: ${APP}-Running checks. Config-sync state is not yet up."
-            rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+
+            # Additional check to confirm config-sync
+            echo "`date` INFO: ${APP}-Checking Config-sync Setup. Starting additional checks to confirm config-sync locally..."
+
+            messagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                  -q "<rpc><show><config-sync><database/><detail/></config-sync></show></rpc>" \
+                  -v "count(/rpc-reply/rpc/show/config-sync/database/local/tables/table)"`
+            messagevpn_total=`echo ${messagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+            # Count message_vpns in-sync and compare with total
+            localmessagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                  -q "<rpc><show><config-sync><database/></config-sync></show></rpc>" \
+                  -v "count(//table[sync-state='In-Sync'])"`
+            local_messagevpn_total_insync=`echo ${localmessagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+            if [ "$messagevpn_total" -ne "$local_messagevpn_total_insync" ]; then
+              echo "`date` INFO: ${APP}-Config-sync state is not in-sync locally."
+              rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+            fi
+
+            echo "`date` INFO: ${APP}-Checking Config-sync Setup. Remote config-sync state check starting..."
+            vpnremotehamate_result=$(get_router_remote_config_state "name")
+
+            remote_messagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                  -q "<rpc><show><config-sync><database/><remote/></config-sync></show></rpc>" \
+                  -v "count(//table/source-router[name='$vpnremotehamate_result'])"`
+            remote_messagevpn_total=`echo ${remote_messagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+
+            #Count message_vpns in-sync, not stale and compare with total
+            remotemessagevpn_result=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                  -q "<rpc><show><config-sync><database/><remote/></config-sync></show></rpc>" \
+                  -v "count(//table/source-router[name='$vpnremotehamate_result' and sync-state='In-Sync' and stale='No'])"`
+            remote_messagevpn_total_insync=`echo ${remotemessagevpn_result} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+            if [ "$remote_messagevpn_total" -ne "$remote_messagevpn_total_insync" ]; then
+              echo "`date` INFO: ${APP}-Config-sync state is not in-sync for remote."
+              rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+            fi
           fi
         fi
         # Pass readiness check
@@ -518,7 +598,7 @@ data:
         echo  '<returnInfo><errorInfo>missing parameter</errorInfo></returnInfo>'
         exit 1
       fi
-      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}/SEMP`" != "200" ] ; then
+      if [ "`curl --write-out '%{http_code}' --silent --output /dev/null -u ${username}:${password} ${url}/SEMP -d '<rpc><show><version/></show></rpc>'`" != "200" ] ; then
         echo  "<returnInfo><errorInfo>management host is not responding</errorInfo></returnInfo>"
         exit 1
       fi
@@ -527,7 +607,7 @@ data:
       fi
       query_response=`curl -sS -u ${username}:${password} ${url}/SEMP -d "${query}"`
       # Validate first char of response is "<", otherwise no hope of being valid xml
-      if [[ ${query_response:0:1} != "<" ]] ; then 
+      if [[ ${query_response:0:1} != "<" ]] ; then
         echo  "<returnInfo><errorInfo>no valid xml returned</errorInfo></returnInfo>"
         exit 1
       fi
