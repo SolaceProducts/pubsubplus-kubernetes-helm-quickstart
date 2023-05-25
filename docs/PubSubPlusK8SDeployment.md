@@ -72,6 +72,7 @@ Contents:
       - [Modification example](#modification-example)
   * [**Re-installing a Deployment**](#re-installing-a-deployment)
   * [**Deleting a Deployment**](#deleting-a-deployment)
+  * [**Backing Up and Restore**](#backing-up-and-restore)
 
 
 
@@ -501,7 +502,8 @@ helm install my-release solacecharts/pubsubplus \
 --set tls.enabled=true,tls.serverCertificatesSecret=<my-tls-secret>
 ```
 
-Important: it is not possible to update an existing deployment to enable TLS that has been created without TLS enabled, by a simply using the [modify deployment](#modifying-or-upgrading-a-deployment) procedure. In this case, for the first time, certificates need to be [manually loaded and set up](//docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm) on each broker node. After that it is possible to use `helm upgrade` with a secret specified.
+Important: it is not possible to update an existing deployment to enable TLS that has been created without TLS enabled, by simply using the [modify deployment](#modifying-or-upgrading-a-deployment) procedure. In this case, for the first time, certificates need to be [manually loaded and set up](//docs.solace.com/Configuring-and-Managing/Managing-Server-Certs.htm) on each broker node. After that it is possible to use `helm upgrade` with a secret specified.
+It is also important to note that because the TLS/SSL configuration are not included in the global [backup](https://docs.solace.com/Admin/Restoring-Config-Files.htm), this configuration can not be restored.
 
 #### Rotating the server key
 
@@ -1051,7 +1053,12 @@ kubectl get statefulsets,services,pods,pvc,pv
 
 > Note: Helm will not clean up PVCs and related PVs. Use `kubectl delete` to delete PVCs is associated data is no longer required.
 
+## Backing Up and Restore
 
+The preferred way of backing up and restoring your deployment is by backing up and restoring the message vpns. 
+This is because of certain limitations of the system-wide backup and restore. For example TLS/SSL configuration are not included in system-wide backup hence configurations related to it will be lost.
+
+A detailed guide to perform backing up and restore of message vpns can be found [here](https://docs.solace.com/Features/VPN/Backing-Up-and-Restoring-VPNs.htm).
 
 
 

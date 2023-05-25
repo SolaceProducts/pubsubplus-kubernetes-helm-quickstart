@@ -46,6 +46,15 @@ jobs:
         yaml-lint -n pubsubplus/*.yaml
         helm lint pubsubplus
 
+    - name: Run Whitesource Action
+      uses: SolaceDev/Mend-Scan-GHA@v1.0.0
+      with:
+        wssURL: https://saas.whitesourcesoftware.com/agent
+        apiKey: ${{ secrets.WSS_API_KEY }}
+        productName: 'pubsubplus-kubernetes-helm'
+        projectName: 'pubsubplus-kubernetes-helm'
+        configFile: 'ci/whitesource/whitesource-agent.config'
+
     - name: Setup K8s env in GKE
       run: |
         gcloud components install gke-gcloud-auth-plugin --quiet
@@ -79,7 +88,7 @@ jobs:
         helm install my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podDisruptionBudgetForHA=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$TAG
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active"
-        sleep 40; kubectl describe nodes
+        sleep 60; kubectl describe nodes
         until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-1 | grep -m 1 -E '1/1'; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-2 | grep -m 1 -E '1/1'; do sleep 10; done
@@ -110,6 +119,7 @@ jobs:
         helm upgrade my-release pubsubplus --set solace.size=dev,solace.redundancy=true,solace.podDisruptionBudgetForHA=true,solace.podModifierEnabled=true,tls.enabled=true,tls.serverCertificatesSecret=test-tls,solace.usernameAdminPassword=admin,image.repository=$REPO,image.tag=$UPGRADETAG,storage.useStorageGroup=true
         kubectl get statefulset,svc,pods,pvc,pv --show-labels
         echo "Waiting for broker to become active after upgrade"
+        sleep 20; kubectl describe nodes
         statefulset_name=$(kubectl get statefulset | grep pubsubplus |  awk '{print $1}')
         until kubectl rollout status statefulset $statefulset_name -w | grep "rolling update complete"; do sleep 10; done
         until kubectl get pods --show-labels | grep pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
@@ -169,7 +179,7 @@ jobs:
           git push --quiet --set-upstream origin-pages gh-pages
           popd
           echo "Updated and pushed GH pages!"
-        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
+        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] && [[ ${{ github.ref }} =~ .*"refs/heads/v".* ]] ; then
           echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1
           rm -rf gh-pages/helm-charts-openshift; mkdir -p gh-pages/helm-charts-openshift
