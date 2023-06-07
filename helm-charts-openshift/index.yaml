@@ -4,10 +4,10 @@ entries:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, non-HA
     apiVersion: v2
-    created: "2023-05-26T15:32:46.355882961Z"
+    created: "2023-06-07T13:07:12.504936521Z"
     description: Deploy a single-node non-HA Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: d054fdb06fc436fa060f6a13f992f6ab31edaa93310307cd126f99be825cb74f
+    digest: 4f22a6b643e9c1862085ed650f2d2cc3a45255c42f6a2a0629dd8c416e528e94
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
@@ -39,10 +39,10 @@ entries:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker for Developers
     apiVersion: v2
-    created: "2023-05-26T15:32:46.357396454Z"
+    created: "2023-06-07T13:07:12.50691451Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ Event
       Broker Software on OpenShift for development purposes
-    digest: 81e27d939b085a0effa4bd556e82ad1bd157df0fba3da752f4374bf73fa4e80e
+    digest: ddf31d880a9ae9ae0ea44c856556bb07ccec9c2a1574c69ba58d5839786f5892
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
@@ -74,10 +74,10 @@ entries:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, HA
     apiVersion: v2
-    created: "2023-05-26T15:32:46.358944747Z"
+    created: "2023-06-07T13:07:12.5087553Z"
     description: Deploy an HA redundancy group of Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: 4e523255483628f6c16e2ee9a8cafdc5c053abd43eeb37d8b4fc4aefc89ced59
+    digest: 12ea3e9fa3c23d3ed9d74f5d19758660fe03eab73ae2da2ce9cb159e3eb6ff85
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-quickstart/images/PubSubPlus.png
     keywords:
@@ -105,4 +105,4 @@ entries:
     urls:
     - https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-ha-3.3.0.tgz
     version: 3.3.0
-generated: "2023-05-26T15:32:46.353560471Z"
+generated: "2023-06-07T13:07:12.50142944Z"
