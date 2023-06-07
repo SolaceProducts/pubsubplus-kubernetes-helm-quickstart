@@ -42,6 +42,9 @@ Contents:
     + [Security considerations](#security-considerations)
       - [Using Security Context](#using-security-context)
       - [Enabling pod label "active" in a tight security environment](#enabling-pod-label-active-in-a-tight-security-environment)
+    + [User management considerations](#user-management-considerations)
+      - [Adding new users](#adding-new-users)
+      - [Changing user passwords](#changing-user-passwords)
   * [**Deployment Prerequisites**](#deployment-prerequisites)
     + [Platform and tools setup](#platform-and-tools-setup)
       - [Install the `kubectl` command-line tool](#install-the-kubectl-command-line-tool)
@@ -595,6 +598,57 @@ Services require [pod label "active"](#using-pod-label-active-to-identify-the-ac
 #### Securing TLS server key and certificate
 
 Using secrets for TLS server keys and certificates follows Kubernetes recommendations, however, particularly in a production environment, additional steps are required to ensure only authorized access to these secrets following Kubernetes industry best practices, including setting tight RBAC permissions and fixing possible security holes.
+
+### User management considerations
+
+#### Adding new users
+
+The deployment comes with an existing user `admin`. Depending on how the installation is carried out, it should start with a random 
+password or an existing one. Refer [here](#admin-password). The default `admin` user has `admin` CLI User Access Level. This means
+an `admin` user can execute all CLI commands on the event broker which also includes controlling broker-wide authentication and authorization. They can also create other admin users. 
+
+However, if there is need to set up a new CLI user, first directly access the event broker pod:
+
+```sh
+kubectl exec -it XXX-XXX-pubsubplus-<pod-ordinal> -- bash
+```
+
+once you have access to the Solace CLI, enter the following commands to create a new user:
+
+```sh
+solace> enable
+solace# configure
+solace(configure)# create username <new-user-name>
+```
+
+enter the following commands to set the CLI User and their access level. For a full list of all the available access levels refer to [this](https://docs.solace.com/Admin/CLI-User-Access-Levels.htm)
+
+```sh
+solace(configure/username) global-access-level <access-level>
+solace(configure/username) change-password <password>
+```
+
+The new user will now be available for use via the CLI  
+
+#### Changing user passwords
+
+At the moment, we do not support changing the default `admin` user password. 
+If there is a need to change the password of a user other than the `admin`. 
+
+Directly access the event broker pod:
+
+```sh
+kubectl exec -it XXX-XXX-pubsubplus-<pod-ordinal> -- bash
+```
+
+get access to the Solace CLI and enter the following commands:
+
+```sh
+solace> enable
+solace# configure
+solace(configure)# username <user-name>
+solace(configure/username) change-password <password>
+```
 
 ## Deployment Prerequisites
 
