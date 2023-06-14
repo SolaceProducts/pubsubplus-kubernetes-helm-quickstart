@@ -32,11 +32,11 @@ spec:
     spec:
 {{- if .Values.solace.affinity }}
       affinity:
-{{ .Values.solace.affinity | indent 8 }}
+{{ toYaml .Values.solace.affinity | indent 8 }}
 {{- end }}
 {{- if .Values.solace.tolerations }}
       tolerations:
-{{ .Values.solace.tolerations | indent 6 }}
+{{ toYaml .Values.solace.tolerations | indent 6 }}
 {{- end }}
 {{- if .Values.image.pullSecretName }}
       imagePullSecrets:

@@ -72,26 +72,26 @@ solace:
   # affinity can be added to statefulset pod to allow selecting subset of the nodes
   # set https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ for more details
   # example:
-  #affinity: |
+  #affinity:
   #  nodeAffinity:
   #    requiredDuringSchedulingIgnoredDuringExecution:
   #      nodeSelectorTerms:
   #      - matchExpressions:
-  #        - key: topology.kubernetes.io/zone
+  #        - key: nodepool
   #          operator: In
   #          values:
-  #          - antarctica-east1
-  #          - antarctica-west1
-  affinity:
+  #          - solace
+  affinity: {}
 
   # tolerations are added to statefulset pods to enable running pods on tained nodes
   # see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ for more details
   # example:
-  #tolerations: |
-  #  - key: "key1"
-  #    operator: "Exists"
-  #    effect: "NoSchedule"
-  tolerations:
+  #tolerations:
+  #- effect: NoSchedule
+  #  key: nodepool
+  #  operator: Equal
+  #  value: solace
+  tolerations: []
 
 image:
   # Default repository

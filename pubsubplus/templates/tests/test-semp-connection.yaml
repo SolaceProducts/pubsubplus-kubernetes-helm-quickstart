@@ -10,6 +10,14 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+{{- if .Values.solace.affinity }}
+  affinity:
+{{ toYaml .Values.solace.affinity | indent 4 }}
+{{- end }}
+{{- if .Values.solace.tolerations }}
+  tolerations:
+{{ toYaml .Values.solace.tolerations | indent 2 }}
+{{- end }}
 {{- if .Values.image.pullSecretName }}
   imagePullSecrets:
   - name: {{ .Values.image.pullSecretName}}
