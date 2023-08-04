@@ -80,11 +80,6 @@ data:
   startup-broker.sh: |-
     #!/bin/bash
     APP=`basename "$0"`
-    LOG_FILE=/usr/sw/var/k8s_startup-broker.log # STDOUT/STDERR goes to k8s logs but will nor survive pod. This will also persist it.
-    if [ -f ${LOG_FILE} ] ; then
-        tail -n 1000 ${LOG_FILE} > ${LOG_FILE}.tmp; mv -f ${LOG_FILE}.tmp ${LOG_FILE} || :  # Limit logs size
-    fi
-    exec > >(tee -a ${LOG_FILE}) 2>&1 # Setup logging
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
     echo "`date` INFO: ${APP}-Node ordinal: ${node_ordinal}"
@@ -387,13 +382,12 @@ data:
     # For monitor node just check for redundancy; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
       # Check redundancy
-      echo "`date` INFO: ${APP}-Running checks. Redundancy state check started..."
       results=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
               -q "<rpc><show><redundancy/></show></rpc>" \
               -v "/rpc-reply/rpc/show/redundancy/redundancy-status"`
       redundancystatus_results=`echo ${results} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
       if [ "${redundancystatus_results}" != "Up" ]; then
-        echo "`date` INFO: ${APP}-Redundancy state is not yet up."
+        echo "`date` INFO: ${APP}-Waiting for redundancy up, redundancy state is not yet up."
         rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
       fi
       if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
