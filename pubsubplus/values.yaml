@@ -220,3 +220,16 @@ storage:
   #  if undefined or set to false, the legacy behavior is to individually mount storage-elements in subdirectories.
   #  Note: legacy mount still works for broker version 9.12 and later but may be deprecated in the future.
   # useStorageGroup: true
+
+probes:
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    exec:
+      command:
+      - /mnt/disks/solace/readiness_check.sh
+  liveness:
+    tcpSocket:
+      port: 8080
+    initialDelaySeconds: 300
+    timeoutSeconds: 5
