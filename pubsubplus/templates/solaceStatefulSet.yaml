@@ -16,27 +16,30 @@ spec:
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
   podManagementPolicy: Parallel
-  updateStrategy: 
+  updateStrategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ template "solace.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-{{- if .Values.solace.podModifierEnabled }}
       annotations:
+{{- with .Values.solace.podAnnotations }}
+{{ . | toYaml | indent 8 }}
+{{- end }}
+{{- if .Values.solace.podModifierEnabled }}
         pod-modifier.solace.com/modify: "true"
         pod-modifier.solace.com/modify.podDefinition: |
           {"Pods":[{"metadata":{"name":"{{ template "solace.fullname" . }}-2"},"spec":{"containers": [{"name": "pubsubplus","resources": {"requests": {"cpu": "1","memory": "1965Mi"},"limits": {"cpu": "1","memory": "1965Mi"} }} ] } } ]}
 {{- end}}
     spec:
-{{- if .Values.solace.affinity }}
+{{- with .Values.solace.affinity }}
       affinity:
-{{ toYaml .Values.solace.affinity | indent 8 }}
+{{ . | toYaml | indent 8 }}
 {{- end }}
-{{- if .Values.solace.tolerations }}
+{{- with .Values.solace.tolerations }}
       tolerations:
-{{ toYaml .Values.solace.tolerations | indent 6 }}
+{{ . | toYaml | indent 6 }}
 {{- end }}
 {{- if .Values.image.pullSecretName }}
       imagePullSecrets:
@@ -51,6 +54,10 @@ spec:
 {{- end }}
       serviceAccountName: {{ template "solace.serviceAccountName" . }}
       terminationGracePeriodSeconds: 1200
+{{- with .Values.solace.podTopologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ . | toYaml | indent 6 }}
+{{- end }}
       containers:
       - name: pubsubplus
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

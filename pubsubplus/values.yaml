@@ -93,6 +93,25 @@ solace:
   #  value: solace
   tolerations: []
 
+  # pod annotations to be added to the statefulset pods
+  # example:
+  #podAnnotations:
+  #  cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  podAnnotations: {}
+
+  # topologySpreadConstraints can be added to pods
+  # example:
+  #podTopologySpreadConstraints:
+  #- maxSkew: 1
+  #  topologyKey: kubernetes.io/hostname
+  #  whenUnsatisfiable: DoNotSchedule
+  #  labelSelector:
+  #    matchLabels:
+  #      app: foo
+  #  matchLabelKeys:
+  #  - pod-template-hash
+  podTopologySpreadConstraints: []
+
 image:
   # Default repository
   repository: solace/solace-pubsub-standard
