@@ -69,6 +69,30 @@ solace:
   # solace.extraEnvVarsSecret specifies the name of existing Secret containing extra environment variables (in case of sensitive data)
   #extraEnvVarsSecret: ""
 
+  # affinity can be added to statefulset pod to allow selecting subset of the nodes
+  # set https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ for more details
+  # example:
+  #affinity:
+  #  nodeAffinity:
+  #    requiredDuringSchedulingIgnoredDuringExecution:
+  #      nodeSelectorTerms:
+  #      - matchExpressions:
+  #        - key: nodepool
+  #          operator: In
+  #          values:
+  #          - solace
+  affinity: {}
+
+  # tolerations are added to statefulset pods to enable running pods on tainted nodes
+  # see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ for more details
+  # example:
+  #tolerations:
+  #- effect: NoSchedule
+  #  key: nodepool
+  #  operator: Equal
+  #  value: solace
+  tolerations: []
+
 image:
   # Default repository
   repository: solace/solace-pubsub-standard
