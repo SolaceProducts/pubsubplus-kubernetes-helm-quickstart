@@ -846,7 +846,7 @@ There are [multiple management tools](//docs.solace.com/Management-Tools.htm ) a
 
 A random admin password will be generated if it has not been provided at deployment using the `solace.usernameAdminPassword` parameter, refer to the the information from `helm status` how to retrieve it.
 
-**Important:** Every time `helm install` or `helm upgrade` is called a new admin password will be generated, which may break an existing deployment. Therefore ensure to always provide the password from the initial deployment as `solace.usernameAdminPassword=<PASSWORD>` parameter to subsequent `install` and `upgrade` commands.
+**Important:** Every time `helm install` is called a new admin password will be generated. When reusing PVCs from a previous deployment, be cautious, as this action might generate a new password, potentially disrupting an existing deployment. Therefore, ensure to always provide the password from the initial deployment as `solace.usernameAdminPassword=<PASSWORD>` parameter to subsequent `install` commands.
 
 #### WebUI, SolAdmin and SEMP access
 
@@ -1013,12 +1013,6 @@ solace:
   redundancy: true
   size: dev
 ```
-**Important:** this may not show, but be aware of an additional non-default parameter:
-```
-solace:
-  usernameAdminPassword: jMzKoW39zz   # The value is just an example
-```
-This has been generated at the initial deployment if not specified and must be used henceforth for all change requests, to keep the same. See related note in the [Admin Password section](#admin-password).
 
 #### Upgrade example
 
