@@ -30,6 +30,7 @@ spec:
           {"Pods":[{"metadata":{"name":"{{ template "solace.fullname" . }}-2"},"spec":{"containers": [{"name": "pubsubplus","resources": {"requests": {"cpu": "1","memory": "1965Mi"},"limits": {"cpu": "1","memory": "1965Mi"} }} ] } } ]}
 {{- end}}
     spec:
+      enableServiceLinks: false
 {{- if .Values.solace.affinity }}
       affinity:
 {{ toYaml .Values.solace.affinity | indent 8 }}
