@@ -115,6 +115,9 @@ securityContext:
   # runAsUser: expecting a number
   runAsUser: 1000001
 
+# enableServiceLinks indicates whether information about services should be injected into pod's environment variables, matching the syntax of Docker links. Optional: Defaults to false.
+enableServiceLinks: false
+
 serviceAccount:
   # create=true will create a service account to be used for the deployment
   create: true
