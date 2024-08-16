@@ -38,6 +38,10 @@ spec:
       tolerations:
 {{ toYaml .Values.solace.tolerations | indent 6 }}
 {{- end }}
+{{- if .Values.solace.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml .Values.solace.topologySpreadConstraints | indent 6 }}
+{{- end }}
 {{- if .Values.image.pullSecretName }}
       imagePullSecrets:
       - name: {{ .Values.image.pullSecretName}}
