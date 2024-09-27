@@ -1,0 +1,65 @@
+{{- if .Values.insights.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "solace.fullname" . }}-monitoring-logs
+data:
+  logs.yaml: |-
+    logs:
+      - path: /jail/logs/system.log
+        service: maas-vmr
+        source: system.log
+        type: file
+      - path: /jail/logs/command.log
+        service: maas-vmr
+        source: command.log
+        type: file
+      - path: /jail/logs/event.log
+        service: maas-vmr
+        source: event.log
+        type: file
+        log_processing_rules:
+        - type: include_at_match
+          name: include_limited_eventLogs
+          pattern: "SYSTEM_AUTHENTICATION_SESSION_DENIED\
+        |SYSTEM_CLIENT_ACL_CONNECT_DENIAL\
+        |SYSTEM_CLIENT_ACL_PUBLISH_DENIAL\
+        |SYSTEM_CLIENT_ACL_SUBSCRIBE_DENIAL\
+        |SYSTEM_CLIENT_CONNECT_AUTH_FAIL\
+        |SYSTEM_CLIENT_CONNECT_FAIL\
+        |VPN_AD_MSG_SPOOL_REJECT_LOW_PRIORITY_MSG_LIMIT_EXCEED\
+        |VPN_AD_MSG_SPOOL_REJECT_LOW_PRIORITY_MSG_LIMIT_HIGH\
+        |VPN_AD_MSG_SPOOL_REJECT_LOW_PRIORITY_MSG_LIMIT_HIGH_CLEAR\
+        |VPN_AD_REPLAY_STATE_TRANSITION_TO_FAILED\
+        |VPN_BRIDGING_LINK_TTL_EXCEEDED\
+        |VPN_BRIDGING_LINK_TTL_EXCEEDED_CLEAR\
+        |VPN_CLIENT_USERNAME_CONNECT_FAIL\
+        |VPN_RDP_RC_CONN_DOWN\
+        |VPN_RDP_RC_CONN_UP\
+        |VPN_RDP_RC_DOWN\
+        |VPN_RDP_RC_UP\
+        |VPN_RDP_RDP_DOWN\
+        |VPN_RDP_RDP_UP\
+        |CLIENT_AD_EGRESS_FLOWS_HIGH\
+        |CLIENT_AD_EGRESS_FLOWS_HIGH_CLEAR\
+        |CLIENT_AD_INGRESS_FLOWS_HIGH\
+        |CLIENT_AD_INGRESS_FLOWS_HIGH_CLEAR\
+        |CLIENT_AD_MAX_EGRESS_FLOWS_EXCEEDED\
+        |CLIENT_AD_MAX_INGRESS_FLOWS_EXCEEDED\
+        |CLIENT_AD_TRANSACTED_SESSIONS_EXCEED\
+        |CLIENT_AD_TRANSACTED_SESSIONS_HIGH\
+        |CLIENT_AD_TRANSACTED_SESSIONS_HIGH_CLEAR\
+        |CLIENT_AD_TRANSACTED_SESSION_FAIL\
+        |CLIENT_AD_TRANSACTIONS_EXCEED\
+        |CLIENT_AD_TRANSACTIONS_HIGH\
+        |CLIENT_AD_TRANSACTIONS_HIGH_CLEAR\
+        |CLIENT_CLIENT_ACK_NOT_ALLOWED\
+        |CLIENT_CLIENT_BIND_FAILED\
+        |CLIENT_CLIENT_CREATE_ENDPOINT_FAILED\
+        |CLIENT_CLIENT_EGRESS_MSG_DISCARD\
+        |CLIENT_CLIENT_LARGE_MESSAGE\
+        |CLIENT_CLIENT_MESSAGE_TOO_BIG\
+        |CLIENT_CLIENT_NAME_CHANGE_FAILED\
+        |CLIENT_CLIENT_PARSE_ERROR\
+        |CLIENT_CLIENT_SUBSCRIPTIONS_HIGH"
+  {{- end }}
