@@ -250,7 +250,14 @@ insights:
   #   and will require the insights license to be installed on the broker
   enabled: false
 
-  site: datadoghq.com
+  datadogSite: datadoghq.com
+
+  #specify the Datadog API key for your Solace Insights subscription.
+  datadogAPIKey:
+
+  insightsAgentImage:
+    pullSecretName: gcr-reg-secret #The name of the secret for Solace private registry access credentials
+
 
   #agentSempClient provides the connection details to the Solace broker SEMP endpoint used for insights.
   agentSempClient:
@@ -261,12 +268,6 @@ insights:
     connection:
       protocol: http
       port: 8080
-
-  #specify the Datadog API key for your Solace Insights subscription.
-  datadogAPIKey:
-
-  insightsAgentImage:
-    pullSecretName: gcr-reg-secret #The name of the secret for Solace private registry access credentials
 
   resources:
     # resources.requests.cpu and resources.requests.memory are the minimum resources required by the container

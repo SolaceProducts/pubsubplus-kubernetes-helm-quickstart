@@ -70,7 +70,7 @@ data:
   DD_LOGS_ENABLED: 'true'
   DD_PROCESS_AGENT_ENABLED: 'False'
   DD_PROCESS_AGENT_PROCESS_DISCOVERY_ENABLED: 'False'
-  DD_SITE: {{ .Values.insights.site }}
+  DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ printf "%s %s " $ddTags "ha_role:backup" }}
   KUBERNETES: 'False'
 
