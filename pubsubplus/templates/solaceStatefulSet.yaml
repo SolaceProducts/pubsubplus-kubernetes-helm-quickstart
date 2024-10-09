@@ -237,15 +237,8 @@ spec:
         {{- end }}
         {{- if ( .Values.insights.enabled) }}
       - name: datadog-agent
-        image: us-docker.pkg.dev/capable-stream-180018/solace-datadog-agent/solace-datadog-agent:latest
+        image: gcr.io/stellar-arcadia-205014/solace-datadog-agent:PR-308
         imagePullPolicy: Always
-        ports:
-          - containerPort: 8125
-            name: dogstatsdport
-            protocol: UDP
-          - containerPort: 8126
-            name: traceport
-            protocol: TCP
         resources:
           requests:
             memory: {{ .Values.insights.resources.requests.memory }}
@@ -279,15 +272,8 @@ spec:
             mountPath: /jail
             subPath: jail
             readOnly: true
-          - name: monitoring-logs
-            mountPath: /etc/datadog-agent/conf.d/solace.d
           - name: monitoring-solace
             mountPath: /conf.d
-          - name: monitoring-monitoringconfig
-            mountPath: /solace.d
-          - name: datadog-ssl-monitoringconfig
-            mountPath: /etc/datadog-agent/datadog.yaml
-            subPath: datadog.yaml
 {{- end -}}
 {{- end }}
       volumes:
@@ -315,24 +301,6 @@ spec:
             sources:
               - configMap:
                   name: {{ template "solace.fullname" . }}-monitoring-solace
-        - name: monitoring-logs
-          configMap:
-            name: {{ template "solace.fullname" . }}-monitoring-logs
-            defaultMode: 0755
-            items:
-              - key: logs.yaml
-                path: logs.yml
-        - name: monitoring-monitoringconfig
-          configMap:
-            name: {{ template "solace.fullname" . }}-monitoring-config
-            defaultMode: 0755
-            items:
-              - key: monitoringConfig.yaml
-                path: monitoringConfig.yaml
-        - name: datadog-ssl-monitoringconfig
-          configMap:
-            name: {{ template "solace.fullname" . }}-datadog-ssl-vmrconfig
-            defaultMode: 0755
 {{- end }}
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
         - name: server-certs

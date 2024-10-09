@@ -54,24 +54,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "solace.fullname" . }}-agentv2-0
+  name: {{ template "solace.fullname" . }}-agentv2-1
 data:
-  DD_AC_EXCLUDE: name:datadog-agent
-  DD_APM_ENABLED: 'False'
-  DD_COLLECT_KUBERNETES_EVENTS: 'True'
-  DD_DOGSTATSD_NON_LOCAL_TRAFFIC: 'true'
   DD_HOSTNAME: "{{ template "solace.fullname" . }}-selfhosted-host"
-  DD_KUBELET_TLS_VERIFY: 'False'
-  DD_KUBERNETES_POD_LABELS_AS_TAGS: '{"*":"kube_%%label%%"}'
-  DD_LEADER_ELECTION: 'True'
-  DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: 'true'
-  DD_LOGS_CONFIG_USE_COMPRESSION: 'true'
-  DD_LOGS_CONFIG_USE_HTTP: 'true'
-  DD_LOGS_ENABLED: 'true'
-  DD_PROCESS_AGENT_ENABLED: 'False'
-  DD_PROCESS_AGENT_PROCESS_DISCOVERY_ENABLED: 'False'
   DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ printf "%s %s " $ddTags "ha_role:backup" }}
-  KUBERNETES: 'False'
 
   {{- end}}
