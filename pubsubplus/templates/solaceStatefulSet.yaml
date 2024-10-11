@@ -242,6 +242,15 @@ spec:
           limits:
             memory: {{ .Values.insights.resources.limits.memory }}
             cpu: {{ .Values.insights.resources.limits.cpu }}
+        env:
+        - name: DD_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: HA_ROLE_INDEX
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
         envFrom:
           - configMapRef:
               name: {{ template "solace.fullname" . }}-agentv2-0

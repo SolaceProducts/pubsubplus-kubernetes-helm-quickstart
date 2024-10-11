@@ -49,7 +49,6 @@ kind: ConfigMap
 metadata:
   name: {{ template "solace.fullname" . }}-agentv2-0
 data:
-  DD_HOSTNAME: "{{ template "solace.fullname" . }}-primary"
   DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ $ddTags }}
   {{- end }}

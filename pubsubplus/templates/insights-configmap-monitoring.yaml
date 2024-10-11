@@ -49,7 +49,6 @@ kind: ConfigMap
 metadata:
   name: {{ template "solace.fullname" . }}-agentv2-2
 data:
-  DD_HOSTNAME: "{{ template "solace.fullname" . }}-monitoring"
   DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ $ddTags }}
   DD_ENABLE_PAYLOADS_EVENTS: false
