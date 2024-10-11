@@ -27,3 +27,14 @@ Return the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Determine the service type based on redundancy
+*/}}
+{{- define "solace.serviceType" -}}
+{{- $serviceType := "enterprise-standalone" -}}
+{{- if .Values.solace.redundancy -}}
+  {{- $serviceType = "enterprise" -}}
+{{- end -}}
+{{- $serviceType -}}
+{{- end -}}

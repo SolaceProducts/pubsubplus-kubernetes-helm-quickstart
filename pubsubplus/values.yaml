@@ -256,6 +256,8 @@ insights:
   datadogAPIKey:
 
   insightsAgentImage:
+    repository: us-docker.pkg.dev/capable-stream-180018/solace-datadog-agent/solace-datadog-agent
+    tag: latest
     pullSecretName: gcr-reg-secret #The name of the secret for Solace private registry access credentials
 
 

@@ -1,8 +1,0 @@
-{{- if .Values.insights.enabled }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ template "solace.fullname" . }}-datadog-ssl-vmrconfig
-data:
-  {{ (.Files.Glob "files/datadog.yaml").AsConfig | nindent 2 }}
-{{- end }}
