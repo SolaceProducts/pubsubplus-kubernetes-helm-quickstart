@@ -247,13 +247,13 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: HA_ROLE_INDEX
+        - name: QUICKSTART_HELM_HA_ROLE_INDEX
           valueFrom:
             fieldRef:
               fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
         envFrom:
           - configMapRef:
-              name: {{ template "solace.fullname" . }}-agentv2-0
+              name: {{ template "solace.fullname" . }}-monitoring-dd-env-configs
           - secretRef:
               name: {{ template "solace.fullname" . }}-monitoring-dd-env-secrets
         securityContext:

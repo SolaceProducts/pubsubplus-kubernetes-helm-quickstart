@@ -38,16 +38,15 @@
 
 {{- $serviceType := include "solace.serviceType" . -}}
 
-{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s-%s maas_datacenter_id:%s service_class:%s maas_instance:%s-selfhosted-host service_type:%s" (include "solace.fullname" .) .Values.solace.size (randAlpha 4) $maasDatacenterId .Values.solace.size (include "solace.fullname" .) $serviceType -}}
-{{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged ha_role:primary" -}}
+{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s" (include "solace.fullname" .) $serviceId $maasDatacenterId .Values.solace.size $serviceType -}}
+{{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged" -}}
 
 {{- $ddTags := printf "%s %s %s" $ddTagsDefault $ddTagsCalculated $ddTagsCustomerProvided -}}
-
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "solace.fullname" . }}-agentv2-0
+  name: {{ template "solace.fullname" . }}-monitoring-dd-env-configs
 data:
   DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ $ddTags }}
