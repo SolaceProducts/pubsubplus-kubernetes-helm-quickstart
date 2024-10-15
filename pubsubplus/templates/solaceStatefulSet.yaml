@@ -253,9 +253,9 @@ spec:
               fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
         envFrom:
           - configMapRef:
-              name: {{ template "solace.fullname" . }}-monitoring-dd-env-configs
+              name: {{ template "solace.fullname" . }}-monitoring-insights-env-configs
           - secretRef:
-              name: {{ template "solace.fullname" . }}-monitoring-dd-env-secrets
+              name: {{ template "solace.fullname" . }}-monitoring-insights-env-secrets
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

@@ -46,7 +46,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "solace.fullname" . }}-monitoring-dd-env-configs
+  name: {{ template "solace.fullname" . }}-monitoring-insights-env-configs
 data:
   DD_SITE: {{ .Values.insights.datadogSite }}
   DD_TAGS: {{ $ddTags }}
