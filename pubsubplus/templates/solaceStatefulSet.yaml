@@ -232,8 +232,8 @@ spec:
           mountPath: /usr/sw/internalSpool/softAdb
         {{- end }}
         {{- if ( .Values.insights.enabled) }}
-      - name: datadog-agent
-        image: {{ .Values.insights.insightsAgentImage.repository }}:{{ .Values.insights.insightsAgentImage.tag}}
+      - name: insights-agent
+        image: {{ .Values.insights.insightsAgentImage.repository }}:{{ .Values.insights.insightsAgentImage.tag }}
         imagePullPolicy: Always
         resources:
           requests:
