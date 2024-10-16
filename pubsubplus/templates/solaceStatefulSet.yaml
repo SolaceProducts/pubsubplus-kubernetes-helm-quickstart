@@ -279,8 +279,8 @@ spec:
                   fieldPath: metadata.labels
         - name: config-map
           configMap:
-            defaultMode: 0755
             name: {{ template "solace.fullname" . }}
+            defaultMode: 0755
         - name: admin-secrets
           secret:
             secretName: {{ template "solace.fullname" . }}-secrets
