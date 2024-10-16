@@ -1,0 +1,17 @@
+{{- if .Values.insights.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "solace.fullname" . }}-monitoring-config
+data:
+  monitoringConfig.yaml: |-
+    monitoring_mode: "advanced"
+
+    objectFilters:
+      VPN_FILTER:
+        priority: SELECT
+        filters: [{'vpn_name':'^#'}]
+      QUEUE_FILTER:
+        priority: SELECT
+        filters: [{'queue_name':'^#bridge', 'vpn_name':'.*'}, {'queue_name':'^#rdp', 'vpn_name':'.*'}, {'queue_name':'^#P2P', 'vpn_name':'.*'}, {'queue_name':'^#REPLAY', 'vpn_name':'.*'}, {'queue_name':'.*', 'vpn_name':'^#'}]
+  {{- end }}

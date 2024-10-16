@@ -1,0 +1,2 @@
+jmx_use_container_support: true
+skip_ssl_validation: true
