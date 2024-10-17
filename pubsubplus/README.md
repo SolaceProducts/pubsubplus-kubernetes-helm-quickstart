@@ -114,5 +114,5 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `storage.monitorStorageSize` | If provided this will create and assign the minimum recommended storage to Monitor pods. For initial deployments only. | `1500M` |
 | `storage.useStorageGroup`      | `true` to use a single mount point storage-group, as recommended from PubSub+ version 9.12. Undefined or `false` is legacy behavior. Note: legacy mount still works for newer versions but may be deprecated in the future. | Undefined |
 
-
-
+## Configuring Insights
+To configure Insights, please see [INSIGHTS.md](INSIGHTS.md).
