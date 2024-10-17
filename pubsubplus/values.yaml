@@ -288,7 +288,7 @@ insights:
 
   #Insights tag values that are required for tagging metrics in Datadog
   tags:
-    - service_id: single-ent-1234 # service_id is a unique identifier for the service, a random value is generated if not provided
-    - service_name: single-ent # service_name is the display name of the service, a default value of 'service_$service_id' is used if not provided
-    - org_id: lkendeh # org_id is the unique identifier for your organization, this is a mandatory value from your Insights Solace Cloud page
-    - datacenter_id: lkendeh-dc-west # datacenter_id is the unique identifier for the parent datacenter containing this and more services, a default value of '$org_id_$environment_name_random_id' is used if not provided
+    - service_id: single-ent-1234 # service_id is a unique identifier for the service. A random value is generated if not provided.
+    - service_name: single-ent # service_name is the display name of the service. A default value of 'service_$service_id' is used if not provided.
+    - org_id: myorg # org_id is the unique identifier for your organization. This is a mandatory value provided to you by Solace.
+    - datacenter_id: myorg-dc-east # datacenter_id is the unique identifier for the parent datacenter containing this and more services. A default value of '$org_id_$environment_name_random_id' is used if not provided.
