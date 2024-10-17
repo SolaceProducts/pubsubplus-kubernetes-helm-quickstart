@@ -259,8 +259,8 @@ insights:
   datadogAPIKey:
 
   insightsAgentImage:
-    pullSecretName: gcr-reg-secret #The name of the secret for Solace private registry access credentials
-
+    repository: gcr.io/gcp-maas-prod/solace-datadog-agent
+    tag: latest
 
   #agentSempClient provides the connection details to the Solace broker SEMP endpoint used for insights.
   agentSempClient:

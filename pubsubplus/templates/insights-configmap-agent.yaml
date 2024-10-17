@@ -36,28 +36,18 @@
 {{- $environmentName := .Values.insights.environment_name -}}
 {{- $maasDatacenterId := printf "%s_%s" $orgId $environmentName -}}
 
-{{- $serviceType := "standard" -}}
-{{- if .Values.image.repository -}}
-  {{- if contains "enterprise" .Values.image.repository -}}
-    {{- $serviceType = "enterprise" -}}
-  {{- else if contains "standard" .Values.image.repository -}}
-    {{- $serviceType = "standard" -}}
-  {{- end -}}
-{{- end -}}
+{{- $serviceType := include "solace.serviceType" . -}}
 
-{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s-%s maas_datacenter_id:%s service_class:%s maas_instance:%s-selfhosted-host service_type:%s" (include "solace.fullname" .) .Values.solace.size (randAlpha 4) $maasDatacenterId .Values.solace.size (include "solace.fullname" .) $serviceType -}}
-{{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged " -}}
+{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s" (include "solace.fullname" .) $serviceId $maasDatacenterId .Values.solace.size $serviceType -}}
+{{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged" -}}
 
 {{- $ddTags := printf "%s %s %s" $ddTagsDefault $ddTagsCalculated $ddTagsCustomerProvided -}}
-
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "solace.fullname" . }}-agentv2-1
+  name: {{ template "solace.fullname" . }}-monitoring-insights-env-configs
 data:
-  DD_HOSTNAME: "{{ template "solace.fullname" . }}-selfhosted-host"
   DD_SITE: {{ .Values.insights.datadogSite }}
-  DD_TAGS: {{ printf "%s %s " $ddTags "ha_role:backup" }}
-
-  {{- end}}
+  DD_TAGS: {{ $ddTags }}
+  {{- end }}
