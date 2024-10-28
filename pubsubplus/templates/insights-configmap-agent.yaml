@@ -6,6 +6,9 @@
 {{- $serviceId := "" -}}
 {{- $serviceName := "" -}}
 
+{{- $includeServiceIdTag := true -}}
+{{- $includeServiceNameTag := true -}}
+
 {{- range $index, $tag := $tagsArray -}}
   {{- range $key, $value := $tag -}}
     {{- if eq $key "org_id" -}}
@@ -13,9 +16,11 @@
     {{- end -}}
     {{- if eq $key "service_id" -}}
       {{- $serviceId = $value -}}
+      {{- $includeServiceIdTag = false -}}
     {{- end -}}
     {{- if eq $key "service_name" -}}
       {{- $serviceName = $value -}}
+      {{- $includeServiceNameTag = false -}}
     {{- end -}}
     {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
   {{- end -}}
@@ -38,7 +43,15 @@
 
 {{- $serviceType := include "solace.serviceType" . -}}
 
-{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s" (include "solace.fullname" .) $serviceId $maasDatacenterId .Values.solace.size $serviceType -}}
+{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s%s%s"
+    (include "solace.fullname" .)
+    $serviceId
+    $maasDatacenterId
+    .Values.solace.size
+    $serviceType
+    (ternary (printf " service_id:%s" $serviceId) "" (not $includeServiceIdTag))
+    (ternary (printf " service_name:%s" $serviceName) "" (not $includeServiceNameTag))
+-}}
 {{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged" -}}
 
 {{- $ddTags := printf "%s %s %s" $ddTagsDefault $ddTagsCalculated $ddTagsCustomerProvided -}}
