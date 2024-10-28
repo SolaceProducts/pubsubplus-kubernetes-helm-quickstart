@@ -49,8 +49,8 @@
     $maasDatacenterId
     .Values.solace.size
     $serviceType
-    (ternary (printf " service_id:%s" $serviceId) "" (not $includeServiceIdTag))
-    (ternary (printf " service_name:%s" $serviceName) "" (not $includeServiceNameTag))
+    (ternary (printf " service_id:%s" $serviceId) "" ($includeServiceIdTag))
+    (ternary (printf " service_name:%s" $serviceName) "" ($includeServiceNameTag))
 -}}
 {{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged" -}}
 
