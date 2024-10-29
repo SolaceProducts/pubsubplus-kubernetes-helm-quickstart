@@ -6,7 +6,7 @@
 {{- $serviceId := "" -}}
 {{- $serviceName := "" -}}
 
-{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-service-info-tags" (include "solace.fullname" .))) -}}
+{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-monitoring-insights-service-info-tags" (include "solace.fullname" .))) -}}
 
 {{- if $existingConfig -}}
     {{- $serviceId = index $existingConfig.data "service_id" -}}
@@ -25,15 +25,19 @@
       {{- if not $serviceId -}}
         {{- $serviceId = $value -}}
         {{- $includeServiceIdTag = false -}}
+        {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
       {{- end -}}
     {{- end -}}
     {{- if eq $key "service_name" -}}
       {{- if not $serviceName -}}
         {{- $serviceName = $value -}}
         {{- $includeServiceNameTag = false -}}
+        {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
       {{- end -}}
     {{- end -}}
-    {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+    {{- if and (ne $key "service_id") (ne $key "service_name") -}}
+      {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 
@@ -70,7 +74,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "solace.fullname" . }}-service-info-tags
+  name: {{ template "solace.fullname" . }}-monitoring-insights-service-info-tags
 data:
   service_id: "{{ $serviceId }}"
   service_name: "{{ $serviceName }}"
