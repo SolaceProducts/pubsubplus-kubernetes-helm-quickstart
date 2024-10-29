@@ -6,7 +6,7 @@
 {{- $serviceId := "" -}}
 {{- $serviceName := "" -}}
 
-{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-service-ids" (include "solace.fullname" .))) -}}
+{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-service-info-tags" (include "solace.fullname" .))) -}}
 
 {{- if $existingConfig -}}
     {{- $serviceId = index $existingConfig.data "service_id" -}}
