@@ -6,6 +6,13 @@
 {{- $serviceId := "" -}}
 {{- $serviceName := "" -}}
 
+{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-service-ids" (include "solace.fullname" .))) -}}
+
+{{- if $existingConfig -}}
+    {{- $serviceId = index $existingConfig.data "service_id" -}}
+    {{- $serviceName = index $existingConfig.data "service_name" -}}
+{{- end -}}
+
 {{- $includeServiceIdTag := true -}}
 {{- $includeServiceNameTag := true -}}
 
@@ -15,12 +22,16 @@
       {{- $orgId = $value -}}
     {{- end -}}
     {{- if eq $key "service_id" -}}
-      {{- $serviceId = $value -}}
-      {{- $includeServiceIdTag = false -}}
+      {{- if not $serviceId -}}
+        {{- $serviceId = $value -}}
+        {{- $includeServiceIdTag = false -}}
+      {{- end -}}
     {{- end -}}
     {{- if eq $key "service_name" -}}
-      {{- $serviceName = $value -}}
-      {{- $includeServiceNameTag = false -}}
+      {{- if not $serviceName -}}
+        {{- $serviceName = $value -}}
+        {{- $includeServiceNameTag = false -}}
+      {{- end -}}
     {{- end -}}
     {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
   {{- end -}}
@@ -30,10 +41,10 @@
   {{- fail "Organization ID not specified" -}}
 {{- end -}}
 
-{{- if eq $serviceId "" -}}
+{{- if not $serviceId -}}
   {{- $serviceId = (randAlpha 6) -}}
 {{- end -}}
-{{- if eq $serviceName "" -}}
+{{- if $serviceName -}}
   {{- $serviceName = printf "service_%s" $serviceId -}}
 {{- end -}}
 
@@ -59,8 +70,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: {{ template "solace.fullname" . }}-service-info-tags
+data:
+  service_id: "{{ $serviceId }}"
+  service_name: "{{ $serviceName }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: {{ template "solace.fullname" . }}-monitoring-insights-env-configs
 data:
-  DD_SITE: {{ .Values.insights.datadogSite }}
-  DD_TAGS: {{ $ddTags }}
+  DD_SITE: "{{ .Values.insights.datadogSite }}"
+  DD_TAGS: "{{ $ddTags }}"
   {{- end }}
