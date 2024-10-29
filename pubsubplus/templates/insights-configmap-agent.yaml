@@ -44,7 +44,7 @@
 {{- if not $serviceId -}}
   {{- $serviceId = (randAlpha 6) -}}
 {{- end -}}
-{{- if $serviceName -}}
+{{- if not $serviceName -}}
   {{- $serviceName = printf "service_%s" $serviceId -}}
 {{- end -}}
 
