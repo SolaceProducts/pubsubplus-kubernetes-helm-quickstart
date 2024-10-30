@@ -6,18 +6,38 @@
 {{- $serviceId := "" -}}
 {{- $serviceName := "" -}}
 
+{{- $existingConfig := (lookup "v1" "ConfigMap" .Release.Namespace (printf "%s-monitoring-insights-service-info-tags" (include "solace.fullname" .))) -}}
+
+{{- if $existingConfig -}}
+    {{- $serviceId = index $existingConfig.data "service_id" -}}
+    {{- $serviceName = index $existingConfig.data "service_name" -}}
+{{- end -}}
+
+{{- $includeServiceIdTag := true -}}
+{{- $includeServiceNameTag := true -}}
+
 {{- range $index, $tag := $tagsArray -}}
   {{- range $key, $value := $tag -}}
     {{- if eq $key "org_id" -}}
       {{- $orgId = $value -}}
     {{- end -}}
     {{- if eq $key "service_id" -}}
-      {{- $serviceId = $value -}}
+      {{- if not $serviceId -}}
+        {{- $serviceId = $value -}}
+        {{- $includeServiceIdTag = false -}}
+        {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+      {{- end -}}
     {{- end -}}
     {{- if eq $key "service_name" -}}
-      {{- $serviceName = $value -}}
+      {{- if not $serviceName -}}
+        {{- $serviceName = $value -}}
+        {{- $includeServiceNameTag = false -}}
+        {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+      {{- end -}}
     {{- end -}}
-    {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+    {{- if and (ne $key "service_id") (ne $key "service_name") -}}
+      {{- $ddTagsCustomerProvided = printf "%s%s%s:%s" $ddTagsCustomerProvided (ternary "" " " (eq $ddTagsCustomerProvided "")) $key $value -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 
@@ -25,10 +45,10 @@
   {{- fail "Organization ID not specified" -}}
 {{- end -}}
 
-{{- if eq $serviceId "" -}}
+{{- if not $serviceId -}}
   {{- $serviceId = (randAlpha 6) -}}
 {{- end -}}
-{{- if eq $serviceName "" -}}
+{{- if not $serviceName -}}
   {{- $serviceName = printf "service_%s" $serviceId -}}
 {{- end -}}
 
@@ -38,7 +58,15 @@
 
 {{- $serviceType := include "solace.serviceType" . -}}
 
-{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s" (include "solace.fullname" .) $serviceId $maasDatacenterId .Values.solace.size $serviceType -}}
+{{- $ddTagsCalculated := printf "infrastructure_name:%s-%s maas_datacenter_id:%s service_class:%s service_type:%s%s%s"
+    (include "solace.fullname" .)
+    $serviceId
+    $maasDatacenterId
+    .Values.solace.size
+    $serviceType
+    (ternary (printf " service_id:%s" $serviceId) "" ($includeServiceIdTag))
+    (ternary (printf " service_name:%s" $serviceName) "" ($includeServiceNameTag))
+-}}
 {{- $ddTagsDefault := "monitoring_mode:advanced datacenter_access_type:Private datacenter_type:CustomerManaged is_trial:false peb_type:software provider:k8s maas_id:customermanaged" -}}
 
 {{- $ddTags := printf "%s %s %s" $ddTagsDefault $ddTagsCalculated $ddTagsCustomerProvided -}}
@@ -46,8 +74,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: {{ template "solace.fullname" . }}-monitoring-insights-service-info-tags
+data:
+  service_id: "{{ $serviceId }}"
+  service_name: "{{ $serviceName }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: {{ template "solace.fullname" . }}-monitoring-insights-env-configs
 data:
-  DD_SITE: {{ .Values.insights.datadogSite }}
-  DD_TAGS: {{ $ddTags }}
+  DD_SITE: "{{ .Values.insights.datadogSite }}"
+  DD_TAGS: "{{ $ddTags }}"
   {{- end }}
