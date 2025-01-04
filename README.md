@@ -1,5 +1,20 @@
 [![Actions Status](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/actions?query=workflow%3Abuild+branch%3Amaster)
 
+__Contents:__
+
+- [Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster](#install-a-solace-pubsub-software-event-broker-onto-a-kubernetes-cluster)
+  - [Overview](#overview)
+  - [How to deploy the Solace PubSub+ Software Event Broker onto Kubernetes](#how-to-deploy-the-solace-pubsub-software-event-broker-onto-kubernetes)
+    - [1. Get a Kubernetes environment](#1-get-a-kubernetes-environment)
+    - [2. Install and configure Helm](#2-install-and-configure-helm)
+    - [3. Install the Solace PubSub+ Software Event Broker with default configuration](#3-install-the-solace-pubsub-software-event-broker-with-default-configuration)
+  - [Support](#support)
+  - [Versioning](#versioning)
+  - [Contributing](#contributing)
+  - [Authors](#authors)
+  - [License](#license)
+  - [Resources](#resources)
+
 # Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster
 
 The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
