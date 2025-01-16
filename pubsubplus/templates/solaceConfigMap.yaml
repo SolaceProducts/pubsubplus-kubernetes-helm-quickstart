@@ -22,8 +22,6 @@ data:
     export messagespool_maxspoolusage={{ required "A valid maxSpoolUsage required!" .Values.solace.systemScaling.maxSpoolUsage | quote }}
 {{- else if eq .Values.solace.size "dev" }}
     export system_scaling_maxconnectioncount="100"
-{{- else if eq .Values.solace.size "prod100" }}
-    export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod1k" }}
     export system_scaling_maxconnectioncount="1000"
 {{- else if eq .Values.solace.size "prod10k" }}
