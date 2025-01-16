@@ -63,11 +63,8 @@ spec:
 {{- else if eq .Values.solace.size "dev" }}
             cpu: "1"
             memory: 3410Mi
-{{- else if eq .Values.solace.size "prod100" }}
-            cpu: "2"
-            memory: 4025Mi
 {{- else if eq .Values.solace.size "prod1k" }}
-            cpu: "2"
+            cpu: "1.5"
             memory: 6515Mi
 {{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
@@ -88,11 +85,8 @@ spec:
 {{- else if eq .Values.solace.size "dev" }}
             cpu: "2"
             memory: 3410Mi
-{{- else if eq .Values.solace.size "prod100" }}
-            cpu: "2"
-            memory: 4025Mi
 {{- else if eq .Values.solace.size "prod1k" }}
-            cpu: "2"
+            cpu: "1.5"
             memory: 6515Mi
 {{- else if eq .Values.solace.size "prod10k" }}
             cpu: "4"
