@@ -99,16 +99,9 @@ spec:
             memory: 52581Mi
 {{- end }}
         livenessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 300
-          timeoutSeconds: 5
+          {{- toYaml .Values.probes.liveness | nindent 10 }}
         readinessProbe:
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          exec:
-            command:
-            - /mnt/disks/solace/readiness_check.sh
+          {{- toYaml .Values.probes.readiness | nindent 10 }}
         securityContext:
           privileged: false
 {{- if semverCompare "<9.4" (default "9.4" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
