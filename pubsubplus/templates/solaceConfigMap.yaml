@@ -489,6 +489,14 @@ data:
             rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
           fi
         fi
+        cluster_status=`/mnt/disks/solace/semp_query.sh -n admin -p ${password} -u http://localhost:8080 \
+                -q "<rpc><show><cluster><cluster-name-pattern>*</cluster-name-pattern></cluster></show></rpc>" \
+                -v "/rpc-reply/rpc/show/cluster/clusters/cluster/oper-up[text()]"`
+        cluster_status=`echo ${cluster_status} | xmllint -xpath "string(returnInfo/valueSearchResult)" -`
+        if [ "${cluster_status}" != "true" ] && [ "${cluster_status}" != "" ]; then
+          echo "`date` INFO: ${APP}-Checking DMR cluster status. DMR cluster is down"
+          rm -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE}; exit 1
+        fi
         # Pass readiness check
         if [ ! -f ${FINAL_ACTIVITY_LOGGED_TRACKING_FILE} ]; then
           echo "`date` INFO: ${APP}-Redundancy is up and node is Mate Active"
