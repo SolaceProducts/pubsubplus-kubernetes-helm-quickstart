@@ -185,6 +185,86 @@
                     "type": "string"
                 }
             }
+        },
+        "insights": {
+            "type": "object",
+            "description": "Configuration for PubSub+ Insights feature",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Enable or disable the Insights feature"
+                },
+                "image": {
+                    "type": "object",
+                    "description": "Container image configuration for the Insights Agent",
+                    "properties": {
+                        "repository": {
+                            "type": "string",
+                            "description": "Image repository for the Insights Agent"
+                        },
+                        "tag": {
+                            "type": "string",
+                            "description": "Image tag for the Insights Agent"
+                        }
+                    }
+                },
+                "environmentVariables": {
+                    "type": "object",
+                    "description": "Environment variables for configuring the Insights Agent",
+                    "properties": {
+                        "INSIGHTS_AGENT_API_KEY": {
+                            "type": "string",
+                            "description": "API key for your Solace Insights subscription (available from Solace Cloud Console)"
+                        },
+                        "INSIGHTS_AGENT_SITE": {
+                            "type": "string",
+                            "description": "Site location where broker metrics and logs will flow (available from Solace Cloud Console)"
+                        },
+                        "INSIGHTS_AGENT_TAGS": {
+                            "type": "string",
+                            "description": "Tags for metrics and logs (available from Solace Cloud Console)"
+                        }
+                    },
+                    "additionalProperties": {
+                        "type": "string",
+                        "description": "Additional environment variables for the Insights Agent"
+                    }
+                },
+                "resources": {
+                    "type": "object",
+                    "description": "Resource requirements for the Insights Agent container",
+                    "properties": {
+                        "requests": {
+                            "type": "object",
+                            "description": "Minimum resource requirements",
+                            "properties": {
+                                "cpu": {
+                                    "type": "string",
+                                    "description": "Minimum CPU resource required"
+                                },
+                                "memory": {
+                                    "type": "string",
+                                    "description": "Minimum memory resource required"
+                                }
+                            }
+                        },
+                        "limits": {
+                            "type": "object",
+                            "description": "Maximum resource limits",
+                            "properties": {
+                                "cpu": {
+                                    "type": "string",
+                                    "description": "Maximum CPU resource allowed"
+                                },
+                                "memory": {
+                                    "type": "string",
+                                    "description": "Maximum memory resource allowed"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
