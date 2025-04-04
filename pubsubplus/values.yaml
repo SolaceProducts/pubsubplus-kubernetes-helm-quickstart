@@ -251,14 +251,14 @@ storage:
 insights:
   enabled: false
 
-  image:
-    repository: gcr.io/gcp-maas-prod/solace-insights-agent
-    tag: latest
-
   environmentVariables:
     INSIGHTS_AGENT_API_KEY: ""
     INSIGHTS_AGENT_SITE: ""
     INSIGHTS_AGENT_TAGS: ""
+
+  image:
+    repository: gcr.io/gcp-maas-prod/solace-insights-agent
+    tag: latest
 
   resources:
     requests:
