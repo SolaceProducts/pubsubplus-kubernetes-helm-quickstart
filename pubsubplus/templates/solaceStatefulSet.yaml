@@ -232,7 +232,8 @@ spec:
         - name: soft-adb-ephemeral
           mountPath: /usr/sw/internalSpool/softAdb
         {{- end }}
-        {{- if ( .Values.insights.enabled) }}
+{{- end }}
+{{- if ( .Values.insights.enabled) }}
       - name: insights-agent
         image: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
         imagePullPolicy: Always
@@ -268,7 +269,6 @@ spec:
           - name: data
             mountPath: /opt/datadog-agent/run
             subPath: opt/datadog-agent/run
-{{- end -}}
 {{- end }}
       volumes:
         - name: podinfo
