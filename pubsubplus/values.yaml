@@ -249,21 +249,31 @@ storage:
   # useStorageGroup: true
 
 insights:
+  # If set to true, Insights will be enabled on the broker
   enabled: false
 
   environmentVariables:
+    # API key for your Solace Insights subscription, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_API_KEY: ""
+    # Site location where broker metrics and logs will flow, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_SITE: ""
+    # Tags for metrics and logs, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_TAGS: ""
 
   image:
+    # Image repository for the Insights Agent container
     repository: gcr.io/gcp-maas-prod/solace-insights-agent
+    # Image tag for the Insights Agent container
     tag: latest
 
   resources:
     requests:
+      # Minimum CPU resource required by the insights-agent container
       cpu: 200m
+      # Minimum memory resource required by the insights-agent container
       memory: 256Mi
     limits:
+      # Maximum CPU resource the insights-agent container can use
       cpu: 200m
+      # Maximum memory resource the insights-agent container can use
       memory: 512Mi
