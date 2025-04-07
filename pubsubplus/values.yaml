@@ -249,7 +249,7 @@ storage:
   # useStorageGroup: true
 
 insights:
-  # If set to true, Insights will be enabled on the broker
+  # If set to true, this will enable the collection of metrics and logs for the Solace broker
   enabled: false
 
   environmentVariables:
