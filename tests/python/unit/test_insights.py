@@ -124,48 +124,59 @@ def test_insights_disabled(render_helm_template):
     assert len(insights_containers) == 0
 
 
-def test_missing_required_values(render_helm_template):
-    invalid_values = {
-        "insights": {
-            "enabled": True,
-            "environmentVariables": {
-                "INSIGHTS_AGENT_SITE": "us-east",
-                "INSIGHTS_AGENT_TAGS": "dev,test",
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        {
+            "name": "missing_environmentVariables",
+            "values": {"insights": {"enabled": True, "environmentVariables": None}},
+            "expected_error": "insights.environmentVariables must be defined when Insights is enabled",
+        },
+        {
+            "name": "missing_api_key",
+            "values": {
+                "insights": {
+                    "enabled": True,
+                    "environmentVariables": {
+                        "INSIGHTS_AGENT_SITE": "us-east",
+                        "INSIGHTS_AGENT_TAGS": "dev,test",
+                    },
+                }
             },
-        }
-    }
-
-    with pytest.raises(Exception) as e:
-        render_helm_template(invalid_values)
-    assert "INSIGHTS_AGENT_API_KEY must be defined" in str(e.value)
-
-    invalid_values = {
-        "insights": {
-            "enabled": True,
-            "environmentVariables": {
-                "INSIGHTS_AGENT_API_KEY": "test-key",
-                "INSIGHTS_AGENT_TAGS": "dev,test",
+            "expected_error": "INSIGHTS_AGENT_API_KEY must be defined",
+        },
+        {
+            "name": "missing_site",
+            "values": {
+                "insights": {
+                    "enabled": True,
+                    "environmentVariables": {
+                        "INSIGHTS_AGENT_API_KEY": "test-key",
+                        "INSIGHTS_AGENT_TAGS": "dev,test",
+                    },
+                }
             },
-        }
-    }
-
-    with pytest.raises(Exception) as e:
-        render_helm_template(invalid_values)
-    assert "INSIGHTS_AGENT_SITE must be defined" in str(e.value)
-
-    invalid_values = {
-        "insights": {
-            "enabled": True,
-            "environmentVariables": {
-                "INSIGHTS_AGENT_API_KEY": "test-key",
-                "INSIGHTS_AGENT_SITE": "us-east",
+            "expected_error": "INSIGHTS_AGENT_SITE must be defined",
+        },
+        {
+            "name": "missing_tags",
+            "values": {
+                "insights": {
+                    "enabled": True,
+                    "environmentVariables": {
+                        "INSIGHTS_AGENT_API_KEY": "test-key",
+                        "INSIGHTS_AGENT_SITE": "us-east",
+                    },
+                }
             },
-        }
-    }
-
+            "expected_error": "INSIGHTS_AGENT_TAGS must be defined",
+        },
+    ],
+)
+def test_missing_required_values(render_helm_template, test_case):
     with pytest.raises(Exception) as e:
-        render_helm_template(invalid_values)
-    assert "INSIGHTS_AGENT_TAGS must be defined" in str(e.value)
+        render_helm_template(test_case["values"])
+    assert test_case["expected_error"] in str(e.value)
 
 
 def test_service_publish_not_ready_addresses(render_helm_template, test_values):
