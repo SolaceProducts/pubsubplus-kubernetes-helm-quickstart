@@ -265,7 +265,7 @@ insights:
     repository: gcr.io/gcp-maas-prod/solace-insights-agent
     # Image tag for the Insights Agent container
     tag: latest
-    # Image pull secret name for the Insights Agent container
+    # Image pull secret name for the Insights Agent container. The pull secret is available from the Solace Cloud Console.
     pullSecretName: gcr-reg-secret
 
   resources:

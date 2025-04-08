@@ -17,6 +17,7 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 | `environmentVariables.INSIGHTS_AGENT_TAGS`    | Tags for metrics and logs. Available from the Solace Cloud Console.                                 |                                              |
 | `image.repository`                            | The image repository for the Insights Agent container                                               | `gcr.io/gcp-maas-prod/solace-insights-agent` |
 | `image.tag`                                   | The image tag for the Insights Agent container                                                      | `latest`                                     |
+| `image.pullSecretName`                        | The name of the image pull secret for the Insights Agent container                                  | `gcr-reg-secret`                             |
 | `resources.requests.cpu`                      | The minimum CPU resource required by the `insights-agent` container.                                | `200m`                                       |
 | `resources.requests.memory`                   | The minimum memory resource required by the `insights-agent` container.                             | `256Mi`                                      |
 | `resources.limits.cpu`                        | The maximum CPU resource the `insights-agent` container can use.                                    | `200m`                                       |

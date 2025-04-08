@@ -17,6 +17,9 @@ TLS is enabled, using secret {{ .Values.tls.serverCertificatesSecret }} for serv
 {{- if .Values.insights.enabled }}
 Solace PubSub+ Insights has been enabled for this deployment.
 Image used for Insights Agent: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
+{{- if .Values.insights.image.pullSecretName }}
+Pull Secret: {{ .Values.insights.image.pullSecretName }}
+{{- end }}
 
 Insights Agent is configured with the following:
 - Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE }}
