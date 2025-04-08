@@ -39,9 +39,12 @@ spec:
       tolerations:
 {{ toYaml .Values.solace.tolerations | indent 6 }}
 {{- end }}
-{{- if .Values.image.pullSecretName }}
       imagePullSecrets:
+{{- if .Values.image.pullSecretName }}
       - name: {{ .Values.image.pullSecretName}}
+{{- end}}
+{{- if and (.Values.insights.enabled) (.Values.insights.image.pullSecretName) }}
+      - name: {{ .Values.insights.image.pullSecretName}}
 {{- end}}
 {{- if .Values.securityContext.enabled }}
       securityContext:
