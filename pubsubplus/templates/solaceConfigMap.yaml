@@ -9,8 +9,10 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 data:
   init.sh: |-
-    export username_admin_passwordfilepath="/mnt/disks/secrets/username_admin_password"
+    export username_admin_passwordfilepath="/mnt/disks/secrets/admin/username_admin_password"
     export username_admin_globalaccesslevel=admin
+    export username_insights_passwordfilepath="/mnt/disks/secrets/insights/username_insights_password"
+    export username_insights_globalaccesslevel=read-only
     export service_ssh_port='2222'
     export service_webtransport_port='8008'
     export service_webtransport_tlsport='1443'
@@ -49,7 +51,7 @@ data:
     service_name=$(echo ${service} | sed 's/-//g')
     export redundancy_enable=yes
     export configsync_enable=yes
-    export redundancy_authentication_presharedkey_key=`cat /mnt/disks/secrets/username_admin_password | awk '{x=$0;for(i=length;i<51;i++)x=x "0";}END{print x}' | base64` # Right-pad with 0s to 50 length
+    export redundancy_authentication_presharedkey_key=`cat /mnt/disks/secrets/admin/username_admin_password | awk '{x=$0;for(i=length;i<51;i++)x=x "0";}END{print x}' | base64` # Right-pad with 0s to 50 length
     export service_redundancy_firstlistenport='8300'
     export redundancy_group_node_${service_name}0_nodetype=message_routing
     export redundancy_group_node_${service_name}0_connectvia=${service}-0.${service}-discovery.${namespace}.svc:${service_redundancy_firstlistenport}
@@ -82,7 +84,7 @@ data:
     node_ordinal=${host_array[-1]}
     echo "`date` INFO: ${APP}-Node ordinal: ${node_ordinal}"
     echo "`date` INFO: ${APP}-Waiting for management API to become available"
-    password=`cat /mnt/disks/secrets/username_admin_password`
+    password=`cat /mnt/disks/secrets/admin/username_admin_password`
     INITIAL_STARTUP_FILE=/var/lib/solace/var/k8s_initial_startup_marker
     loop_guard=60
     pause=10
@@ -376,7 +378,7 @@ data:
     # HA config
     IFS='-' read -ra host_array <<< $(hostname)
     node_ordinal=${host_array[-1]}
-    password=`cat /mnt/disks/secrets/username_admin_password`
+    password=`cat /mnt/disks/secrets/admin/username_admin_password`
     # For monitor node just check for redundancy; active label will never be set
     if [ "${node_ordinal}" = "2" ]; then
       # Check redundancy
