@@ -1,5 +1,20 @@
 [![Actions Status](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/actions?query=workflow%3Abuild+branch%3Amaster)
 
+__Contents:__
+
+- [Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster](#install-a-solace-pubsub-software-event-broker-onto-a-kubernetes-cluster)
+  - [Overview](#overview)
+  - [How to deploy the Solace PubSub+ Software Event Broker onto Kubernetes](#how-to-deploy-the-solace-pubsub-software-event-broker-onto-kubernetes)
+    - [1. Get a Kubernetes environment](#1-get-a-kubernetes-environment)
+    - [2. Install and configure Helm](#2-install-and-configure-helm)
+    - [3. Install the Solace PubSub+ Software Event Broker with default configuration](#3-install-the-solace-pubsub-software-event-broker-with-default-configuration)
+  - [Support](#support)
+  - [Versioning](#versioning)
+  - [Contributing](#contributing)
+  - [Authors](#authors)
+  - [License](#license)
+  - [Resources](#resources)
+
 # Install a Solace PubSub+ Software Event Broker onto a Kubernetes cluster
 
 The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
@@ -30,8 +45,7 @@ In this quick start we go through the steps to set up a PubSub+ Software Event B
 
 There are three Helm chart variants available with default small-size configurations:
 1.	`pubsubplus-dev` - recommended PubSub+ Software Event Broker for Developers (standalone) - no guaranteed performance
-2.	`pubsubplus` - PubSub+ Software Event Broker standalone, supporting 100 connections
-3.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 100 connections
+2.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 1000 connections
 
 For other PubSub+ Software Event Broker configurations or sizes, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
@@ -101,6 +115,32 @@ Refer to the detailed PubSub+ Kubernetes documentation for:
 * [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
 * [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
 * [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
+
+## Support
+
+Releases are ON Demand. Solace provides full support for the latest Helm Chart and technical support for an additional six months. 
+
+Refer [Technical Product Support | Solace](https://solace.com/legal/technical-product-support/) for support terminologies.
+
+The following table shows:
+
+
+![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)
+A green check mark shows that broker deployment using the Helm chart is supported and tested on the specific Kubernetes distribution.
+
+ ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)
+A gray check mark shows the broker deployment using helm chart is supported but not fully tested on the specific kubernetes distribution. In addition, there may be known issues or additional work required to deploy event broker services on the Kubernetes cluster.
+
+| Kubernetes Distribution | Minimum Recommended Pubsub+ Event Broker Version | Supported |
+|-------------------------|--------------------------------------------------|-----------|
+| Google Kubernetes Engine (GKE)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/f22255d5-ec7e-4f6e-a0c9-ac75c3992016)        |
+| Amazon Elastic Kubernetes Service (EKS)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
+| Azure Kubernetes Service (AKS)                      | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
+|                         |                                                  |           |
+
+## Versioning
+
+Solace Helm Charts follows [semantic versioning](https://semver.org/).
 
 ## Contributing
 

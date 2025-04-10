@@ -126,7 +126,6 @@ The broker nodes are scaled by the [maximum number of concurrent client connecti
 
 The broker container CPU and memory resource requirements are assigned according to the tier, and are summarized here from the [Solace documentation](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Requirements.htm#res-req-container) for the possible `solace.size` parameter values:
 * `dev`: no guaranteed performance, minimum requirements: 1 CPU, 3.4 GiB memory
-* `prod100`: up to 100 connections, minimum requirements: 2 CPU, 3.4 GiB memory
 * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 6.4 GiB memory
 * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12.2 GiB memory
 * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 30.3 GiB memory
@@ -176,7 +175,6 @@ Broker versions prior to 9.12 required separate volumes mounted for each storage
 
 If using [simplified vertical scaling](#simplified-vertical-scaling), set following storage size (`storage.size` parameter) for the scaling tiers:
 * `dev`: no guaranteed performance: 5GB
-* `prod100`: up to 100 connections, 7GB
 * `prod1k`: up to 1,000 connections, 14GB
 * `prod10k`: up to 10,000 connections, 18GB
 * `prod100k`: up to 100,000 connections, 30GB
