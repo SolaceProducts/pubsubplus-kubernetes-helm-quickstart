@@ -11,8 +11,10 @@ data:
   init.sh: |-
     export username_admin_passwordfilepath="/mnt/disks/secrets/admin/username_admin_password"
     export username_admin_globalaccesslevel=admin
+{{- if .Values.insights.enabled }}
     export username_insights_passwordfilepath="/mnt/disks/secrets/insights/username_insights_password"
     export username_insights_globalaccesslevel=read-only
+{{- end }}
     export service_ssh_port='2222'
     export service_webtransport_port='8008'
     export service_webtransport_tlsport='1443'

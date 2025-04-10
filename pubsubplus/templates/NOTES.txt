@@ -13,6 +13,24 @@ TLS has not been enabled for this deployment.
 TLS is enabled, using secret {{ .Values.tls.serverCertificatesSecret }} for server certificates configuration.
 {{- end }}
 
+== Solace PubSub+ Insights ==
+{{- if .Values.insights.enabled }}
+Solace PubSub+ Insights has been enabled for this deployment.
+Image used for Insights Agent: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
+{{- if .Values.insights.image.pullSecretName }}
+Pull Secret: {{ .Values.insights.image.pullSecretName }}
+{{- end }}
+
+Insights Agent is configured with the following:
+- Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE }}
+- Tags: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_TAGS }}
+
+{{- else }}
+Solace PubSub+ Insights has not been enabled for this deployment.
+To enable Insights, set insights.enabled=true and provide the required configuration parameters.
+For more information, refer to the INSIGHTS.md documentation.
+{{- end }}
+
 == Admin credentials and access ==
 {{- if not .Values.solace.usernameAdminPassword }}
 *********************************************************************
