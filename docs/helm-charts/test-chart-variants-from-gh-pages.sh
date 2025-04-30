@@ -13,7 +13,7 @@ kubectl get nodes -o wide
 testDeployHelmv2 () {
   # Params: $1 is the Helm chart name
   echo
-  helm install --name my-release solacecharts/$1 --set solace.size=dev
+  helm install my-release solacecharts/$1 --set solace.size=dev
   echo
   echo "Waiting for chart $1 to deploy..."
   echo
