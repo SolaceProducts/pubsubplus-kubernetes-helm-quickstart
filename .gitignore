@@ -1,1 +1,6 @@
+.idea
+.venv
+__pycache__
 solace/aws.yaml
+pubsubplus/self-managed-insights-values.yaml
+.DS_Store

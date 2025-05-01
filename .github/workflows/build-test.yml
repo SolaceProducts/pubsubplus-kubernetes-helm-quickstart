@@ -212,7 +212,7 @@ jobs:
           git push --quiet --set-upstream origin-pages gh-pages
           popd
           echo "Updated and pushed GH pages!"
-        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] && [[ ${{ github.ref }} =~ .*"refs/heads/v".* ]] ; then
+        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] && [[ ${{ github.ref }} =~ .*"refs/heads/dev".* ]] ; then
           echo "Using $TESTRUNBRANCH on ${{ github.repository_owner }}"
           git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1
           rm -rf gh-pages/helm-charts-openshift; mkdir -p gh-pages/helm-charts-openshift
