@@ -70,7 +70,7 @@ solace:
   redundancy: true
   usernameAdminPassword: secretpassword" > my-values.yaml
 # Now use the file:
-helm install --name my-release -f my-values.yaml solacecharts/pubsubplus
+helm install my-release -f my-values.yaml solacecharts/pubsubplus
 ```
 > Note: as an alternative to creating a new file you can [download](https://raw.githubusercontent.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/master/pubsubplus/values.yaml) the `values.yaml` file with default values and edit that for overrides.
 
