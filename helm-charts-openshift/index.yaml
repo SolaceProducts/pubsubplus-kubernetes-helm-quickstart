@@ -4,10 +4,10 @@ entries:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, non-HA
     apiVersion: v2
-    created: "2025-01-16T22:47:10.023148287Z"
+    created: "2025-05-01T17:17:07.836889882Z"
     description: Deploy a single-node non-HA Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: 61ed36d4aa984851763e7924fdb62a1c9a440948645c4b9083c8fb747b396c13
+    digest: 5a825dd77ec010345bed17919cec9fa39368e67aedc64cc035b3ec4d248c4954
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
@@ -33,16 +33,16 @@ entries:
     sources:
     - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-3.4.0.tgz
-    version: 3.4.0
+    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-3.6.0.tgz
+    version: 3.6.0
   pubsubplus-openshift-dev:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker for Developers
     apiVersion: v2
-    created: "2025-01-16T22:47:10.024290875Z"
+    created: "2025-05-01T17:17:07.83817098Z"
     description: Deploy a minimum footprint single-node non-HA Solace PubSub+ Event
       Broker Software on OpenShift for development purposes
-    digest: 60eaf5c1fe510079b948fd225be2c18ef3dd27d4b7a5613e10c41349b1252471
+    digest: db0f20d2be6ea78b4a2734c5dd4e16d7facbea4abc2ede90c0de208d095e60c6
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
@@ -68,16 +68,16 @@ entries:
     sources:
     - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-dev-3.4.0.tgz
-    version: 3.4.0
+    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-dev-3.6.0.tgz
+    version: 3.6.0
   pubsubplus-openshift-ha:
   - annotations:
       charts.openshift.io/name: PubSub+ Event Broker, HA
     apiVersion: v2
-    created: "2025-01-16T22:47:10.025400772Z"
+    created: "2025-05-01T17:17:07.839505458Z"
     description: Deploy an HA redundancy group of Solace PubSub+ Event Broker Software
       on OpenShift
-    digest: f2c46c2c2952cffc2e7c9f6082aca109b2f30716e4b9ee631a57da2e711f3092
+    digest: adf4f0216a4b4d1a94173814db49486191490f2f7c4a0ec69eb556b290809609
     home: https://dev.solace.com
     icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/PubSubPlus.png
     keywords:
@@ -103,6 +103,6 @@ entries:
     sources:
     - https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart
     urls:
-    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-ha-3.4.0.tgz
-    version: 3.4.0
-generated: "2025-01-16T22:47:10.021879915Z"
+    - https://solacedev.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts-openshift/pubsubplus-openshift-ha-3.6.0.tgz
+    version: 3.6.0
+generated: "2025-05-01T17:17:07.834969487Z"
