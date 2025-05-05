@@ -36,7 +36,7 @@ data:
     export system_scaling_maxconnectioncount="200000"
 {{- end }}
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
-    cat /mnt/disks/certs/server/{{.Values.tls.certFilename | default "tls.key"}} /mnt/disks/certs/server/{{.Values.tls.certKeyFilename | default "tls.crt"}} > /dev/shm/server.cert
+    cat /mnt/disks/certs/server/{{.Values.tls.certFilename | default "tls.crt"}} /mnt/disks/certs/server/{{.Values.tls.certKeyFilename | default "tls.key"}} > /dev/shm/server.cert
     export tls_servercertificate_filepath="/dev/shm/server.cert"
 {{- end }}
     # Deal with the fact we cannot accept "-" in router names
@@ -109,7 +109,7 @@ data:
     rm /dev/shm/server.cert # remove as soon as possible
     cert_results=$(curl --write-out '%{http_code}' --silent --output /dev/null -k -X PATCH -u admin:${password} https://localhost:1943/SEMP/v2/config/ \
       -H "content-type: application/json" \
-      -d "{\"tlsServerCertContent\":\"$(cat /mnt/disks/certs/server/{{.Values.tls.certFilename | default "tls.key"}} /mnt/disks/certs/server/{{.Values.tls.certKeyFilename | default "tls.crt"}} | awk '{printf "%s\\n", $0}')\"}")
+      -d "{\"tlsServerCertContent\":\"$(cat /mnt/disks/certs/server/{{.Values.tls.certFilename | default "tls.crt"}} /mnt/disks/certs/server/{{.Values.tls.certKeyFilename | default "tls.key"}} | awk '{printf "%s\\n", $0}')\"}")
     if [ "${cert_results}" != "200" ]; then
       echo "`date` ERROR: ${APP}-Unable to set the server certificate, exiting"  >&2
       exit 1 
