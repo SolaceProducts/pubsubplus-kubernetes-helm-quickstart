@@ -84,7 +84,7 @@ Helm is configured properly if the command `helm version` returns no error.
 ```
 - By default the publicly available [latest Docker image of PubSub+ Software Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a non-default image, add the `--set image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the commands below.
 - Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
-- Use one of the following chart variants to create a deployment: 
+- Use one of the following chart variants to create a deployment:
 
 a) Create a Solace PubSub+ Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
 ```bash
@@ -118,7 +118,7 @@ Refer to the detailed PubSub+ Kubernetes documentation for:
 
 ## Support
 
-Releases are ON Demand. Solace provides full support for the latest Helm Chart and technical support for an additional six months. 
+Releases are ON Demand. Solace provides full support for the latest Helm Chart and technical support for an additional six months.
 
 Refer [Technical Product Support | Solace](https://solace.com/legal/technical-product-support/) for support terminologies.
 
@@ -128,14 +128,14 @@ The following table shows:
 ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)
 A green check mark shows that broker deployment using the Helm chart is supported and tested on the specific Kubernetes distribution.
 
- ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)
+![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)
 A gray check mark shows the broker deployment using helm chart is supported but not fully tested on the specific kubernetes distribution. In addition, there may be known issues or additional work required to deploy event broker services on the Kubernetes cluster.
 
 | Kubernetes Distribution | Minimum Recommended Pubsub+ Event Broker Version | Supported |
 |-------------------------|--------------------------------------------------|-----------|
 | Google Kubernetes Engine (GKE)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/f22255d5-ec7e-4f6e-a0c9-ac75c3992016)        |
 | Amazon Elastic Kubernetes Service (EKS)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
-| Azure Kubernetes Service (AKS)                      | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
+| Azure Kubernetes Service (AKS)                      | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)         |
 |                         |                                                  |           |
 
 ## Versioning

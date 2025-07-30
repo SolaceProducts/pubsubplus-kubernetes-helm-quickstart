@@ -30,6 +30,7 @@ spec:
           {"Pods":[{"metadata":{"name":"{{ template "solace.fullname" . }}-2"},"spec":{"containers": [{"name": "pubsubplus","resources": {"requests": {"cpu": "1","memory": "1965Mi"},"limits": {"cpu": "1","memory": "1965Mi"} }} ] } } ]}
 {{- end}}
     spec:
+      enableServiceLinks: {{ .Values.enableServiceLinks}}
 {{- if .Values.solace.affinity }}
       affinity:
 {{ toYaml .Values.solace.affinity | indent 8 }}
@@ -38,9 +39,12 @@ spec:
       tolerations:
 {{ toYaml .Values.solace.tolerations | indent 6 }}
 {{- end }}
-{{- if .Values.image.pullSecretName }}
       imagePullSecrets:
+{{- if .Values.image.pullSecretName }}
       - name: {{ .Values.image.pullSecretName}}
+{{- end}}
+{{- if and (.Values.insights.enabled) (.Values.insights.image.pullSecretName) }}
+      - name: {{ .Values.insights.image.pullSecretName}}
 {{- end}}
 {{- if .Values.securityContext.enabled }}
       securityContext:
@@ -175,9 +179,14 @@ spec:
           mountPath: /etc/podinfo        
         - name: config-map
           mountPath: /mnt/disks/solace
-        - name: secrets
-          mountPath: /mnt/disks/secrets
+        - name: admin-secrets
+          mountPath: /mnt/disks/secrets/admin/
           readOnly: true
+        {{- if ( .Values.insights.enabled) }}
+        - name: insights-secrets
+          mountPath: /mnt/disks/secrets/insights/
+          readOnly: true
+          {{- end }}
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
         - name: server-certs
           mountPath: /mnt/disks/certs/server
@@ -221,6 +230,43 @@ spec:
           mountPath: /usr/sw/internalSpool/softAdb
         {{- end }}
 {{- end }}
+{{- if ( .Values.insights.enabled) }}
+      - name: insights-agent
+        image: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: {{ .Values.insights.resources.requests.memory }}
+            cpu: {{ .Values.insights.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.insights.resources.limits.memory }}
+            cpu: {{ .Values.insights.resources.limits.cpu }}
+        env:
+        - name: INSIGHTS_AGENT_BROKER_HOSTNAME_OVERRIDE
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: INSIGHTS_AGENT_NODE_ROLE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+        envFrom:
+          - secretRef:
+              name: {{ template "solace.fullname" . }}-insights-agent-env-secrets
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+          - name: data
+            mountPath: /jail
+            subPath: jail
+            readOnly: true
+          - name: data
+            mountPath: /opt/datadog-agent/run
+            subPath: opt/datadog-agent/run
+{{- end }}
       volumes:
         - name: podinfo
           downwardAPI:
@@ -232,10 +278,16 @@ spec:
           configMap:
             name: {{ template "solace.fullname" . }}
             defaultMode: 0755
-        - name: secrets
+        - name: admin-secrets
           secret:
             secretName: {{ template "solace.fullname" . }}-secrets
             defaultMode: 0400
+        {{- if .Values.insights.enabled }}
+        - name: insights-secrets
+          secret:
+            secretName: {{ template "solace.fullname" . }}-insights-secrets
+            defaultMode: 0400
+{{- end }}
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
         - name: server-certs
           secret:
