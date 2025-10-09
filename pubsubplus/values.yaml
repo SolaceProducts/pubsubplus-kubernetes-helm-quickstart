@@ -35,6 +35,16 @@ solace:
   #   cpu: 2
   #   # memory: host Virtual Memory
   #   memory: 3410Mi
+  #   # maxKafkaBridgeCount: Maximum number of Kafka bridges
+  #   maxKafkaBridgeCount: 0
+  #   # maxKafkaBrokerConnectionCount: Maximum number of connections to Kafka brokers
+  #   maxKafkaBrokerConnectionCount: 0
+  #   # maxBridgeCount: Maximum number of bridges
+  #   maxBridgeCount: 25
+  #   # maxSubscriptionCount: Maximum number of subscriptions
+  #   maxSubscriptionCount: 50000
+  #   # maxGuaranteedMessageSize: Maximum guaranteed message size in MB
+  #   maxGuaranteedMessageSize: 10
 
   # solace.podModifierEnabled=true enables modifying (reducing) CPU and memory resources for Monitoring nodes in an HA deployment
   # this must be provided and set to true to enable adjustments by the solace-pod-modifier admission plugin
