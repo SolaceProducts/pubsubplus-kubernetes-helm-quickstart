@@ -24,6 +24,21 @@ data:
     export system_scaling_maxconnectioncount={{ required "A valid maxConnections required!" .Values.solace.systemScaling.maxConnections | quote }}
     export system_scaling_maxqueuemessagecount={{ required "A valid maxQueueMessages required!" .Values.solace.systemScaling.maxQueueMessages | quote }}
     export messagespool_maxspoolusage={{ required "A valid maxSpoolUsage required!" .Values.solace.systemScaling.maxSpoolUsage | quote }}
+{{- if hasKey .Values.solace.systemScaling "maxKafkaBridgeCount" }}
+    export system_scaling_maxkafkabridgecount={{ .Values.solace.systemScaling.maxKafkaBridgeCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxKafkaBrokerConnectionCount" }}
+    export system_scaling_maxkafkabrokerconnectioncount={{ .Values.solace.systemScaling.maxKafkaBrokerConnectionCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxBridgeCount" }}
+    export system_scaling_maxbridgecount={{ .Values.solace.systemScaling.maxBridgeCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxSubscriptionCount" }}
+    export system_scaling_maxsubscriptioncount={{ .Values.solace.systemScaling.maxSubscriptionCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxGuaranteedMessageSize" }}
+    export system_scaling_maxguaranteedmessagesize={{ .Values.solace.systemScaling.maxGuaranteedMessageSize | quote }}
+{{- end }}
 {{- else if eq .Values.solace.size "dev" }}
     export system_scaling_maxconnectioncount="100"
 {{- else if eq .Values.solace.size "prod1k" }}
