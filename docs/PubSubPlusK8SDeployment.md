@@ -137,13 +137,19 @@ This option overrides simplified vertical scaling. It enables specifying each su
 * "maxConnections", in `solace.systemScaling.maxConnections` parameter
 * "maxQueueMessages", in `solace.systemScaling.maxQueueMessages` parameter
 * "maxSpoolUsage", in `solace.systemScaling.maxSpoolUsage` parameter
+* "maxKafkaBridgeCount", in `solace.systemScaling.maxKafkaBridgeCount` parameter
+* "maxKafkaBrokerConnectionCount", in `solace.systemScaling.maxKafkaBrokerConnectionCount` parameter
+* "maxBridgeCount", in `solace.systemScaling.maxBridgeCount` parameter
+* "maxSubscriptionCount", in `solace.systemScaling.maxSubscriptionCount` parameter
+* "maxGuaranteedMessageSize", in `solace.systemScaling.maxGuaranteedMessageSize` parameter
+
 
 Additionally, CPU and memory must be sized and provided in `solace.systemScaling.cpu` and `solace.systemScaling.memory` parameters. Use the [Solace online System Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm) to determine CPU and memory requirements for the selected scaling parameters.
 
 > Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. We recommend using the minimum required values specified in the [Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm).
 > However, you can adjust these values in the YAML file based on your available resources. If you decide to allocate fewer resources than the recommended minimum, make sure to thoroughly test your deployment to ensure stability and performance.
 
-Also note, that specifying maxConnections, maxQueueMessages and maxSpoolUsage on initial deployment will overwrite the broker’s default values. On the other hand, doing the same using Helm upgrade on an existing deployment will not overwrite these values on brokers configuration, but it can be used to prepare (first step) for a manual scale up through CLI where these parameters can be actually changed (second step).
+Also note, that specifying the scaling parameters on initial deployment will overwrite the broker’s default values. On the other hand, doing the same using Helm upgrade on an existing deployment will not overwrite these values on brokers configuration, but it can be used to prepare (first step) for a manual scale up through CLI where these parameters can be actually changed (second step).
 
 #### Enabling a Disruption Budget for HA deployment
 
