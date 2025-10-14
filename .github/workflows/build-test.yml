@@ -227,22 +227,28 @@ jobs:
 
         # Check Kafka Bridge Count through SEMP
         echo "Checking max Kafka Bridge Count through SEMP..."
-        if ! curl -s -u admin:admin "http://$url:8080/SEMP" -d "<rpc><show><system></system></show></rpc>" | grep -q "<max-kafka-bridges>10</max-kafka-bridges>"; then
+        result=$(curl -s -u admin:admin "http://$url:8080/SEMP" -d "<rpc><show><system></system></show></rpc>" | grep "<max-kafka-bridges>10</max-kafka-bridges>")
+        if [ -z "$result" ]; then
           echo "Expected value not found!"
           exit 1
+        else
+          echo
+          echo "PASSED: Found: $result"
         fi
 
         # Check max bridge Count through SEMP
         echo "Checking max Bridge Count through SEMP..."
-        if ! curl -s -u admin:admin http://$url:8080/SEMP -d "<rpc><show><system></system></show></rpc>" | grep -q "<max-bridges>25</max-bridges>"; then
+        result=$(curl -s -u admin:admin "http://$url:8080/SEMP" -d "<rpc><show><system></system></show></rpc>" | grep "<max-bridges>25</max-bridges>")
+        if [ -z "$result" ]; then
           echo "Expected value not found!"
           exit 1
+        else
+          echo
+          echo "PASSED: Found: $result"
         fi
-
 
         # Clean up
         helm delete scaling-test
-        kubectl delete secret test-tls
         kubectl delete pvc --all
 
     - name: Create chart variants
