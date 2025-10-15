@@ -173,6 +173,84 @@ jobs:
         kubectl delete secret test-tls
         kubectl delete pvc --all
 
+    - name: Test Comprehensive Vertical Scaling
+      run: |
+        REPO=solace/solace-pubsub-standard
+        TAG=latest
+
+        # Deploy broker with specific scaling parameters
+
+        echo "Installing broker with comprehensive vertical scaling parameters"
+        helm install scaling-test pubsubplus \
+          --set solace.systemScaling.maxConnections=1000 \
+          --set solace.systemScaling.maxQueueMessages=100 \
+          --set solace.systemScaling.maxSpoolUsage=1500 \
+          --set solace.systemScaling.cpu=2 \
+          --set solace.systemScaling.memory=6410Mi \
+          --set solace.systemScaling.maxKafkaBridgeCount=10 \
+          --set solace.systemScaling.maxKafkaBrokerConnectionCount=300 \
+          --set solace.systemScaling.maxBridgeCount=25 \
+          --set solace.systemScaling.maxSubscriptionCount=50000 \
+          --set solace.systemScaling.maxGuaranteedMessageSize=30 \
+          --set solace.usernameAdminPassword=admin
+
+        kubectl get statefulset,svc,pods,pvc,pv --show-labels
+
+        # Wait for broker to become active
+        echo "Waiting for broker to become active"
+        sleep 60
+        until kubectl get pods --show-labels | grep scaling-test-pubsubplus-0 | grep -m 1 -E '1/1'; do sleep 10; done
+        until kubectl get pods --show-labels | grep scaling-test-pubsubplus- | grep -m 1 -E 'active=true'; do sleep 10; done
+
+        # Verify environment variables are set correctly in the pod
+        echo "Verifying environment variables..."
+        kubectl exec scaling-test-pubsubplus-0 -- env | grep SYSTEM_SCALING_MAXKAFKABRIDGECOUNT | grep "10"
+        kubectl exec scaling-test-pubsubplus-0 -- env | grep SYSTEM_SCALING_MAXKAFKABROKERCONNECTIONCOUNT | grep "300"
+        kubectl exec scaling-test-pubsubplus-0 -- env | grep SYSTEM_SCALING_MAXBRIDGECOUNT | grep "25"
+        kubectl exec scaling-test-pubsubplus-0 -- env | grep SYSTEM_SCALING_MAXSUBSCRIPTIONCOUNT | grep "50000"
+        kubectl exec scaling-test-pubsubplus-0 -- env | grep SYSTEM_SCALING_MAXGUARANTEEDMESSAGESIZE | grep "30"
+
+
+        # Verify the broker configuration through SEMP API
+        echo "Verifying broker configuration through SEMP API..."
+        export url="$(kubectl get svc scaling-test-pubsubplus -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+        echo "Broker URL: $url"
+
+        # Wait for SEMP API to be available
+        sleep 30
+
+        # Test basic connectivity
+        curl -s -u admin:admin http://$url:8080/SEMP -d "<rpc><show><version></version></show></rpc>"
+
+        # Test Sytem configuration
+        curl -s -u admin:admin http://$url:8080/SEMP -d "<rpc><show><system></system></show></rpc>"
+
+        # Check Kafka Bridge Count through SEMP
+        echo "Checking max Kafka Bridge Count through SEMP..."
+        result=$(curl -s -u admin:admin "http://$url:8080/SEMP" -d "<rpc><show><system></system></show></rpc>" | grep "<max-kafka-bridges>10</max-kafka-bridges>")
+        if [ -z "$result" ]; then
+          echo "Expected value not found!"
+          exit 1
+        else
+          echo
+          echo "PASSED: Found: $result"
+        fi
+
+        # Check max bridge Count through SEMP
+        echo "Checking max Bridge Count through SEMP..."
+        result=$(curl -s -u admin:admin "http://$url:8080/SEMP" -d "<rpc><show><system></system></show></rpc>" | grep "<max-bridges>25</max-bridges>")
+        if [ -z "$result" ]; then
+          echo "Expected value not found!"
+          exit 1
+        else
+          echo
+          echo "PASSED: Found: $result"
+        fi
+
+        # Clean up
+        helm delete scaling-test
+        kubectl delete pvc --all
+
     - name: Create chart variants
       run: |
         bash docs/helm-charts/create-chart-variants.sh; # Create chart variants
