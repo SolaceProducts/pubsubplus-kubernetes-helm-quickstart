@@ -1,22 +1,22 @@
-# Solace PubSub+ Software Event Broker - Helm Chart
+# Solace Software Event Broker - Helm Chart
 
-The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This chart bootstraps a single-node or HA deployment of a [Solace PubSub+ Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
+This chart bootstraps a single-node or HA deployment of a [Solace Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace PubSub+ Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
 * Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v3 client installed
-* If using a private container image registry, load the PubSub+ Software Event Broker container image and for signed images create an image pull secret
+* If using a private container image registry, load the Solace Software Event Broker container image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 
-Also review additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-software-event-broker-deployment-considerations).
+Also review additional [deployment considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#solace-software-event-broker-deployment-considerations).
 
 ## Create a deployment
 
@@ -51,7 +51,7 @@ kubectl get pvc | grep data-my-release
 
 ## Configuration
 
-The following table lists the configurable parameters of the PubSub+ chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##pubsub-helm-chart-deployment-considerations) in the PubSub+ Kubernetes documentation.
+The following table lists the configurable parameters of the Solace chart and their default values. For a detailed discussion refer to the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md##solace-software-event-broker-deployment-considerations) in the Solace Kubernetes documentation.
 
 There are several ways to customize the deployment:
 
@@ -81,19 +81,19 @@ For more ways to override default chart values, refer to [Customizing the Helm C
 | `nameOverride`                 | Kubernetes objects will be named as `<release-name>-nameOverride`                                       | Undefined, default naming is `<release-name>-<chart-name>`                      |
 | `fullnameOverride`             | Kubernetes objects will be named as `fullnameOverride`                                                  | Undefined, default naming is `<release-name>-<chart-name>`                      |
 | `solace.redundancy`            | `false` will create a single-node non-HA deployment; `true` will create an HA deployment with Primary, Backup and Monitor nodes | `false`                                                                         |
-| `solace.podDisruptionBudgetForHA`  | `true` will set up a [Pod disruption budget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the PubSub+ broker in HA deployment, `false` does not set up a pod disruption budget. HA deployment with Primary, Backup and Monitor nodes requires a minimum of 2 nodes to reach a quorum, the pod disruption budget is defaulted to `2` minimum nodes when enabled.                                       | `false`                                                                         |
+| `solace.podDisruptionBudgetForHA`  | `true` will set up a [Pod disruption budget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) for the Solace broker in HA deployment, `false` does not set up a pod disruption budget. HA deployment with Primary, Backup and Monitor nodes requires a minimum of 2 nodes to reach a quorum, the pod disruption budget is defaulted to `2` minimum nodes when enabled.                                       | `false`                                                                         |
 | `solace.size`                  | Event broker simple vertical scaling by number of client connections. **Ignored** if `solace.systemScaling` is set. Options: `dev` (requires minimum resources but no guaranteed performance),  `prod1k`, `prod10k`, `prod100k` | `prod1k`                                                                        |
 | `solace.systemScaling.*`       | Event broker fine-grained vertical scaling definition. If defined, all sub-settings must be provided and these settings will **override** `solace.size`. For scaling documentation, look for "system scaling" at [docs.solace.com](https://docs.solace.com/Search.htm?q=system%20scaling). Use the [online calculator](https://docs.solace.com/Assistance-Tools/Resource-Calculator/pubsubplus-resource-calculator.html) to determine CPU, Memory and Storage requirements for "Container (messaging)" type. </br> `maxConnections`: max supported number of client connections </br> `maxQueueMessages`: max number of queue messages, in millions of messages </br> `maxSpoolUsage`: max Spool Usage, in MB. Also ensure adequate storage.size parameter, use the calculator </br> `cpu`: CPUs in cores </br> `memory`: host Virtual Memory, in MiB | Undefined                                                                       |
 | `solace.podModifierEnabled`    | Enables modifying (reducing) CPU and memory resources for Monitoring nodes in an HA deployment. Also requires the ["solace-pod-modifier" Kubernetes admission plugin](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/solace-pod-modifier-admission-plugin/README.md#how-to-use) deployed to work.  | Undefined, meaning not enabled.                                                 |
 | `solace.usernameAdminPassword` | The password for the "admin" management user. Will autogenerate it if not provided. **Important:** refer to the the information from `helm status` how to retrieve it and use it for `helm upgrade`. | Undefined, meaning autogenerate                                                 |
-| `solace.timezone`              | Timezone setting for the PubSub+ container. Valid values are tz database time zone names.               | Undefined, default is UTC                                                       |
+| `solace.timezone`              | Timezone setting for the Solace container. Valid values are tz database time zone names.               | Undefined, default is UTC                                                       |
 | `solace.extraEnvVars`              | List of extra environment variables to be added to the PubSub+ container. A primary use case is to specify [configuration keys](https://docs.solace.com/Software-Broker/Configuration-Keys-Reference.htm). Important: env variables defined here will not override the ones defined in solaceConfigMap. | Undefined                                                                       |
 | `solace.extraEnvVarsCM`              | The name of an existing ConfigMap containing extra environment variables | Undefined                                                                       |
 | `solace.extraEnvVarsSecret`              | The name of an existing Secret containing extra environment variables (in case of sensitive data) | Undefined                                                                       |
-| `image.repository`             | The image repo name and path to the PubSub+ container image                                                | `solace/solace-pubsub-standard`                                                 |
+| `image.repository`             | The image repo name and path to the Solace container image                                                | `solace/solace-pubsub-standard`                                                 |
 | `image.tag`                    | The Solace container image tag. It is recommended to specify an explicit tag for production use For possible tags, refer to the [Solace Docker Hub repo](https://hub.docker.com/r/solace/solace-pubsub-standard/tags) | `latest`                                                                        |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                                                  |
-| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the PubSub+ container image registry                                         | Undefined, meaning no ImagePullSecret used                                      |
+| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Solace container image registry                                         | Undefined, meaning no ImagePullSecret used                                      |
 | `securityContext.enabled`      | `true` enables to using defined `fsGroup` and `runAsUser`. Set to `false` if `fsGroup` and `runAsUser` conflict with PodSecurityPolicy or Openshift SCC settings. | `true` meaning `fsGroup` and `runAsUser` used                                   |
 | `securityContext.fsGroup`      | Specifies `fsGroup` in pod security context                                                             | set to default non-zero id 1000002                                              |
 | `securityContext.runAsUser`    | Specifies `runAsUser` in pod security context                                                           | set to default PubSub+ appuser id 1000001                                       |

@@ -1,16 +1,16 @@
-# Solace PubSub+ Software Event Broker on Kubernetes Deployment Documentation
+# Solace Software Event Broker on Kubernetes Deployment Documentation
 
-This document provides detailed information for deploying Solace PubSub+ Software Event Broker on Kubernetes.
+This document provides detailed information for deploying Solace Software Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
-* For the `pubsubplus` Helm chart configuration options, refer to the [PubSub+ Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
+* For the `pubsubplus` Helm chart configuration options, refer to the [Solace Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
 This document is applicable to any platform provider supporting Kubernetes.
 
 Contents:
-  * [**The Solace PubSub+ Software Event Broker**](#the-solace-pubsub-software-event-broker)
+  * [**The Solace Software Event Broker**](#the-solace-software-event-broker)
   * [**Overview**](#overview)
-  * [**PubSub+ Event Broker Deployment Considerations**](#pubsub-software-event-broker-deployment-considerations)
+  * [**Solace Event Broker Deployment Considerations**](#solace-software-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
       - [Simplified vertical scaling](#simplified-vertical-scaling)
       - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
@@ -23,7 +23,7 @@ Contents:
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
       - [Tested storage environments and providers](#tested-storage-environments-and-providers)
-    + [Exposing the PubSub+ Event Broker Services](#exposing-the-pubsub-software-event-broker-services)
+    + [Exposing the Solace Event Broker Services](#exposing-the-solace-software-event-broker-services)
       - [Specifying Service Type](#specifying-service-type)
       - [Using Ingress to access event broker services](#using-ingress-to-access-event-broker-services)
         * [Configuration examples](#configuration-examples)
@@ -35,7 +35,7 @@ Contents:
     + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
       - [Setting up TLS](#setting-up-tls)
       - [Rotating the server key](#rotating-the-server-key)
-    + [The PubSub+ Docker image](#the-pubsub-software-event-broker-docker-image)
+    + [The Solace Docker image](#the-solace-software-event-broker-docker-image)
       - [Using a public registry](#using-a-public-registry)
       - [Using private registries](#using-private-registries)
       - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
@@ -63,7 +63,7 @@ Contents:
   * [**Troubleshooting**](#troubleshooting)
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
-    + [PubSub+ Software Event Broker troubleshooting](#pubsub-software-event-broker-troubleshooting)
+    + [Solace Software Event Broker troubleshooting](#solace-software-event-broker-troubleshooting)
       - [General Kubernetes troubleshooting hints](#general-kubernetes-troubleshooting-hints)
       - [Pods stuck in not enough resources](#pods-stuck-in-not-enough-resources)
       - [Pods stuck in no storage](#pods-stuck-in-no-storage)
@@ -79,40 +79,40 @@ Contents:
 
 
 
-## The Solace PubSub+ Software Event Broker
+## The Solace Software Event Broker
 
-The [PubSub+ Software Event Broker](https://solace.com/products/event-broker/) of the [Solace PubSub+ Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace Software Event Broker](https://solace.com/products/event-broker/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
 This document assumes a basic understanding of [Kubernetes concepts](https://kubernetes.io/docs/concepts/).
 
-For an example deployment diagram, check out the [PubSub+ Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/pubsubplus-gke-quickstart#how-to-deploy-solace-pubsub-software-event-broker-onto-gke).
+For an example deployment diagram, check out the [Solace Event Broker on Google Kubernetes Engine (GKE) quickstart](https://github.com/SolaceProducts/pubsubplus-gke-quickstart#how-to-deploy-solace-pubsub-software-event-broker-onto-gke).
 
-Multiple YAML templates define the PubSub+ Kubernetes deployment with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
+Multiple YAML templates define the Solace Kubernetes deployment with several parameters as deployment options. The templates are packaged as the `pubsubplus` [Helm chart](//helm.sh/docs/topics/charts/) to enable easy customization by only specifying the non-default parameter values, without the need to edit the template files.
 
 There are two deployment options described in this document:
 * The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can also manage your deployment's lifecycle, including upgrade and delete.
 * Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-It is also important to know that Helm is a templating tool that helps package PubSub+ Software Event Broker deployment into charts.
+It is also important to know that Helm is a templating tool that helps package Solace Software Event Broker deployment into charts.
 It is most useful when first setting up broker nodes on the Kubernetes cluster. It can handle the install-update-delete lifecycle for the broker nodes deployed to the cluster.
-It can not be used to scale-up, scale down or apply custom configuration to an already deployed PubSub+ Software Event Broker.
+It can not be used to scale-up, scale down or apply custom configuration to an already deployed Solace Software Event Broker.
 
-The next sections will provide details on the PubSub+ Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
+The next sections will provide details on the Solace Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
-## PubSub+ Software Event Broker Deployment Considerations
+## Solace Software Event Broker Deployment Considerations
 
-The following diagram illustrates the template organization used for the PubSub+ Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
+The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the pods of a PubSub+ Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a PubSub+ event broker redundancy group can communicate with each other in an HA setting.
+The StatefulSet template controls the pods of a Solace Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a Solace event broker redundancy group can communicate with each other in an HA setting.
 
-All the `pubsubplus` chart parameters are documented in the [PubSub+ Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
+All the `pubsubplus` chart parameters are documented in the [Solace Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 ### Deployment scaling
 
-Solace PubSub+ Software Event Broker can be scaled vertically by specifying either:
+Solace Software Event Broker can be scaled vertically by specifying either:
 * `solace.size` - simplified scaling along the maximum number of client connections; or
 * `solace.systemScaling` - enables defining all scaling parameters and pod resources
 
@@ -153,9 +153,9 @@ Note that specifying the scaling parameters on initial deployment overwrites the
 
 #### Enabling a Disruption Budget for HA deployment
 
-One of the important parameters available to configure PubSub+ Software Event Broker HA is the [`podDisruptionBudget`](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
+One of the important parameters available to configure Solace Software Event Broker HA is the [`podDisruptionBudget`](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
 This helps you control and limit the disruption to your application when its pods need to be rescheduled for upgrades, maintenance or any other reason.
-This is only available when we have the PubSub+ Software Event Broker deployed in [high-availability (HA) mode](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm), that is, `solace.redundancy=true`.
+This is only available when we have the Solace Software Event Broker deployed in [high-availability (HA) mode](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm), that is, `solace.redundancy=true`.
 
 In an HA deployment with Primary, Backup and Monitor nodes, we require a minimum of 2 nodes to reach a quorum. The pod disruption budget defaults to a minimum of two nodes when enabled.
 
@@ -164,11 +164,11 @@ To enable this functionality you have to set  `solace.podDisruptionBudgetForHA=t
 
 #### Reducing resource requirements of Monitoring Nodes in an HA deployment
 
-The Kubernetes StatefulSet which controls the pods that make up a PubSub+ broker [deployment in an HA redundancy group](#deployment-scaling) does not distinguish between PubSub+ HA node types: it assigns the same CPU and memory resources to pods hosting worker and monitoring node types, even though monitoring nodes have minimal resource requirements.
+The Kubernetes StatefulSet which controls the pods that make up a Solace broker [deployment in an HA redundancy group](#deployment-scaling) does not distinguish between Solace HA node types: it assigns the same CPU and memory resources to pods hosting worker and monitoring node types, even though monitoring nodes have minimal resource requirements.
 
 To address this, a "solace-pod-modifier" Kubernetes admission plugin is provided as part of this repo: when deployed it intercepts pod create requests and can set the lower resource requirements for broker monitoring nodes only.
 
-Also ensure to define the Helm chart parameter `solace.podModifierEnabled: true` to provide the necessary annotations to the PubSub+ broker pods, which acts as a "control switch" to enable the monitoring pod resource modification.
+Also ensure to define the Helm chart parameter `solace.podModifierEnabled: true` to provide the necessary annotations to the Solace broker pods, which acts as a "control switch" to enable the monitoring pod resource modification.
 
 Refer to the [Readme of the plugin](/solace-pod-modifier-admission-plugin/README.md) for details on how to activate and use it. Note: the plugin requires Kubernetes v1.16 or later.
 
@@ -176,7 +176,7 @@ Refer to the [Readme of the plugin](/solace-pod-modifier-admission-plugin/README
 
 ### Disk Storage
 
-The [PubSub+ deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
+The [Solace deployment uses disk storage](//docs.solace.com/Configuring-and-Managing/Configuring-Storage.htm#Storage-) for logging, configuration, guaranteed messaging and other purposes, allocated from Kubernetes volumes.
 
 Broker versions prior to 9.12 required separate volumes mounted for each storage functionality, making up a [storage-group from individual storage-elements](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/Configuring-Storage.htm). Versions 9.12 and later can have a single mount storage-group that will be divided up internally, but they still support the legacy mounting of storage-elements. It is recommended to set the parameter `storage.useStorageGroup=true` if using broker version 9.12 or later - do not use it on earlier versions.
 
@@ -201,7 +201,7 @@ Followings are examples of how to specify parameter values in common use cases:
 
 #### Allocating smaller storage to Monitor pods in an HA deployment
 
-When deploying PubSub+ in an HA redundancy group, monitoring nodes have minimal storage requirements compared to working nodes. The default `storage.monitorStorageSize` Helm chart value enables setting and creating smaller storage for Monitor pods hosting monitoring nodes as a pre-install hook in an HA deployment (`solace.redundancy=true`), before larger storage would be automatically created. Note that this setting is effective for initial deployments only, cannot be used to upgrade an existing deployment with storage already allocated for monitoring nodes. A workaround is to mark the Monitor pod storage for delete (will not delete it immediately, only after the Monitor pod has been deleted) then follow the steps to [recreate the deployment](#re-installing-a-deployment): `kubectl delete pvc <monitoring-pod-pvc>`.
+When deploying Solace in an HA redundancy group, monitoring nodes have minimal storage requirements compared to working nodes. The default `storage.monitorStorageSize` Helm chart value enables setting and creating smaller storage for Monitor pods hosting monitoring nodes as a pre-install hook in an HA deployment (`solace.redundancy=true`), before larger storage would be automatically created. Note that this setting is effective for initial deployments only, cannot be used to upgrade an existing deployment with storage already allocated for monitoring nodes. A workaround is to mark the Monitor pod storage for delete (will not delete it immediately, only after the Monitor pod has been deleted) then follow the steps to [recreate the deployment](#re-installing-a-deployment): `kubectl delete pvc <monitoring-pod-pvc>`.
 
 #### Using the default or an existing storage class
 
@@ -287,19 +287,19 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 ```
 #### Tested storage environments and providers
 
-The PubSub+ Software Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
+The Solace Software Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
 However, note that for [EKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-eks-specific-req.htm) and [GKE](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-gke-specific-req.htm#storage-class), `xfs` produced the best results during tests.
 [AKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-aks-specific-req.htm) users can opt for `Local Redundant Storage (LRS)` redundancy. This is because they produce the best results
 when compared with the other types available on Azure.
 
-### Exposing the PubSub+ Software Event Broker Services
+### Exposing the Solace Software Event Broker Services
 
 #### Specifying Service Type
 
-[PubSub+ services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the following [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
+[Solace services](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm#Software) can be exposed through one of the following [Kubernetes service types](//kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) by specifying the `service.type` parameter:
 
 * LoadBalancer (default) - a load balancer, typically externally accessible depending on the K8s provider.
-* NodePort - maps PubSub+ services to a port on a Kubernetes node; external access depends on access to the node.
+* NodePort - maps Solace services to a port on a Kubernetes node; external access depends on access to the node.
 * ClusterIP - internal access only from within K8s.
 
 Additionally, for all above service types, external access can be configured through K8s Ingress (see next section).
@@ -314,11 +314,11 @@ A deployment is ready for service requests when there is a Solace pod that is ru
 
 #### Using Ingress to access event broker services
 
-The `LoadBalancer` or `NodePort` service types can be used to expose all services from one PubSub+ broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) may be used to enable efficient external access from a single external IP address to specific PubSub+ services, potentially provided by multiple brokers.
+The `LoadBalancer` or `NodePort` service types can be used to expose all services from one Solace broker. [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress) may be used to enable efficient external access from a single external IP address to specific Solace services, potentially provided by multiple brokers.
 
-The following table gives an overview of how external access can be configured for PubSub+ services via Ingress.
+The following table gives an overview of how external access can be configured for Solace services via Ingress.
 
-| PubSub+ service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
+| Solace service / protocol, configuration and requirements | HTTP, no TLS | HTTPS with TLS terminate at ingress | HTTPS with TLS re-encrypt at ingress | General TCP over TLS with passthrough to broker |
 | -- | -- | -- | -- | -- |
 | **Notes:** | -- | Requires TLS config on Ingress-controller | Requires TLS config on broker AND TLS config on Ingress-controller | Requires TLS config on broker. Client must use SNI to provide target host |
 | WebSockets, MQTT over WebSockets | Supported | Supported | Supported | Supported (routing via SNI) |
@@ -353,7 +353,7 @@ example.address                   nginx   frontend.host
 
 ##### HTTP, no TLS
 
-The following example configures ingress to [access PubSub+ REST service](https://docs.solace.com/RESTMessagingPrtl/Solace-REST-Example.htm#cURL). Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the PubSub+ `values.yaml` file.
+The following example configures ingress to [access Solace REST service](https://docs.solace.com/RESTMessagingPrtl/Solace-REST-Example.htm#cURL). Replace `<my-pubsubplus-service>` with the name of the service of your deployment (hint: the service name is similar to your pod names). The port name must match the `service.ports` name in the Solace `values.yaml` file.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -437,9 +437,9 @@ The TLS passthrough capability must be explicitly enabled on the NGINX ingress c
 
 The Ingress manifest specifies "passthrough" by adding the `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` annotation.
 
-The deployed PubSub+ broker(s) must have TLS configured with a certificate that includes DNS names in CN and/or SAN, that match the host used. In the example the broker server certificate may specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1`, distinguished by the host FQDN.
+The deployed Solace broker(s) must have TLS configured with a certificate that includes DNS names in CN and/or SAN, that match the host used. In the example the broker server certificate may specify the host `*.broker1.bar.com`, so multiple services can be exposed from `broker1`, distinguished by the host FQDN.
 
-The protocol client must support SNI. It depends on the client if it uses the server certificate CN or SAN for host name validation. Most recent clients use SAN, for example the PubSub+ Java API requires host DNS names in the SAN when using SNI.
+The protocol client must support SNI. It depends on the client if it uses the server certificate CN or SAN for host name validation. Most recent clients use SAN, for example the Solace Java API requires host DNS names in the SAN when using SNI.
 
 With above, an ingress example looks following:
 
@@ -476,7 +476,7 @@ This label is set by the `readiness_check.sh` script in `pubsubplus/templates/so
 
 - the Solace pods must be able to communicate with each-other at port 8080 and internal ports using the Service-Discovery service.
 - the Kubernetes service account associated with the Solace pod must have sufficient rights to patch the pod's label when the active event broker is service ready
-- the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-message-brokers).
+- the Solace pods must be able to communicate with the Kubernetes API at `kubernetes.default.svc.cluster.local` at port $KUBERNETES_SERVICE_PORT. You can find out the address and port by [SSH into the pod](#ssh-access-to-individual-event-brokers).
 
 ### Enabling use of TLS to access broker services
 
@@ -521,28 +521,28 @@ Next, if using the same secret name, the broker Pods need to be restarted, one a
 
 > Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
 
-### The PubSub+ Software Event Broker Docker image
+### The Solace Software Event Broker Docker image
 
-The `image.repository` and `image.tag` parameters combined specify the PubSub+ Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
+The `image.repository` and `image.tag` parameters combined specify the Solace Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
 
 #### Using a public registry
 
-The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free PubSub+ Software Event Broker Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
+The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free Solace Software Event Broker Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
 
 #### Using private registries
 
 The following steps are applicable if using a private Docker container registry (e.g.: GCR, ECR or Harbor):
-1. Get the Solace PubSub+ event broker Docker image tar.gz archive
+1. Get the Solace event broker Docker image tar.gz archive
 2. Load the image into the private Docker registry 
 
-To get the PubSub+ Software Event Broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ Software Event Broker as a **docker** image or obtain your version from Solace Support.
+To get the Solace Software Event Broker Docker image URL, go to the Solace Developer Portal and download the Solace Software Event Broker as a **docker** image or obtain your version from Solace Support.
 
-| PubSub+ Software Event Broker Standard<br/>Docker Image | PubSub+ Software Event Broker Enterprise Evaluation Edition<br/>Docker Image
+| Solace Software Event Broker Standard<br/>Docker Image | Solace Software Event Broker Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-To load the Solace PubSub+ Software Event Broker Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+To load the Solace Software Event Broker Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
 
 * Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
 * Login to the private registry:
@@ -553,7 +553,7 @@ sudo docker login <private-registry> ...
 ```sh
 # Options a or b depending on your Docker image source:
 ## Option a): If you have a local tar.gz Docker image file
-sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
+sudo docker load -i <solace-XYZ-docker>.tar.gz
 ## Option b): You can use the public Solace Docker image, such as from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
 #
@@ -598,7 +598,7 @@ If other settings control `fsGroup` and `runAsUser`, e.g: when using a [PodSecur
 #### Enabling pod label "active" in a tight security environment
 
 Services require [pod label "active"](#using-pod-label-active-to-identify-the-active-event-broker-node) of the serving event broker.
-* In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-policies/ ) to enable [required communication](#using-pod-label-active-to-identify-the-active-event-broker-node).
+* In a controlled environment it may be necessary to add a [NetworkPolicy](//kubernetes.io/docs/concepts/services-networking/network-
 
 #### Securing TLS server key and certificate
 
