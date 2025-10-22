@@ -88,19 +88,19 @@ Helm is configured properly if the command `helm version` returns no error.
 
 a) Create a Solace Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
 ```bash
-# Deploy Solace Software Event Broker Standard edition for developers
+# Deploy Solace Software Event Broker Standard Edition for developers
 helm install my-release solacecharts/pubsubplus-dev
 ```
 
 b) Create a Solace standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 4 GB of memory must be available to the event broker pod.
 ```bash
-# Deploy Solace Software Event Broker Standard edition, standalone
+# Deploy Solace Software Event Broker Standard Edition, standalone
 helm install my-release solacecharts/pubsubplus
 ```
 
 c) Create a Solace HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three event broker pods.
 ```bash
-# Deploy Solace Software Event Broker Standard edition, HA
+# Deploy Solace Software Event Broker Standard Edition, HA
 helm install my-release solacecharts/pubsubplus-ha
 ```
 
