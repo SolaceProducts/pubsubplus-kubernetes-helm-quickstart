@@ -184,7 +184,7 @@ data:
             echo "`date` INFO: ${APP}-Node activity status is Local Active, after ${run_time} seconds"
             # We should only be here on new cluster create, if not this is an indication of unexpected HA procedures
             if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
-                # Need to issue assert leader to get back into sync only one time when the PubSub+ Event Broker starts the first time
+                # Need to issue assert leader to get back into sync only one time when the Solace Event Broker starts the first time
                 echo "`date` INFO: ${APP}-Broker initial startup detected. This node will assert config-sync configuration over its mate"
                 resync_step_required="true"
             else
@@ -325,10 +325,10 @@ data:
       fi
     fi # if not monitor
 {{- end }}
-    echo "`date` INFO: ${APP}-PubSub+ Event Broker bringup is complete for this node."
-    # create startup file after PubSub+ Event Broker is up and running.  Create only if it does not exist
+    echo "`date` INFO: ${APP}-Solace Event Broker bringup is complete for this node."
+    # create startup file after Solace Event Broker is up and running.  Create only if it does not exist
     if [[ ! -e ${INITIAL_STARTUP_FILE} ]]; then
-        echo "PubSub+ Event Broker initial startup completed on `date`" > ${INITIAL_STARTUP_FILE}
+        echo "Solace Event Broker initial startup completed on `date`" > ${INITIAL_STARTUP_FILE}
     fi
     exit 0
 

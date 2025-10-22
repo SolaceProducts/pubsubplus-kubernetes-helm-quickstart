@@ -131,12 +131,12 @@ A green check mark shows that broker deployment using the Helm chart is supporte
 ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)
 A gray check mark shows the broker deployment using helm chart is supported but not fully tested on the specific kubernetes distribution. In addition, there may be known issues or additional work required to deploy event broker services on the Kubernetes cluster.
 
-| Kubernetes Distribution | Minimum Recommended Pubsub+ Event Broker Version | Supported |
-|-------------------------|--------------------------------------------------|-----------|
-| Google Kubernetes Engine (GKE)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/f22255d5-ec7e-4f6e-a0c9-ac75c3992016)        |
-| Amazon Elastic Kubernetes Service (EKS)                       | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
-| Azure Kubernetes Service (AKS)                      | 10.4.1                                           | ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)         |
-|                         |                                                  |           |
+| Kubernetes Distribution | Minimum Recommended Solace Event Broker Version | Supported |
+|-------------------------|-------------------------------------------------|-----------|
+| Google Kubernetes Engine (GKE)                       | 10.4.1                                          | ![image](https://github.com/user-attachments/assets/f22255d5-ec7e-4f6e-a0c9-ac75c3992016)        |
+| Amazon Elastic Kubernetes Service (EKS)                       | 10.4.1                                          | ![image](https://github.com/user-attachments/assets/df403828-04a8-4ca5-9b6c-303b270640e8)         |
+| Azure Kubernetes Service (AKS)                      | 10.4.1                                          | ![image](https://github.com/user-attachments/assets/bfefe455-d6d8-49a4-98d0-dee8d791dc66)         |
+|                         |                                                 |           |
 
 ## Versioning
 

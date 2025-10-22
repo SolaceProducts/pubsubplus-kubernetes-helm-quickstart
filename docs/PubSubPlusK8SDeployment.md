@@ -1,16 +1,16 @@
-# Solace Software Event Broker on Kubernetes Deployment Documentation
+# Solace Event Broker on Kubernetes Deployment Documentation
 
-This document provides detailed information for deploying Solace Software Event Broker on Kubernetes.
+This document provides detailed information for deploying Solace Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
-* For the `pubsubplus` Helm chart configuration options, refer to the [Solace Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
+* For the `pubsubplus` Helm chart configuration options, refer to the [Solace Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
 This document is applicable to any platform provider supporting Kubernetes.
 
 Contents:
-  * [**The Solace Software Event Broker**](#the-solace-software-event-broker)
+  * [**The Solace Event Broker**](#the-solace-event-broker)
   * [**Overview**](#overview)
-  * [**Solace Event Broker Deployment Considerations**](#solace-software-event-broker-deployment-considerations)
+  * [**Solace Event Broker Deployment Considerations**](#solace-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
       - [Simplified vertical scaling](#simplified-vertical-scaling)
       - [Comprehensive vertical scaling](#comprehensive-vertical-scaling)
@@ -23,7 +23,7 @@ Contents:
       - [Using an existing PVC (Persistent Volume Claim)](#using-an-existing-pvc-persistent-volume-claim-)
       - [Using a pre-created provider-specific volume](#using-a-pre-created-provider-specific-volume)
       - [Tested storage environments and providers](#tested-storage-environments-and-providers)
-    + [Exposing the Solace Event Broker Services](#exposing-the-solace-software-event-broker-services)
+    + [Exposing the Solace Event Broker Services](#exposing-the-solace-event-broker-services)
       - [Specifying Service Type](#specifying-service-type)
       - [Using Ingress to access event broker services](#using-ingress-to-access-event-broker-services)
         * [Configuration examples](#configuration-examples)
@@ -35,7 +35,7 @@ Contents:
     + [Enabling use of TLS to access broker services](#enabling-use-of-tls-to-access-broker-services)
       - [Setting up TLS](#setting-up-tls)
       - [Rotating the server key](#rotating-the-server-key)
-    + [The Solace Docker image](#the-solace-software-event-broker-docker-image)
+    + [The Solace Docker image](#the-solace-docker-image)
       - [Using a public registry](#using-a-public-registry)
       - [Using private registries](#using-private-registries)
       - [Using ImagePullSecrets for signed images](#using-imagepullsecrets-for-signed-images)
@@ -63,7 +63,7 @@ Contents:
   * [**Troubleshooting**](#troubleshooting)
     + [Viewing logs](#viewing-logs)
     + [Viewing events](#viewing-events)
-    + [Solace Software Event Broker troubleshooting](#solace-software-event-broker-troubleshooting)
+    + [Solace Event Broker troubleshooting](#solace-event-broker-troubleshooting)
       - [General Kubernetes troubleshooting hints](#general-kubernetes-troubleshooting-hints)
       - [Pods stuck in not enough resources](#pods-stuck-in-not-enough-resources)
       - [Pods stuck in no storage](#pods-stuck-in-no-storage)
@@ -79,9 +79,9 @@ Contents:
 
 
 
-## The Solace Software Event Broker
+## The Solace Event Broker
 
-The [Solace Software Event Broker](https://solace.com/products/event-broker/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace Event Broker](https://solace.com/products/event-broker/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
@@ -93,26 +93,26 @@ Multiple YAML templates define the Solace Kubernetes deployment with several par
 
 There are two deployment options described in this document:
 * The recommended option is to use the [Kubernetes Helm tool](https://github.com/helm/helm/blob/master/README.md), which can also manage your deployment's lifecycle, including upgrade and delete.
-* Another option is to generate a set of templates with customized values from the PubSub+ Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
+* Another option is to generate a set of templates with customized values from the Solace Helm chart and then use the Kubernetes native `kubectl` tool to deploy. The deployment will use the authorizations of the requesting user. However, in this case, Helm will not be able to manage your Kubernetes rollouts lifecycle.
 
-It is also important to know that Helm is a templating tool that helps package Solace Software Event Broker deployment into charts.
+It is also important to know that Helm is a templating tool that helps package Solace Event Broker deployment into charts.
 It is most useful when first setting up broker nodes on the Kubernetes cluster. It can handle the install-update-delete lifecycle for the broker nodes deployed to the cluster.
-It can not be used to scale-up, scale down or apply custom configuration to an already deployed Solace Software Event Broker.
+It can not be used to scale-up, scale down or apply custom configuration to an already deployed Solace Event Broker.
 
 The next sections will provide details on the Solace Helm chart, dependencies and customization options, followed by [deployment prerequisites](#deployment-prerequisites) and the actual [deployment steps](#deployment-steps).
 
-## Solace Software Event Broker Deployment Considerations
+## Solace Event Broker Deployment Considerations
 
 The following diagram illustrates the template organization used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 ![alt text](/docs/images/template_relationship.png "`pubsubplus` chart template relationship")
 
-The StatefulSet template controls the pods of a Solace Software Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a Solace event broker redundancy group can communicate with each other in an HA setting.
+The StatefulSet template controls the pods of a Solace Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a Solace event broker redundancy group can communicate with each other in an HA setting.
 
-All the `pubsubplus` chart parameters are documented in the [Solace Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
+All the `pubsubplus` chart parameters are documented in the [Solace Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 ### Deployment scaling
 
-Solace Software Event Broker can be scaled vertically by specifying either:
+Solace Event Broker can be scaled vertically by specifying either:
 * `solace.size` - simplified scaling along the maximum number of client connections; or
 * `solace.systemScaling` - enables defining all scaling parameters and pod resources
 
@@ -149,13 +149,13 @@ Additionally, CPU and memory must be sized and provided in `solace.systemScaling
 > Note: beyond CPU and memory requirements, required storage size (see next section) also depends significantly on scaling. We recommend using the minimum required values specified in the [Resource Calculator](https://docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/System-Resource-Calculator.htm).
 > However, you can adjust these values in the YAML file based on your available resources. If you decide to allocate fewer resources than the recommended minimum, make sure to thoroughly test your deployment to ensure stability and performance.
 
-Note that specifying the scaling parameters on initial deployment overwrites the broker’s default values. Using a Helm upgrade on an existing deployment avoids overwriting broker configuration values. You can use a Helm upgrade to prepare for a manual scale up using the CLI, where you can change the parameters.
+Note that specifying the scaling parameters on initial deployment overwrites the broker's default values. Using a Helm upgrade on an existing deployment avoids overwriting broker configuration values. You can use a Helm upgrade to prepare for a manual scale up using the CLI, where you can change the parameters.
 
 #### Enabling a Disruption Budget for HA deployment
 
-One of the important parameters available to configure Solace Software Event Broker HA is the [`podDisruptionBudget`](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
+One of the important parameters available to configure Solace Event Broker HA is the [`podDisruptionBudget`](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
 This helps you control and limit the disruption to your application when its pods need to be rescheduled for upgrades, maintenance or any other reason.
-This is only available when we have the Solace Software Event Broker deployed in [high-availability (HA) mode](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm), that is, `solace.redundancy=true`.
+This is only available when we have the Solace Event Broker deployed in [high-availability (HA) mode](//docs.solace.com/Overviews/SW-Broker-Redundancy-and-Fault-Tolerance.htm), that is, `solace.redundancy=true`.
 
 In an HA deployment with Primary, Backup and Monitor nodes, we require a minimum of 2 nodes to reach a quorum. The pod disruption budget defaults to a minimum of two nodes when enabled.
 
@@ -265,7 +265,7 @@ Provide this custom YAML fragment in `storage.customVolumeMount`:
 
 #### Using a pre-created provider-specific volume
 
-The PubSub+ Software Event Broker Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
+The Solace Event Broker Kubernetes deployment is expected to work with all [types of volumes](//kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes ) your environment supports. In this case provide the specifics on mounting it in a custom YAML fragment in `storage.customVolumeMount`.
 
 The following shows how to implement the [gcePersistentDisk example](//kubernetes.io/docs/concepts/storage/volumes/#gcepersistentdisk); note how the portion of the pod manifest example after `{spec.volumes.name}` is specified:
 ```yaml
@@ -287,12 +287,12 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 ```
 #### Tested storage environments and providers
 
-The Solace Software Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
+The Solace Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
 However, note that for [EKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-eks-specific-req.htm) and [GKE](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-gke-specific-req.htm#storage-class), `xfs` produced the best results during tests.
 [AKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-aks-specific-req.htm) users can opt for `Local Redundant Storage (LRS)` redundancy. This is because they produce the best results
 when compared with the other types available on Azure.
 
-### Exposing the Solace Software Event Broker Services
+### Exposing the Solace Event Broker Services
 
 #### Specifying Service Type
 
@@ -409,7 +409,7 @@ External requests shall be targeted to the ingress External-IP through the defin
 
 ##### HTTPS with TLS re-encrypt at ingress
 
-This only differs from above in that the request is forwarded to a TLS-encrypted PubSub+ service port. The broker must have TLS configured but there are no specific requirements for the broker certificate as the ingress does not enforce it.
+This only differs from above in that the request is forwarded to a TLS-encrypted Solace Event Broker service port. The broker must have TLS configured but there are no specific requirements for the broker certificate as the ingress does not enforce it.
 
 The difference in the Ingress manifest is an NGINX-specific annotation marking that the backend is using TLS, and the service target port in the last line - it refers now to a TLS backend port:
 
@@ -493,7 +493,7 @@ The server key and certificate must be packaged in a Kubernetes secret, for exam
 kubectl create secret tls <my-tls-secret> --key="<my-server-key-file>" --cert="<my-certificate-file>"
 ```
 
-This secret name and related parameters shall be specified when deploying the PubSub+ Helm chart:
+This secret name and related parameters shall be specified when deploying the Solace Event Broker Helm chart:
 ```
 tls:
   enabled: true    # set to false by default
@@ -694,7 +694,7 @@ As discussed in the [Overview](#overview), two types of deployments will be desc
 
 ### Deployment steps using Helm
 
-The recommended way is to make use of published pre-packaged PubSub+ charts from Solace' public repo and customizing your deployment through [available chart parameters](/pubsubplus/README.md).
+The recommended way is to make use of published pre-packaged Solace Event Broker charts from Solace' public repo and customizing your deployment through [available chart parameters](/pubsubplus/README.md).
 
 Add or refresh a local Solace `solacecharts` repo:
 ```bash
@@ -708,11 +708,11 @@ helm install my-release solacecharts/pubsubplus
 ```
 
 There are three Helm chart variants available with default small-size configurations:
-1.	`pubsubplus-dev` - PubSub+ Software Event Broker for Developers (standalone)
-2.	`pubsubplus` - PubSub+ Software Event Broker standalone, supporting 100 connections
-3.	`pubsubplus-ha` - PubSub+ Software Event Broker HA, supporting 100 connections
+1.	`pubsubplus-dev` - Solace Event Broker for Developers (standalone)
+2.	`pubsubplus` - Solace Event Broker standalone, supporting 100 connections
+3.	`pubsubplus-ha` - Solace Event Broker HA, supporting 100 connections
 
-Customization options are described in the [PubSub+ Software Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
+Customization options are described in the [Solace Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 Also, refer to the [quick start guide](/README.md) for additional deployment details.
 
@@ -952,7 +952,7 @@ kubectl logs XXX-XXX-pubsubplus-0 | grep [.]sh
 
 ### Viewing events
 
-Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the PubSub+ deployment.
+Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace Event Broker deployment.
 
 It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 
@@ -960,7 +960,7 @@ It is recommended to watch events when creating or upgrading a Solace deployment
 kubectl get events -w # use -w to watch live
 ```
 
-### PubSub+ Software Event Broker troubleshooting
+### Solace Event Broker troubleshooting
 
 #### Pods stuck in not enough resources
 
@@ -970,7 +970,7 @@ If pods stay in pending state and `kubectl describe pods` reveals there are not 
 
 Pods may also stay in pending state because [storage requirements](#storage) cannot be met. Check `kubectl get pv,pvc`. PVCs and PVs should be in bound state and if not then use `kubectl describe pvc` for any issues.
 
-Unless otherwise specified, a default storage class must be available for default PubSub+ deployment configuration.
+Unless otherwise specified, a default storage class must be available for default Solace Event Broker deployment configuration.
 ```bash
 kubectl get storageclasses
 ```
@@ -1112,9 +1112,3 @@ The preferred way of backing up and restoring your deployment is by backing up a
 This is because of certain limitations of the system-wide backup and restore. For example TLS/SSL configuration are not included in system-wide backup hence configurations related to it will be lost.
 
 A detailed guide to perform backing up and restore of message vpns can be found [here](https://docs.solace.com/Features/VPN/Backing-Up-and-Restoring-VPNs.htm).
-
-
-
-
-
-
