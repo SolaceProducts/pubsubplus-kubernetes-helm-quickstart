@@ -3,12 +3,12 @@
 This document provides detailed information for deploying Solace Event Broker on Kubernetes.
 
 * For a hands-on quick start, refer to the [Quick Start guide](/README.md).
-* For the `pubsubplus` Helm chart configuration options, refer to the [Solace Event Broker Helm Chart Reference](/pubsubplus/README.md).
+* For the `pubsubplus` Helm chart configuration options, refer to the [Solace Event Broker Software Helm Chart Reference](/pubsubplus/README.md).
 
 This document is applicable to any platform provider supporting Kubernetes.
 
 Contents:
-  * [**The Solace Event Broker**](#the-solace-event-broker)
+  * [**The Solace Event Broker Software**](#the-solace-event-broker-software)
   * [**Overview**](#overview)
   * [**Solace Event Broker Deployment Considerations**](#solace-event-broker-deployment-considerations)
     + [Deployment scaling](#deployment-scaling)
@@ -79,7 +79,7 @@ Contents:
 
 
 
-## The Solace Event Broker
+## The Solace Event Broker Software
 
 The [Solace Event Broker](https://solace.com/products/event-broker/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
@@ -108,7 +108,7 @@ The following diagram illustrates the template organization used for the Solace 
 
 The StatefulSet template controls the pods of a Solace Event Broker deployment. It also mounts the scripts from the ConfigMap and the files from the Secrets and maps the event broker data directories to a storage volume through a StorageClass, if configured. The Service template provides the event broker services at defined ports. The Service-Discovery template is only used internally, so pods in a Solace event broker redundancy group can communicate with each other in an HA setting.
 
-All the `pubsubplus` chart parameters are documented in the [Solace Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
+All the `pubsubplus` chart parameters are documented in the [Solace Event Broker Software Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 ### Deployment scaling
 
@@ -287,7 +287,7 @@ Another example is using [hostPath](//kubernetes.io/docs/concepts/storage/volume
 ```
 #### Tested storage environments and providers
 
-The Solace Event Broker has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
+The Solace Event Broker Software has been tested to work with the following, Portworx, Ceph, Cinder (Openstack), vSphere storage for Kubernetes as documented [here](https://docs.solace.com/Cloud/Deployment-Considerations/resource-requirements-k8s.htm#supported-storage-solutions).
 However, note that for [EKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-eks-specific-req.htm) and [GKE](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-gke-specific-req.htm#storage-class), `xfs` produced the best results during tests.
 [AKS](https://docs.solace.com/Cloud/Deployment-Considerations/installing-ps-cloud-k8s-aks-specific-req.htm) users can opt for `Local Redundant Storage (LRS)` redundancy. This is because they produce the best results
 when compared with the other types available on Azure.
@@ -493,7 +493,7 @@ The server key and certificate must be packaged in a Kubernetes secret, for exam
 kubectl create secret tls <my-tls-secret> --key="<my-server-key-file>" --cert="<my-certificate-file>"
 ```
 
-This secret name and related parameters shall be specified when deploying the Solace Event Broker Helm chart:
+This secret name and related parameters shall be specified when deploying the Solace Event Broker Software Helm chart:
 ```
 tls:
   enabled: true    # set to false by default
@@ -712,7 +712,7 @@ There are three Helm chart variants available with default small-size configurat
 2.	`pubsubplus` - Solace Event Broker standalone, supporting 100 connections
 3.	`pubsubplus-ha` - Solace Event Broker HA, supporting 100 connections
 
-Customization options are described in the [Solace Event Broker Helm Chart](/pubsubplus/README.md#configuration) reference.
+Customization options are described in the [Solace Event Broker Software Helm Chart](/pubsubplus/README.md#configuration) reference.
 
 Also, refer to the [quick start guide](/README.md) for additional deployment details.
 
@@ -952,7 +952,7 @@ kubectl logs XXX-XXX-pubsubplus-0 | grep [.]sh
 
 ### Viewing events
 
-Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace Event Broker deployment.
+Kubernetes collects [all events for a cluster in one pool](//kubernetes.io/docs/tasks/debug-application-cluster/events-stackdriver ). This includes events related to the Solace Event Broker Software deployment.
 
 It is recommended to watch events when creating or upgrading a Solace deployment. Events clear after about an hour. You can query all available events:
 

@@ -23,7 +23,7 @@ sed -i '/charts.openshift.io\/name:/ s@charts.openshift.io/name.*@charts.openshi
 sed -i '/name:/ s/pubsubplus/pubsubplus-dev/g' pubsubplus-dev/Chart.yaml
 sed -i 's/size: prod.*$/size: dev/g' pubsubplus-dev/values.yaml
 sed -i 's/size: .*Gi/size: 10Gi/g' pubsubplus-dev/values.yaml
-sed -i 's/# Solace Event Broker Helm Chart/# Solace Event Broker Helm Chart for Developers/g' pubsubplus-dev/README.md
+sed -i 's/# Solace Event Broker Software Helm Chart/# Solace Event Broker Software Helm Chart for Developers/g' pubsubplus-dev/README.md
 sed -i 's/This chart bootstraps a single-node or HA deployment/This chart bootstraps minimum single-node deployment for Developers/g' pubsubplus-dev/README.md
 sed -i 's@solacecharts/pubsubplus@solacecharts/pubsubplus-dev@g' pubsubplus-dev/README.md
 sed -i '/`solace.size`/ s/| `prod.*` |/| `dev` |/g' pubsubplus-dev/README.md
