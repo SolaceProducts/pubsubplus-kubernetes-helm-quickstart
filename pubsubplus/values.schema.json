@@ -226,7 +226,7 @@
         },
         "insights": {
             "type": "object",
-            "description": "Configuration for PubSub+ Insights feature",
+            "description": "Configuration for Solace Event Broker Insights feature",
             "properties": {
                 "enabled": {
                     "type": "boolean",
