@@ -2,12 +2,12 @@
 
 __Contents:__
 
-- [Install a Solace Software Event Broker onto a Kubernetes cluster](#install-a-solace-software-event-broker-onto-a-kubernetes-cluster)
+- [Install a Solace Event Broker onto a Kubernetes cluster](#install-a-solace-software-event-broker-onto-a-kubernetes-cluster)
   - [Overview](#overview)
-  - [How to deploy the Solace Software Event Broker onto Kubernetes](#how-to-deploy-the-solace-software-event-broker-onto-kubernetes)
+  - [How to deploy the Solace Event Broker onto Kubernetes](#how-to-deploy-the-solace-software-event-broker-onto-kubernetes)
     - [1. Get a Kubernetes environment](#1-get-a-kubernetes-environment)
     - [2. Install and configure Helm](#2-install-and-configure-helm)
-    - [3. Install the Solace Software Event Broker with default configuration](#3-install-the-solace-software-event-broker-with-default-configuration)
+    - [3. Install the Solace Event Broker with default configuration](#3-install-the-solace-software-event-broker-with-default-configuration)
   - [Support](#support)
   - [Versioning](#versioning)
   - [Contributing](#contributing)
@@ -15,43 +15,43 @@ __Contents:__
   - [License](#license)
   - [Resources](#resources)
 
-# Install a Solace Software Event Broker onto a Kubernetes cluster
+# Install a Solace Event Broker onto a Kubernetes cluster
 
-The [Solace Software Event Broker](https://solace.com/products/event-broker/software/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
+The [Solace Event Broker](https://solace.com/products/event-broker/software/) of the [Solace Platform](https://solace.com/products/platform/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in the cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This project is a best practice template intended for development and demo purposes. The tested and recommended Solace Software Event Broker version is 10.0.
+This project is a best practice template intended for development and demo purposes. The tested and recommended Solace Event Broker version is 10.0.
 
 This document provides a quick getting started guide to install a software event broker in various configurations onto a [Kubernetes](https://kubernetes.io/docs/home/) cluster.
 
-Detailed documentation is provided in the [Solace Software Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md). Consult the [Deployment Considerations](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#solace-software-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
+Detailed documentation is provided in the [Solace Event Broker on Kubernetes Documentation](docs/PubSubPlusK8SDeployment.md). Consult the [Deployment Considerations](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#solace-software-event-broker-deployment-considerations) section of the Documentation when planning your deployment.
 
 This document is applicable to any platform supporting Kubernetes, with specific hints on how to set up a simple MiniKube deployment on a Linux-based machine. To view examples of other Kubernetes platforms see:
 
-- [Deploying a Solace Software Event Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
-- [Deploying a Solace Software Event Broker HA Group onto an OpenShift 4 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
-- Deploying a Solace Software Event Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](//docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
-- [Install a Solace Software Event Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
-- Deploying a Solace Software Event Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
+- [Deploying a Solace Event Broker HA group onto a Google Kubernetes Engine](//github.com/SolaceProducts/solace-gke-quickstart )
+- [Deploying a Solace Event Broker HA Group onto an OpenShift 4 platform](//github.com/SolaceProducts/solace-openshift-quickstart )
+- Deploying a Solace Event Broker HA Group onto Amazon EKS (Amazon Elastic Container Service for Kubernetes): follow the [AWS documentation](//docs.aws.amazon.com/eks/latest/userguide/getting-started.html ) to set up EKS then this guide to deploy.
+- [Install a Solace Event Broker onto a Pivotal Container Service (PKS) cluster](//github.com/SolaceProducts/solace-pks )
+- Deploying a Solace Event Broker HA Group onto Azure Kubernetes Service (AKS): follow the [Azure documentation](//docs.microsoft.com/en-us/azure/aks/ ) to deploy an AKS cluster then this guide to deploy.
 
-## How to deploy the Solace Software Event Broker onto Kubernetes
+## How to deploy the Solace Event Broker onto Kubernetes
 
-Solace Software Event Broker can be deployed in either a three-node High-Availability (HA) group or as a single-node standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
+Solace Event Broker can be deployed in either a three-node High-Availability (HA) group or as a single-node standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
 We recommend using the Helm tool for convenience. An [alternative method](/docs/PubSubPlusK8SDeployment.md#alternative-deployment-with-generating-templates-for-the-kubernetes-kubectl-tool) using generated templates is also provided.
 
-In this quick start we go through the steps to set up a Solace Software Event Broker using [Solace Helm charts](//artifacthub.io/packages/search?ts_query_web=solace).
+In this quick start we go through the steps to set up a Solace Event Broker using [Solace Helm charts](//artifacthub.io/packages/search?ts_query_web=solace).
 
 There are three Helm chart variants available with default small-size configurations:
-1.	`pubsubplus-dev` - recommended Solace Software Event Broker for Developers (standalone) - no guaranteed performance
-2.	`pubsubplus-ha` - Solace Software Event Broker HA, supporting 1000 connections
+1.	`pubsubplus-dev` - recommended Solace Event Broker for Developers (standalone) - no guaranteed performance
+2.	`pubsubplus-ha` - Solace Event Broker HA, supporting 1000 connections
 
-For other Solace Software Event Broker configurations or sizes, refer to the [Solace Software Event Broker Helm Chart Reference](/pubsubplus/README.md).
+For other Solace Event Broker configurations or sizes, refer to the [Solace Event Broker Helm Chart Reference](/pubsubplus/README.md).
 
 ### 1. Get a Kubernetes environment
 
-Follow your Kubernetes provider's instructions ([other options available here](https://kubernetes.io/docs/setup/)). Ensure you meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted Solace Software Event Broker configuration size. Important: the broker resource requirements refer to available resources on a [Kubernetes node](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/#kube-scheduler).
+Follow your Kubernetes provider's instructions ([other options available here](https://kubernetes.io/docs/setup/)). Ensure you meet [minimum CPU, Memory and Storage requirements](docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) for the targeted Solace Event Broker configuration size. Important: the broker resource requirements refer to available resources on a [Kubernetes node](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/#kube-scheduler).
 > Note: If using [MiniKube](https://kubernetes.io/docs/setup/learning-environment/minikube/), use `minikube start` with specifying the options `--memory` and `--cpus` to assign adequate resources to the MiniKube VM. The recommended memory is 1GB plus the minimum requirements of your event broker.
 
 Also have the `kubectl` tool [installed](https://kubernetes.io/docs/tasks/tools/install-kubectl/) locally.
@@ -76,31 +76,31 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 Helm is configured properly if the command `helm version` returns no error.
 
 
-### 3. Install the Solace Software Event Broker with default configuration
+### 3. Install the Solace Event Broker with default configuration
 
 - Add the Solace Helm charts to your local Helm repo:
 ```bash
   helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 ```
-- By default the publicly available [latest Docker image of Solace Software Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a non-default image, add the `--set image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the commands below.
-- Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [Solace Software Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
+- By default the publicly available [latest Docker image of Solace Event Broker Standard Edition](https://hub.Docker.com/r/solace/solace-pubsub-standard/tags/) will be used. Specify a different image or [use a Docker image from a private registry](/docs/PubSubPlusK8SDeployment.md#using-private-registries) if required. If using a non-default image, add the `--set image.repository=<your-image-location>,image.tag=<your-image-tag>` values to the commands below.
+- Generally, for configuration options and ways to override default configuration values (using `--set` is one the options), consult the [Solace Event Broker Helm Chart Reference](/pubsubplus/README.md#configuration).
 - Use one of the following chart variants to create a deployment:
 
-a) Create a Solace Software Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
+a) Create a Solace Event Broker deployment for development purposes using `pubsubplus-dev`. It requires a minimum of 1 CPU and 2 GB of memory available to the event broker pod.
 ```bash
-# Deploy Solace Software Event Broker Standard Edition for developers
+# Deploy Solace Event Broker Standard Edition for developers
 helm install my-release solacecharts/pubsubplus-dev
 ```
 
 b) Create a Solace standalone deployment, supporting 100 connections scaling using `pubsubplus`. A minimum of 2 CPUs and 4 GB of memory must be available to the event broker pod.
 ```bash
-# Deploy Solace Software Event Broker Standard Edition, standalone
+# Deploy Solace Event Broker Standard Edition, standalone
 helm install my-release solacecharts/pubsubplus
 ```
 
 c) Create a Solace HA deployment, supporting 100 connections scaling using `pubsubplus-ha`. The minimum resource requirements are 2 CPU and 4 GB of memory available to each of the three event broker pods.
 ```bash
-# Deploy Solace Software Event Broker Standard Edition, HA
+# Deploy Solace Event Broker Standard Edition, HA
 helm install my-release solacecharts/pubsubplus-ha
 ```
 

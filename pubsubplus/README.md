@@ -1,18 +1,18 @@
-# Solace Software Event Broker - Helm Chart
+# Solace Event Broker - Helm Chart
 
 The [Solace Platform](https://solace.com/products/platform/)'s [software event broker](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
 ## Overview
 
-This chart bootstraps a single-node deployment of a [Solace Software Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
+This chart bootstraps a single-node or HA deployment of a [Solace Event Broker](//solace.com/products/event-broker/software/) on a [Kubernetes](//kubernetes.io) cluster using the [Helm](//helm.sh) package manager.
 
-Detailed documentation is provided in the [Solace Software Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation is provided in the [Solace Event Broker on Kubernetes Documentation](https://github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
 ## Prerequisites
 
 * Kubernetes 1.10 or later platform with adequate [CPU and memory](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#cpu-and-memory-requirements) and [storage resources](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#disk-storage) for the targeted scaling tier requirements
 * Helm package manager v3 client installed
-* If using a private container image registry, load the Solace Software Event Broker container image and for signed images create an image pull secret
+* If using a private container image registry, load the Solace Event Broker container image and for signed images create an image pull secret
 * With persistent storage enabled (see in [Configuration](#config-storageclass)):
   * Specify a storage class unless using a default storage class in your Kubernetes cluster
 

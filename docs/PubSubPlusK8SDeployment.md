@@ -521,13 +521,13 @@ Next, if using the same secret name, the broker Pods need to be restarted, one a
 
 > Note: a pod restart will result in provisioning the server certificate from the secret again so it will revert back from any other server certificate that may have been provisioned on the broker through other mechanism.
 
-### The Solace Software Event Broker Docker image
+### The Solace Event Broker Docker image
 
-The `image.repository` and `image.tag` parameters combined specify the Solace Software Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry. 
+The `image.repository` and `image.tag` parameters combined specify the Solace Event Broker Docker image to be used for the deployment. They can either point to an image in a public or a private Docker container registry.
 
 #### Using a public registry
 
-The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free Solace Software Event Broker Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
+The default values are `solace/solace-pubsub-standard/` and `latest`, which is the free Solace Event Broker Standard Edition from the [public Solace Docker Hub repo](//hub.docker.com/r/solace/solace-pubsub-standard/). It is generally recommended to set `image.tag` to a specific build for traceability purposes.
 
 #### Using private registries
 
@@ -535,14 +535,14 @@ The following steps are applicable if using a private Docker container registry 
 1. Get the Solace event broker Docker image tar.gz archive
 2. Load the image into the private Docker registry 
 
-To get the Solace Software Event Broker Docker image URL, go to the Solace Developer Portal and download the Solace Software Event Broker as a **docker** image or obtain your version from Solace Support.
+To get the Solace Event Broker Docker image URL, go to the Solace Developer Portal and download the Solace Event Broker as a **docker** image or obtain your version from Solace Support.
 
-| Solace Software Event Broker Standard<br/>Docker Image | Solace Software Event Broker Enterprise Evaluation Edition<br/>Docker Image
-| :---: | :---: |
+|               Solace Event Broker Standard<br/>Docker Image                | Solace Event Broker Enterprise Evaluation Edition<br/>Docker Image
+|:--------------------------------------------------------------------------:| :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
-| [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
+|    [Download Standard docker image](http://dev.solace.com/downloads/ )     | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-To load the Solace Software Event Broker Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+To load the Solace Event Broker Docker image into a private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
 
 * Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
 * Login to the private registry:

@@ -126,7 +126,7 @@ kube-system          Active   26m
 solace-pod-modifier  Active   17m
 ```
 
-2. Deploy Solace Event Broker HA
+2. Deploy the High Availability (HA) Solace Event Broker
 
 ```bash
 helm install my-ha-deployment solacecharts/pubsubplus \
