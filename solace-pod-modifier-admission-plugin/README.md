@@ -1,6 +1,6 @@
 # "solace-pod-modifier" Admission Plugin
 
-This project provides an [admission plugin](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) extension to Kubernetes v1.16 or later, to support reducing the resource requirements of PubSub+ Monitoring Nodes in an HA deployment.
+This project provides an [admission plugin](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) extension to Kubernetes v1.16 or later, to support reducing the resource requirements of Solace Event Broker Monitoring Nodes in an HA deployment.
 
 Contents:
   * [Overview](#overview)
@@ -112,7 +112,7 @@ pod-modifier.solace.com            1          36s
 
 With `solace-pod-modifier` [deployed](#build-and-deploy-steps),
 
-1. Label the namespace designated for PubSub+ HA deployment with `pod-modifier.solace.com=enabled`:
+1. Label the namespace designated for HA Solace Event Broker deployment with `pod-modifier.solace.com=enabled`:
 
 ```
 kubectl create ns test-ns
@@ -126,7 +126,7 @@ kube-system          Active   26m
 solace-pod-modifier  Active   17m
 ```
 
-2. Deploy PubSub+ HA
+2. Deploy the High Availability (HA) Solace Event Broker
 
 ```bash
 helm install my-ha-deployment solacecharts/pubsubplus \
@@ -158,7 +158,7 @@ If the Monitoring node specs were not reduced, check followings:
 kubectl logs pod-modifier-webhook-deployment-d45f8b7dd-968gf -n solace-pod-modifier
 ```
 
-2. The namespace in which the PubSub+ HA broker is deployed has the correct label (`pod-modifier.solace.com=enabled`) as configured in `MutatingWebhookConfiguration`.
+2. The namespace in which the HA Solace Event Broker is deployed has the correct label (`pod-modifier.solace.com=enabled`) as configured in `MutatingWebhookConfiguration`.
 
 3. Check if the broker pods have both annotations
 * `pod-modifier.solace.com/inject: "true"`; and also

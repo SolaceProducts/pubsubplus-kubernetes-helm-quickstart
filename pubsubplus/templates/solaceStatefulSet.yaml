@@ -116,7 +116,7 @@ spec:
         securityContext:
           privileged: false
 {{- if semverCompare "<9.4" (default "9.4" (regexFind "\\d+\\.\\d+" .Values.image.tag)) }}
-          # need capabilities opened up if PubSub+ version is lower than 9.4
+          # need capabilities opened up if Solace Event Broker version is lower than 9.4
           capabilities:
             add:
               - IPC_LOCK
@@ -133,6 +133,28 @@ spec:
           value: {{ printf "%s/%s" ":/usr/share/zoneinfo" (default "UTC" .Values.solace.timezone) }}
         - name: UMASK
           value: "0022"
+{{- if .Values.solace.systemScaling }}
+{{- if hasKey .Values.solace.systemScaling "maxKafkaBridgeCount" }}
+        - name: SYSTEM_SCALING_MAXKAFKABRIDGECOUNT
+          value: {{ .Values.solace.systemScaling.maxKafkaBridgeCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxKafkaBrokerConnectionCount" }}
+        - name: SYSTEM_SCALING_MAXKAFKABROKERCONNECTIONCOUNT
+          value: {{ .Values.solace.systemScaling.maxKafkaBrokerConnectionCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxBridgeCount" }}
+        - name: SYSTEM_SCALING_MAXBRIDGECOUNT
+          value: {{ .Values.solace.systemScaling.maxBridgeCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxSubscriptionCount" }}
+        - name: SYSTEM_SCALING_MAXSUBSCRIPTIONCOUNT
+          value: {{ .Values.solace.systemScaling.maxSubscriptionCount | quote }}
+{{- end }}
+{{- if hasKey .Values.solace.systemScaling "maxGuaranteedMessageSize" }}
+        - name: SYSTEM_SCALING_MAXGUARANTEEDMESSAGESIZE
+          value: {{ .Values.solace.systemScaling.maxGuaranteedMessageSize | quote }}
+{{- end }}
+{{- end }}
 {{- if .Values.solace.extraEnvVars }}
       {{- range $item := .Values.solace.extraEnvVars }}
         - name: {{ $item.name }}

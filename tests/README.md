@@ -1,6 +1,6 @@
-# PubSub+ Kubernetes Helm Chart Tests
+# Solace Event Broker Kubernetes Helm Chart Tests
 
-This directory contains tests for the PubSub+ Kubernetes Helm quickstart charts.
+This directory contains tests for the Solace Event Broker Kubernetes Helm quickstart charts.
 
 ## Helm Template Tests
 

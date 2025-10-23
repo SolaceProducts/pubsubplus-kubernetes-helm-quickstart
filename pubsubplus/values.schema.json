@@ -110,6 +110,44 @@
                 "podDisruptionBudgetForHA": {
                     "type": "boolean"
                 },
+                "systemScaling": {
+                    "type": "object",
+                    "properties": {
+                        "maxConnections": {
+                            "type": "integer",
+                            "description": "Maximum supported number of client connections"
+                        },
+                        "maxQueueMessages": {
+                            "type": "integer",
+                            "description": "Number of queue messages, in millions of messages"
+                        },
+                        "maxSpoolUsage": {
+                            "type": "integer",
+                            "description": "Maximum Spool Usage in MB"
+                        },
+                        "maxKafkaBridgeCount": {
+                            "type": "integer",
+                            "description": "Maximum number of Kafka bridges"
+                        },
+                        "maxKafkaBrokerConnectionCount": {
+                            "type": "integer",
+                            "description": "Maximum number of connections to Kafka brokers"
+                        },
+                        "maxBridgeCount": {
+                            "type": "integer",
+                            "description": "Maximum number of bridges"
+                        },
+                        "maxSubscriptionCount": {
+                            "type": "integer",
+                            "description": "Maximum number of subscriptions"
+                        },
+                        "maxGuaranteedMessageSize": {
+                            "type": "integer",
+                            "description": "Maximum guaranteed message size in MB"
+                        }
+                    },
+                    "required": ["maxConnections", "maxQueueMessages", "maxSpoolUsage"]
+                },
                 "size": {
                     "type": "string"
                 },
@@ -188,7 +226,7 @@
         },
         "insights": {
             "type": "object",
-            "description": "Configuration for PubSub+ Insights feature",
+            "description": "Configuration for Solace Event Broker Insights feature",
             "properties": {
                 "enabled": {
                     "type": "boolean",

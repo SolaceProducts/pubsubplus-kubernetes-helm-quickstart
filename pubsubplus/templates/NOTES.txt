@@ -1,6 +1,6 @@
 
-== Check Solace PubSub+ deployment progress ==
-Deployment is complete when a PubSub+ pod representing an active event broker node's label reports "active=true".
+== Check Solace Event Broker deployment progress ==
+Deployment is complete when a Solace Event Broker pod representing an active event broker node's label reports "active=true".
 Watch progress by running:
    kubectl get pods --namespace {{ .Release.Namespace }} --show-labels -w | grep {{ template "solace.fullname" . }}
 
@@ -13,9 +13,9 @@ TLS has not been enabled for this deployment.
 TLS is enabled, using secret {{ .Values.tls.serverCertificatesSecret }} for server certificates configuration.
 {{- end }}
 
-== Solace PubSub+ Insights ==
+== Solace Event Broker Insights ==
 {{- if .Values.insights.enabled }}
-Solace PubSub+ Insights has been enabled for this deployment.
+Solace Event Broker Insights has been enabled for this deployment.
 Image used for Insights Agent: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
 {{- if .Values.insights.image.pullSecretName }}
 Pull Secret: {{ .Values.insights.image.pullSecretName }}
@@ -26,7 +26,7 @@ Insights Agent is configured with the following:
 - Tags: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_TAGS }}
 
 {{- else }}
-Solace PubSub+ Insights has not been enabled for this deployment.
+Solace Event Broker Insights has not been enabled for this deployment.
 To enable Insights, set insights.enabled=true and provide the required configuration parameters.
 For more information, refer to the INSIGHTS.md documentation.
 {{- end }}
@@ -75,7 +75,7 @@ This is a minimum footprint deployment for development purposes. For guaranteed 
 {{- else }}
 The requested connection scaling tier for this deployment is: max {{ substr 4 10 .Values.solace.size }} connections. 
 {{- end }}
-Following resources have been requested per PubSub+ pod:
+Following resources have been requested per Solace Event Broker pod:
     echo `kubectl get statefulset --namespace {{ .Release.Namespace }} {{ template "solace.fullname" . }} -o jsonpath="Minimum resources: {.spec.template.spec.containers[0].resources.requests}"`
 {{- end }}
 
