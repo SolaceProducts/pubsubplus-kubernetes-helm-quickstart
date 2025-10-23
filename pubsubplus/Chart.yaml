@@ -1,7 +1,7 @@
 apiVersion: v2
 description: Deploy Solace Event Broker Singleton or HA redundancy group onto a Kubernetes Cluster
 name: pubsubplus
-version: 3.7.0
+version: 3.8.0
 icon: https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/images/solace.png
 kubeVersion: '>= 1.10.0-0'
 maintainers:
