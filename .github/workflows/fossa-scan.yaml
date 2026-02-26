@@ -1,0 +1,28 @@
+name: FOSSA Manual Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to scan (leave empty for current branch)'
+        required: false
+        type: string
+
+permissions:
+  contents: read        # For checkout
+  pull-requests: write  # For PR comments
+  actions: read         # For sca-scan-and-guard
+  issues: write         # For issue comments
+  checks: write         # For FOSSA status checks
+  statuses: write       # For FOSSA commit status
+
+jobs:
+  fossa_scan:
+    name: FOSSA Scan
+    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@main
+    with:
+      git_ref: ${{ inputs.branch || github.ref_name }}
+      use_vault: false
+      config_file: '.github/workflow-config.json'
+    secrets:
+      FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}

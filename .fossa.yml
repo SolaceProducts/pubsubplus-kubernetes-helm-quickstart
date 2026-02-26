@@ -1,0 +1,34 @@
+version: 3
+
+project:
+  locator: SolaceProducts_pubsubplus-kubernetes-helm-quickstart
+  id: SolaceProducts_pubsubplus-kubernetes-helm-quickstart
+  name: pubsubplus-kubernetes-helm-quickstart
+  teams: []
+  labels:
+    - mission-control
+    - solace-cloud
+    - broker
+    - public
+
+vendoredDependencies:
+  forceRescans: false
+  scanMethod: CLILicenseScan
+  licenseScanPathFilters:
+    exclude:
+      - "./.git"
+      - "./.github"
+      - "./ci"
+      - "./tests"
+      - "./docs"
+
+paths:
+  exclude:
+    - ./.git
+    - ./.github
+    - ./ci
+    - ./tests
+    - ./docs
+
+telemetry:
+  scope: full
