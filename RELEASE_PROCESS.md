@@ -25,11 +25,11 @@ flowchart TD
     C --> E
     D --> E
 
-    style A fill:#e8e8e8,color:#888,stroke:#ccc
-    style E fill:#e8e8e8,color:#888,stroke:#ccc
-    style B fill:#d4edda,stroke:#28a745
-    style C fill:#d4edda,stroke:#28a745
-    style D fill:#d4edda,stroke:#28a745
+    style A fill:#e8e8e8,color:#000,stroke:#ccc
+    style E fill:#e8e8e8,color:#000,stroke:#ccc
+    style B fill:#d4edda,color:#000,stroke:#28a745
+    style C fill:#d4edda,color:#000,stroke:#28a745
+    style D fill:#d4edda,color:#000,stroke:#28a745
 ```
 
 ### Jobs
@@ -72,12 +72,12 @@ flowchart TD
     E -->|yes| F[publish\ngh-pages release]
     E -->|no| G([blocked])
 
-    style A fill:#e8e8e8,color:#888,stroke:#ccc
-    style B fill:#d4edda,stroke:#28a745
-    style C fill:#d4edda,stroke:#28a745
-    style D fill:#d4edda,stroke:#28a745
-    style F fill:#cce5ff,stroke:#004085
-    style G fill:#f8d7da,stroke:#721c24
+    style A fill:#e8e8e8,color:#000,stroke:#ccc
+    style B fill:#d4edda,color:#000,stroke:#28a745
+    style C fill:#d4edda,color:#000,stroke:#28a745
+    style D fill:#d4edda,color:#000,stroke:#28a745
+    style F fill:#cce5ff,color:#000,stroke:#004085
+    style G fill:#f8d7da,color:#000,stroke:#721c24
 ```
 
 ### Gate conditions for `publish`
