@@ -1,0 +1,18 @@
+{
+  "sca_scanning": {
+    "enabled": true,
+    "fossa": {
+      "policy": {
+        "mode": "REPORT",
+        "block_on": ["policy_conflict", "unlicensed_dependency"]
+      },
+      "vulnerability": {
+        "mode": "REPORT",
+        "block_on": ["critical", "high"]
+      },
+      "project_id": "SolaceProducts_pubsubplus-kubernetes-helm-quickstart",
+      "team": null,
+      "labels": []
+    }
+  }
+}
