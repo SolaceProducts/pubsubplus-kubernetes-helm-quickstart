@@ -26,6 +26,7 @@ permissions:
   checks: write                # For FOSSA status checks
   statuses: write              # For FOSSA commit status
   packages: write              # For package publishing
+  id-token: write              # Required by sca-scan-and-guard reusable workflow
 
 jobs:
   check_permissions:
