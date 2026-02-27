@@ -50,7 +50,6 @@ jobs:
     name: FOSSA Scan
     needs: [check_permissions]
     if: ${{ always() && !inputs.skip_fossa && (needs.check_permissions.result == 'success' || needs.check_permissions.result == 'skipped') }}
-    runs-on: ubuntu-latest
     uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@main
     with:
       git_ref: ${{ github.event_name == 'push' && github.ref_name || '' }}
@@ -58,6 +57,10 @@ jobs:
       config_file: '.github/workflow-config.json'
     secrets:
       FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+
+  helm_template_tests:
+    name: Helm Template Tests
+    uses: ./.github/workflows/test-helm-templates.yml
 
   build_test:
     name: Build & Test
@@ -513,13 +516,14 @@ jobs:
 
   publish:
     name: Publish Helm Charts
-    needs: [fossa_scan, build_test]
+    needs: [fossa_scan, build_test, helm_template_tests]
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/master' &&
       github.repository_owner == 'SolaceProducts' &&
       (needs.fossa_scan.result == 'success' || needs.fossa_scan.result == 'skipped') &&
-      needs.build_test.result == 'success'
+      needs.build_test.result == 'success' &&
+      needs.helm_template_tests.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
