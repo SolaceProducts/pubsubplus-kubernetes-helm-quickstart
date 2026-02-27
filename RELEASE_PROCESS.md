@@ -16,11 +16,20 @@ This document describes the CI/CD pipeline for `pubsubplus-kubernetes-helm-quick
 
 Triggered when a PR is opened, synchronized, or reopened against any branch.
 
-```
-check_permissions (skipped — only active when skip_fossa input is set)
-├── fossa_scan          — FOSSA license compliance scan
-├── helm_template_tests — Helm template unit tests (Python/pytest)
-└── build_test          — GKE integration test suite
+```mermaid
+flowchart TD
+    A([check_permissions\nskipped]) --> B[fossa_scan]
+    A --> C[helm_template_tests]
+    A --> D[build_test]
+    B --> E([publish\nskipped on PRs])
+    C --> E
+    D --> E
+
+    style A fill:#e8e8e8,color:#888,stroke:#ccc
+    style E fill:#e8e8e8,color:#888,stroke:#ccc
+    style B fill:#d4edda,stroke:#28a745
+    style C fill:#d4edda,stroke:#28a745
+    style D fill:#d4edda,stroke:#28a745
 ```
 
 ### Jobs
@@ -52,12 +61,23 @@ The cluster is deleted in a cleanup step that always runs, even on failure.
 
 Triggered on push to `master`. Runs the same job graph as a PR, with `publish` now active.
 
-```
-check_permissions (skipped)
-├── fossa_scan          — must pass (or be skipped via workflow_dispatch)
-├── helm_template_tests — must pass
-└── build_test          — must pass
-         └── publish    — publishes Helm charts to gh-pages
+```mermaid
+flowchart TD
+    A([check_permissions\nskipped]) --> B[fossa_scan]
+    A --> C[helm_template_tests]
+    A --> D[build_test]
+    B --> E{all passed?}
+    C --> E
+    D --> E
+    E -->|yes| F[publish\ngh-pages release]
+    E -->|no| G([blocked])
+
+    style A fill:#e8e8e8,color:#888,stroke:#ccc
+    style B fill:#d4edda,stroke:#28a745
+    style C fill:#d4edda,stroke:#28a745
+    style D fill:#d4edda,stroke:#28a745
+    style F fill:#cce5ff,stroke:#004085
+    style G fill:#f8d7da,stroke:#721c24
 ```
 
 ### Gate conditions for `publish`
