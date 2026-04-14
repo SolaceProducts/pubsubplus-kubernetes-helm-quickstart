@@ -16,6 +16,7 @@ permissions:
   checks: write         # For FOSSA status checks
   statuses: write       # For FOSSA commit status
   packages: read
+  id-token: write       # required by sca-scan-and-guard reusable workflow declaration
 
 jobs:
   fossa_scan:
