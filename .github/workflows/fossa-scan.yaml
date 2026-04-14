@@ -15,6 +15,7 @@ permissions:
   issues: write         # For issue comments
   checks: write         # For FOSSA status checks
   statuses: write       # For FOSSA commit status
+  packages: read        # required to pull ghcr.io image in fossa-guard composite action
 
 jobs:
   fossa_scan:
