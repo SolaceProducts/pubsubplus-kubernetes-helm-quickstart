@@ -24,6 +24,13 @@ Pull Secret: {{ .Values.insights.image.pullSecretName }}
 Insights Agent is configured with the following:
 - Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE }}
 - Tags: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_TAGS }}
+- Mode: {{ if .Values.insights.forwarding.enabled }}forwarding (Insights Agent Pro, via OTel collector){{ else }}standard (direct to Datadog SaaS){{ end }}
+{{- if .Values.insights.forwarding.enabled }}
+- OTel config Secret: {{ template "solace.fullname" . }}-otel-config (chart-managed)
+{{- if .Values.insights.forwarding.logsConfig }}
+- Agent logs.yml override: {{ template "solace.fullname" . }}-logs-config (chart-managed ConfigMap)
+{{- end }}
+{{- end }}
 
 {{- else }}
 Solace Event Broker Insights has not been enabled for this deployment.

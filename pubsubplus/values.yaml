@@ -276,6 +276,13 @@ insights:
     INSIGHTS_AGENT_SITE: ""
     # Tags for metrics and logs, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_TAGS: ""
+    # Additional agent settings are supplied here as plain env vars and passed through to the
+    # agent verbatim. The following are honored only when forwarding.enabled=true:
+    #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"        # GOMEMLIMIT for the co-resident OTel collector
+    #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
+    #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
+    #   INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS: '{"https://app.<site>":["<key1>","<key2>"]}'
+    #   INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS: '[{"api_key":"<key1>","host":"agent-http-intake.logs.<site>","use_compression":true,"compression_level":2}]'
 
   image:
     # Image repository for the Insights Agent container
@@ -284,6 +291,9 @@ insights:
     tag: latest
     # Image pull secret name for the Insights Agent container. The pull secret is available from the Solace Cloud Console.
     pullSecretName: gcr-reg-secret
+    # Image pull policy for the Insights Agent container. Defaults to "Always".
+    # Set to "IfNotPresent" or "Never" for air-gapped clusters with pre-loaded images.
+    pullPolicy: Always
 
   resources:
     requests:
@@ -291,8 +301,45 @@ insights:
       cpu: 200m
       # Minimum memory resource required by the insights-agent container
       memory: 256Mi
-    limits:
-      # Maximum CPU resource the insights-agent container can use
-      cpu: 200m
-      # Maximum memory resource the insights-agent container can use
-      memory: 512Mi
+    # Maximum CPU/memory limits for the insights-agent container.
+    # When not set, each limit is computed per solace.size as a base plus per-size-class
+    # headroom for the co-resident OTel collector. The base is the corresponding requests
+    # value when set, otherwise 200m CPU / 256Mi memory (requests must use Mi or Gi units).
+    # NOTE: the headroom is selected by solace.size. When solace.systemScaling is used
+    # (solace.size is ignored for broker sizing), the headroom falls back to the
+    # solace.size default tier — set limits explicitly below to size the agent for a
+    # custom-scaled broker.
+    # Set either/both here to override with explicit final values (used verbatim):
+    # limits:
+    #   cpu: "1"
+    #   memory: 1Gi
+
+  # Insights Agent Pro / third-party forwarding configuration.
+  # When forwarding.enabled is false (default), the agent ships metrics and logs
+  # directly to Datadog SaaS (standard mode) and none of the keys below take effect.
+  forwarding:
+    # Master switch for Insights Agent Pro mode. When true, the agent's
+    # custom-entrypoint.sh flips to ship through the co-resident OTel collector.
+    enabled: false
+
+    # Inline OTel collector configuration (otel-config.yaml). Required when
+    # forwarding.enabled=true. Rendered into a chart-managed Secret and mounted at
+    # /etc/datadog-agent/otel-config.yaml.
+    #   otelConfig: |
+    #     receivers: { ... }
+    #     exporters: { ... }
+    #     service:
+    #       pipelines: { ... }
+    otelConfig: ""
+
+    # Optional inline override of the Datadog agent's Solace log-collection config
+    # (/etc/datadog-agent/conf.d/solace.d/logs.yml). Rendered into a chart-managed
+    # ConfigMap and mounted over that single file. Only takes effect when
+    # forwarding.enabled=true; leave empty to keep the agent image's default logs.yml.
+    #   logsConfig: |
+    #     logs:
+    #       - type: file
+    #         path: /jail/logs/*.log
+    #         service: solace
+    #         source: solace
+    logsConfig: ""

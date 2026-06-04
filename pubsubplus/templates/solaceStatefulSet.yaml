@@ -262,14 +262,15 @@ spec:
 {{- if ( .Values.insights.enabled) }}
       - name: insights-agent
         image: {{ .Values.insights.image.repository }}:{{ .Values.insights.image.tag }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.insights.image.pullPolicy | default "Always" }}
         resources:
           requests:
-            memory: {{ .Values.insights.resources.requests.memory }}
-            cpu: {{ .Values.insights.resources.requests.cpu }}
+            memory: {{ .Values.insights.resources.requests.memory | default "256Mi" }}
+            cpu: {{ .Values.insights.resources.requests.cpu | default "200m" }}
           limits:
-            memory: {{ .Values.insights.resources.limits.memory }}
-            cpu: {{ .Values.insights.resources.limits.cpu }}
+{{- $insightsLimits := .Values.insights.resources.limits | default dict }}
+            memory: {{ $insightsLimits.memory | default (include "insights.agentLimitMemory" .) }}
+            cpu: {{ $insightsLimits.cpu | default (include "insights.agentLimitCpu" .) }}
         env:
         - name: INSIGHTS_AGENT_BROKER_HOSTNAME_OVERRIDE
           valueFrom:
@@ -295,6 +296,18 @@ spec:
           - name: data
             mountPath: /opt/datadog-agent/run
             subPath: opt/datadog-agent/run
+{{- if .Values.insights.forwarding.enabled }}
+          - name: otel-config
+            mountPath: /etc/datadog-agent/otel-config.yaml
+            subPath: otel-config.yaml
+            readOnly: true
+{{- if .Values.insights.forwarding.logsConfig }}
+          - name: logs-config
+            mountPath: /etc/datadog-agent/conf.d/solace.d/logs.yml
+            subPath: logs.yml
+            readOnly: true
+{{- end }}
+{{- end }}
 {{- end }}
       volumes:
         - name: podinfo
@@ -316,6 +329,24 @@ spec:
           secret:
             secretName: {{ template "solace.fullname" . }}-insights-secrets
             defaultMode: 0400
+{{- end }}
+{{- if and .Values.insights.enabled .Values.insights.forwarding.enabled }}
+        - name: otel-config
+          secret:
+            secretName: {{ template "solace.fullname" . }}-otel-config
+            items:
+              - key: otel-config.yaml
+                path: otel-config.yaml
+            defaultMode: 0444
+{{- if .Values.insights.forwarding.logsConfig }}
+        - name: logs-config
+          configMap:
+            name: {{ template "solace.fullname" . }}-logs-config
+            items:
+              - key: logs.yml
+                path: logs.yml
+            defaultMode: 0444
+{{- end }}
 {{- end }}
 {{- if and (.Values.tls) (.Values.tls.enabled) }}
         - name: server-certs
