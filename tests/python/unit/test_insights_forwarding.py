@@ -152,6 +152,28 @@ def test_forwarding_env_vars_pass_through(render_helm_template, base_values):
     assert "INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS" not in string_data
 
 
+def test_forwarding_does_not_require_api_key_or_site(render_helm_template, base_values):
+    # In forwarding mode INSIGHTS_AGENT_API_KEY / INSIGHTS_AGENT_SITE are optional
+    # (the agent overrides/derives them); only TAGS remains required.
+    values = copy.deepcopy(base_values)
+    values["insights"]["environmentVariables"] = {"INSIGHTS_AGENT_TAGS": "env:dev"}
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    # Renders without error despite no API_KEY/SITE.
+    assert _otel_secret(render_helm_template(values)) is not None
+
+
+def test_standard_mode_still_requires_api_key(render_helm_template, base_values):
+    # With forwarding disabled (standard mode), API_KEY remains required.
+    values = copy.deepcopy(base_values)
+    values["insights"]["environmentVariables"] = {
+        "INSIGHTS_AGENT_SITE": "datadoghq.com",
+        "INSIGHTS_AGENT_TAGS": "env:dev",
+    }
+    with pytest.raises(Exception) as e:
+        render_helm_template(values)
+    assert "INSIGHTS_AGENT_API_KEY must be defined" in str(e.value)
+
+
 # --------------------------------------------------------------------------- #
 # Backward compatibility
 # --------------------------------------------------------------------------- #

@@ -12,8 +12,8 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 |-----------------------------------------------|-----------------------------------------------------------------------------------------------------|----------------------------------------------|
 | `enabled`                                     | Should be set to `true` if you want Insights enabled on the broker.                                 | `false`                                      |
 | `environmentVariables`                        | Environment variables for configuring the Insights Agent                                            |                                              |
-| `environmentVariables.INSIGHTS_AGENT_API_KEY` | The API key for your Solace Insights subscription. Available from the Solace Cloud Console.         |                                              |
-| `environmentVariables.INSIGHTS_AGENT_SITE`    | The site location where broker metrics and logs will flow. Available from the Solace Cloud Console. |                                              |
+| `environmentVariables.INSIGHTS_AGENT_API_KEY` | The API key for your Solace Insights subscription. Available from the Solace Cloud Console. Required in standard mode; optional when `forwarding.enabled=true`. |                                              |
+| `environmentVariables.INSIGHTS_AGENT_SITE`    | The site location where broker metrics and logs will flow. Available from the Solace Cloud Console. Required in standard mode; optional when `forwarding.enabled=true`. |                                              |
 | `environmentVariables.INSIGHTS_AGENT_TAGS`    | Tags for metrics and logs. Available from the Solace Cloud Console.                                 |                                              |
 | `image.repository`                            | The image repository for the Insights Agent container                                               | `gcr.io/gcp-maas-prod/solace-insights-agent` |
 | `image.tag`                                   | The image tag for the Insights Agent container                                                      | `latest`                                     |
@@ -64,8 +64,7 @@ To tune the collector's memory, set `INSIGHTS_AGENT_GOMEMLIMIT` (e.g. `"410MiB"`
 insights:
   enabled: true
   environmentVariables:
-    INSIGHTS_AGENT_API_KEY: "unused"
-    INSIGHTS_AGENT_SITE: "datadoghq.com"
+    # INSIGHTS_AGENT_API_KEY and INSIGHTS_AGENT_SITE are not required in forwarding mode.
     INSIGHTS_AGENT_TAGS: "<your-tags>"
   forwarding:
     enabled: true
@@ -91,8 +90,7 @@ Substitute your Datadog site for `<site>` (e.g. `datadoghq.com`) and your real A
 insights:
   enabled: true
   environmentVariables:
-    INSIGHTS_AGENT_API_KEY: "unused"
-    INSIGHTS_AGENT_SITE: "datadoghq.com"
+    # INSIGHTS_AGENT_API_KEY and INSIGHTS_AGENT_SITE are not required in forwarding mode.
     INSIGHTS_AGENT_TAGS: "<your-tags>"
     # ── dual-write to Datadog SaaS (passed through to the agent verbatim) ──
     INSIGHTS_AGENT_LOGS_ENABLED: "true"
@@ -118,8 +116,7 @@ effect when `forwarding.enabled=true`.
 insights:
   enabled: true
   environmentVariables:
-    INSIGHTS_AGENT_API_KEY: "unused"
-    INSIGHTS_AGENT_SITE: "datadoghq.com"
+    # INSIGHTS_AGENT_API_KEY and INSIGHTS_AGENT_SITE are not required in forwarding mode.
     INSIGHTS_AGENT_TAGS: "<your-tags>"
   forwarding:
     enabled: true

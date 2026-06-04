@@ -270,9 +270,11 @@ insights:
   enabled: false
 
   environmentVariables:
-    # API key for your Solace Insights subscription, available from the Solace Cloud Console. This value is required.
+    # API key for your Solace Insights subscription, available from the Solace Cloud Console.
+    # Required in standard mode; optional when forwarding.enabled=true (the agent does not use it).
     INSIGHTS_AGENT_API_KEY: ""
-    # Site location where broker metrics and logs will flow, available from the Solace Cloud Console. This value is required.
+    # Site location where broker metrics and logs will flow, available from the Solace Cloud Console.
+    # Required in standard mode; optional when forwarding.enabled=true (falls back to the agent default).
     INSIGHTS_AGENT_SITE: ""
     # Tags for metrics and logs, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_TAGS: ""
