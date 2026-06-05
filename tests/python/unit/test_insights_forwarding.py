@@ -309,6 +309,50 @@ def test_standard_mode_still_requires_api_key(render_helm_template, base_values)
 
 
 # --------------------------------------------------------------------------- #
+# Empty API_KEY / SITE suppression (forwarding mode)
+# --------------------------------------------------------------------------- #
+def test_empty_api_key_site_suppressed_in_forwarding(render_helm_template, base_values):
+    # The chart's empty defaults for API_KEY/SITE are merged in even when omitted; in
+    # forwarding mode they are optional, so empty values must not be emitted as blank env vars.
+    values = copy.deepcopy(base_values)
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_API_KEY"] = ""
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_SITE"] = ""
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    data = _env_secret(render_helm_template(values))["data"]
+    assert "INSIGHTS_AGENT_API_KEY" not in data
+    assert "INSIGHTS_AGENT_SITE" not in data
+    # Non-empty operator vars are unaffected.
+    assert "INSIGHTS_AGENT_TAGS" in data
+
+
+def test_nonempty_api_key_site_passthrough_in_forwarding(render_helm_template, base_values):
+    # If the operator does set them in forwarding mode, they pass through unchanged.
+    values = copy.deepcopy(base_values)
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_API_KEY"] = "k"
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_SITE"] = "datadoghq.eu"
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    data = _env_secret(render_helm_template(values))["data"]
+    assert base64.b64decode(data["INSIGHTS_AGENT_API_KEY"]).decode() == "k"
+    assert base64.b64decode(data["INSIGHTS_AGENT_SITE"]).decode() == "datadoghq.eu"
+
+
+def test_env_secret_consumed_via_envfrom(render_helm_template, base_values):
+    # Suppressing optional keys is only safe because the container loads the env secret via
+    # envFrom (a missing key just means the var is unset). A non-optional secretKeyRef to a
+    # suppressed key would fail the pod with CreateContainerConfigError, so guard against it.
+    values = copy.deepcopy(base_values)
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    c = _insights_container(render_helm_template(values))
+    env_from_secrets = [
+        e.get("secretRef", {}).get("name", "") for e in c.get("envFrom", [])
+    ]
+    assert any(n.endswith("-insights-agent-env-secrets") for n in env_from_secrets)
+    for e in c.get("env", []):
+        ref = e.get("valueFrom", {}).get("secretKeyRef", {})
+        assert not ref.get("name", "").endswith("-insights-agent-env-secrets")
+
+
+# --------------------------------------------------------------------------- #
 # Backward compatibility
 # --------------------------------------------------------------------------- #
 def test_forwarding_disabled_is_noop(render_helm_template, base_values):

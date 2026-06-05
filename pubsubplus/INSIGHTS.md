@@ -34,7 +34,9 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 
 The chart natively supports the Insights forwarding modes. Each is a single
 `helm install -f values.yaml` — no out-of-band `kubectl create secret` or `kubectl patch`
-is required, and the configuration survives `helm upgrade`.
+is required, and the configuration survives `helm upgrade`. (Note: applying a *change* to
+`otelConfig`/`logsConfig` on a later upgrade needs an agent restart — see
+[Applying otelConfig / logsConfig changes after an upgrade](#applying-otelconfig--logsconfig-changes-after-an-upgrade).)
 
 ### Standard (direct to Datadog SaaS)
 
@@ -175,3 +177,40 @@ Keep the stable settings (`forwarding.enabled: true`, `environmentVariables`, im
 in `values.yaml`; `--set-file` overrides the matching keys with each file's contents.
 (`--set-file` also works for the single-config keys, e.g.
 `--set-file insights.forwarding.otelConfig=./otel-config.yaml` in non-HA deployments.)
+
+### Applying `otelConfig` / `logsConfig` changes after an upgrade
+
+`otelConfig` and `logsConfig` are mounted into the `insights-agent` container as single files
+via `subPath`/`subPathExpr`. Kubernetes does **not** live-update `subPath` mounts, and the
+chart does not roll the broker pods on a config-only change. So when a `helm upgrade` changes
+only `otelConfig` or `logsConfig`, the chart-managed Secret/ConfigMap is updated, but the
+**running agents keep using the old config** until their container restarts. The agent picks up
+the new config the next time the `insights-agent` container starts.
+
+> **Wait for propagation first.** After the `helm upgrade`, the kubelet needs a short interval
+> (up to ~1 minute) to sync the updated Secret/ConfigMap onto the node. Restart the container
+> *after* that interval — restarting too early can re-mount the old content.
+
+Choose one of these to apply the change:
+
+**Option A — restart only the agent (no broker restart).** Restart the `insights-agent`
+container in place; the broker container and the pod are left untouched (no HA failover). Run
+this on every broker pod (all three in an HA deployment):
+
+```bash
+kubectl exec <release>-pubsubplus-<ordinal> -c insights-agent -n <namespace> -- kill 1
+```
+
+The container restarts (its `restartCount` increments) within the same pod and re-mounts the
+updated config. Use this when you do not want the broker to restart.
+
+**Option B — recreate the pods (broker restarts too).** Roll the StatefulSet; each pod is
+recreated with a fresh volume, so the new config is guaranteed to take effect. In an HA
+deployment this is a rolling restart (one pod at a time, with the usual primary/backup
+failover):
+
+```bash
+kubectl rollout restart statefulset/<release>-pubsubplus -n <namespace>
+```
+
+Use this when a broker restart is acceptable.
