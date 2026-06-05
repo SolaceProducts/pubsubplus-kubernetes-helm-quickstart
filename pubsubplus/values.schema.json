@@ -320,7 +320,19 @@
                         },
                         "otelConfig": {
                             "type": "string",
-                            "description": "Inline otel-config.yaml content. Required when forwarding.enabled=true; rendered into a chart-managed Secret."
+                            "description": "Inline otel-config.yaml content. Required when forwarding.enabled=true (unless per-node configs are set); rendered into a chart-managed Secret."
+                        },
+                        "otelConfigPrimary": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the primary node (pod-0) in HA. Falls back to otelConfig when empty."
+                        },
+                        "otelConfigBackup": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the backup node (pod-1) in HA. Falls back to otelConfig when empty."
+                        },
+                        "otelConfigMonitor": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the monitor node (pod-2) in HA. Falls back to otelConfig when empty."
                         },
                         "logsConfig": {
                             "type": "string",

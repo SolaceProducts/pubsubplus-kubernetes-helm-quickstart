@@ -82,10 +82,10 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     }
     resources = render_helm_template(values)
 
-    # Chart-managed OTel config Secret is rendered.
+    # Chart-managed OTel config Secret is rendered (keyed per pod index).
     otel_secret = _otel_secret(resources)
     assert otel_secret is not None
-    assert "otel-config.yaml" in otel_secret["stringData"]
+    assert "otel-config-0.yaml" in otel_secret["stringData"]
 
     # Only SOLACE_CUSTOM_INSIGHTS_ENABLED is chart-managed in stringData.
     env_secret = _env_secret(resources)
@@ -103,11 +103,67 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
         if m["name"] == "otel-config"
     )
     assert mount["mountPath"] == "/etc/datadog-agent/otel-config.yaml"
-    assert mount["subPath"] == "otel-config.yaml"
+    assert mount["subPathExpr"] == "otel-config-$(INSIGHTS_AGENT_NODE_ROLE).yaml"
     assert mount["readOnly"] is True
 
     volume = next(v for v in _volumes(resources) if v["name"] == "otel-config")
     assert volume["secret"]["secretName"].endswith("-otel-config")
+
+
+# --------------------------------------------------------------------------- #
+# Per-node otelConfig (HA)
+# --------------------------------------------------------------------------- #
+def test_otel_per_node_configs_keyed_by_pod_index(render_helm_template, base_values):
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev", "redundancy": True}
+    values["insights"]["forwarding"] = {
+        "enabled": True,
+        "otelConfigPrimary": "service: {role: primary}\n",
+        "otelConfigBackup": "service: {role: backup}\n",
+        "otelConfigMonitor": "service: {role: monitor}\n",
+    }
+    sd = _otel_secret(render_helm_template(values))["stringData"]
+    assert "role: primary" in sd["otel-config-0.yaml"]
+    assert "role: backup" in sd["otel-config-1.yaml"]
+    assert "role: monitor" in sd["otel-config-2.yaml"]
+
+
+def test_otel_per_node_falls_back_to_otel_config(render_helm_template, base_values):
+    # backup/monitor unset -> fall back to otelConfig; primary overrides.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev", "redundancy": True}
+    values["insights"]["forwarding"] = {
+        "enabled": True,
+        "otelConfig": "service: {role: shared}\n",
+        "otelConfigPrimary": "service: {role: primary}\n",
+    }
+    sd = _otel_secret(render_helm_template(values))["stringData"]
+    assert "role: primary" in sd["otel-config-0.yaml"]
+    assert "role: shared" in sd["otel-config-1.yaml"]
+    assert "role: shared" in sd["otel-config-2.yaml"]
+
+
+def test_otel_non_ha_renders_only_index_0(render_helm_template, base_values):
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev"}  # redundancy defaults false
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sd = _otel_secret(render_helm_template(values))["stringData"]
+    assert "otel-config-0.yaml" in sd
+    assert "otel-config-1.yaml" not in sd
+    assert "otel-config-2.yaml" not in sd
+
+
+def test_otel_ha_requires_backup_config_when_no_fallback(render_helm_template, base_values):
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev", "redundancy": True}
+    # primary set, but no otelConfig fallback and no backup/monitor -> fail for backup.
+    values["insights"]["forwarding"] = {
+        "enabled": True,
+        "otelConfigPrimary": "service: {}\n",
+    }
+    with pytest.raises(Exception) as e:
+        render_helm_template(values)
+    assert "backup node" in str(e.value)
 
 
 # --------------------------------------------------------------------------- #

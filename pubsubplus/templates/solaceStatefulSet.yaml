@@ -299,7 +299,8 @@ spec:
 {{- if .Values.insights.forwarding.enabled }}
           - name: otel-config
             mountPath: /etc/datadog-agent/otel-config.yaml
-            subPath: otel-config.yaml
+            # Each node mounts its own config by pod index (primary=0, backup=1, monitor=2).
+            subPathExpr: otel-config-$(INSIGHTS_AGENT_NODE_ROLE).yaml
             readOnly: true
 {{- if .Values.insights.forwarding.logsConfig }}
           - name: logs-config
@@ -333,10 +334,9 @@ spec:
 {{- if and .Values.insights.enabled .Values.insights.forwarding.enabled }}
         - name: otel-config
           secret:
+            # All per-node keys (otel-config-0/1/2.yaml) are projected; the container
+            # selects its own via subPathExpr on the pod index.
             secretName: {{ template "solace.fullname" . }}-otel-config
-            items:
-              - key: otel-config.yaml
-                path: otel-config.yaml
             defaultMode: 0444
 {{- if .Values.insights.forwarding.logsConfig }}
         - name: logs-config

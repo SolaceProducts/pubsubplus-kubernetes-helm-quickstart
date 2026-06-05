@@ -24,8 +24,11 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 | `resources.limits.cpu`                        | Max CPU for the `insights-agent` container. Used verbatim if set; otherwise computed as the requests CPU plus a per-`solace.size` OTel headroom. | computed       |
 | `resources.limits.memory`                     | Max memory for the `insights-agent` container. Used verbatim if set; otherwise computed as the requests memory plus a per-`solace.size` OTel headroom. | computed   |
 | `forwarding.enabled`                          | Set `true` to enable Insights Agent Pro (third-party forwarding via the co-resident OTel collector). | `false`                                     |
-| `forwarding.otelConfig`                       | Inline `otel-config.yaml` content. Required when `forwarding.enabled=true`; rendered into a chart-managed Secret. | `""`                        |
-| `forwarding.logsConfig`                       | Inline `logs.yml` to override the agent's `/etc/datadog-agent/conf.d/solace.d/logs.yml` (rendered into a chart-managed ConfigMap). Only takes effect when `forwarding.enabled=true`. | `""`        |
+| `forwarding.otelConfig`                       | Inline `otel-config.yaml` content for all nodes. Required when `forwarding.enabled=true` unless per-node configs are set; rendered into a chart-managed Secret. | `""`        |
+| `forwarding.otelConfigPrimary`                | Per-node `otel-config.yaml` for the primary node (pod-0) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                       |
+| `forwarding.otelConfigBackup`                 | Per-node `otel-config.yaml` for the backup node (pod-1) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                        |
+| `forwarding.otelConfigMonitor`                | Per-node `otel-config.yaml` for the monitor node (pod-2) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                       |
+| `forwarding.logsConfig`                       | Inline `logs.yml` to override the agent's `/etc/datadog-agent/conf.d/solace.d/logs.yml` (rendered into a chart-managed ConfigMap, same for all nodes). Only takes effect when `forwarding.enabled=true`. | `""`        |
 
 ## Forwarding modes
 
@@ -129,3 +132,38 @@ insights:
           service: solace
           source: solace
 ```
+
+### HA deployments: per-node OTel config
+
+In an HA deployment (`solace.redundancy=true`) the broker runs three nodes — primary
+(pod-0), backup (pod-1), and monitor (pod-2). If each node needs a different
+`otel-config.yaml` (for example, an auto-generated config whose only per-node difference
+is the `ha_role` attribute), supply one config per node:
+
+- `forwarding.otelConfigPrimary` → pod-0
+- `forwarding.otelConfigBackup` → pod-1
+- `forwarding.otelConfigMonitor` → pod-2
+
+The chart renders them into a single Secret under per-index keys
+(`otel-config-0/1/2.yaml`) and each pod mounts its own via `subPathExpr` keyed on the
+pod index. A node with an empty per-node value falls back to `forwarding.otelConfig`, so
+you can also set just one or two of them. `logsConfig` is always shared across all nodes.
+
+Because these values are whole files, load them with `--set-file` instead of pasting
+(avoids indentation mistakes and keeps the generated files intact):
+
+```bash
+helm install my-release pubsubplus \
+  -f values.yaml \
+  --set solace.redundancy=true \
+  --set insights.enabled=true \
+  --set-file insights.forwarding.otelConfigPrimary=./otel-primary.yaml \
+  --set-file insights.forwarding.otelConfigBackup=./otel-backup.yaml \
+  --set-file insights.forwarding.otelConfigMonitor=./otel-monitor.yaml \
+  --set-file insights.forwarding.logsConfig=./logs.yaml
+```
+
+Keep the stable settings (`forwarding.enabled: true`, `environmentVariables`, image, etc.)
+in `values.yaml`; `--set-file` overrides the matching keys with each file's contents.
+(`--set-file` also works for the single-config keys, e.g.
+`--set-file insights.forwarding.otelConfig=./otel-config.yaml` in non-HA deployments.)

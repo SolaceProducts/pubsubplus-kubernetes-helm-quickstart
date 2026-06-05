@@ -22,9 +22,9 @@ Pull Secret: {{ .Values.insights.image.pullSecretName }}
 {{- end }}
 
 Insights Agent is configured with the following:
-- Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE | default "(agent default)" }}
+- Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE | default "datadoghq.com" }}
 - Tags: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_TAGS }}
-- Mode: {{ if .Values.insights.forwarding.enabled }}forwarding (Insights Agent Pro, via OTel collector){{ else }}standard (direct to Datadog SaaS){{ end }}
+- Mode: {{ if .Values.insights.forwarding.enabled }}forwarding (Insights Agent Pro){{ else }}standard (direct to Datadog SaaS){{ end }}
 {{- if .Values.insights.forwarding.enabled }}
 - OTel config Secret: {{ template "solace.fullname" . }}-otel-config (chart-managed)
 {{- if .Values.insights.forwarding.logsConfig }}
