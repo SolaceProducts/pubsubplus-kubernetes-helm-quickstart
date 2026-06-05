@@ -480,6 +480,52 @@ def test_agent_limits_rejects_non_mi_gi_memory(render_helm_template, base_values
     assert "must be specified in Mi or Gi" in str(e.value)
 
 
+# --------------------------------------------------------------------------- #
+# Full per-size matrix: computed memory/CPU limits and derived GOMEMLIMIT, with
+# default requests (256Mi / 200m). Locks the hand-maintained delta maps for every
+# solace.size tier in one place so a drift in any tier is caught.
+# --------------------------------------------------------------------------- #
+SIZE_MATRIX = {
+    "dev": ("768Mi", 0.7, "409MiB"),
+    "prod1k": ("1280Mi", 0.7, "819MiB"),
+    "prod10k": ("2304Mi", 1.2, "1638MiB"),
+    "prod100k": ("4352Mi", 2.2, "3276MiB"),
+    "prod200k": ("5888Mi", 2.2, "4505MiB"),
+}
+
+
+@pytest.mark.parametrize("size,expected", list(SIZE_MATRIX.items()))
+def test_computed_limits_and_gomemlimit_per_size(render_helm_template, base_values, size, expected):
+    exp_mem, exp_cpu, exp_gom = expected
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": size}
+    del values["insights"]["resources"]["limits"]  # computed
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    resources = render_helm_template(values)
+    container = _insights_container(resources)
+    assert container["resources"]["limits"]["memory"] == exp_mem
+    assert float(container["resources"]["limits"]["cpu"]) == exp_cpu
+    sd = _env_secret(resources)["stringData"]
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == exp_gom
+
+
+# --------------------------------------------------------------------------- #
+# TLS: the insights SEMP connection uses the secure port/protocol.
+# --------------------------------------------------------------------------- #
+def test_tls_enabled_uses_https_semp_port(render_helm_template, base_values):
+    values = copy.deepcopy(base_values)
+    values["tls"] = {"enabled": True, "serverCertificatesSecret": "dummy-tls"}
+    sd = _env_secret(render_helm_template(values))["stringData"]
+    assert sd["INSIGHTS_AGENT_SEMP_PORT"] == "1943"
+    assert sd["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "https"
+
+
+def test_tls_disabled_uses_plain_semp_port(render_helm_template, base_values):
+    sd = _env_secret(render_helm_template(base_values))["stringData"]
+    assert sd["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
+    assert sd["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "http"
+
+
 def test_agent_limits_fractional_millicore_cpu_not_truncated(render_helm_template, base_values):
     # "100.5m" must not truncate to 0; ceil(100.5)=101 + dev 500m = 601m = 0.601 cores.
     values = copy.deepcopy(base_values)
