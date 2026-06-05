@@ -93,13 +93,14 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     assert otel_secret is not None
     assert _otel_key(0) in otel_secret["stringData"]
 
-    # In forwarding mode the chart manages these two keys in stringData.
+    # In forwarding mode the chart manages these keys in stringData.
     env_secret = _env_secret(resources)
     assert env_secret["stringData"]["SOLACE_CUSTOM_INSIGHTS_ENABLED"] == "true"
     assert env_secret["stringData"]["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
-    # The chart no longer injects GOMEMLIMIT or the push env vars; those are
-    # operator-supplied via environmentVariables only.
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in env_secret["stringData"]
+    # GOMEMLIMIT is derived from the agent memory headroom when the operator did not
+    # set it: 80% of (limits.memory - requests.memory) = 80% of (512Mi - 256Mi) = 204MiB.
+    assert env_secret["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "204MiB"
+    # The Datadog push vars remain operator-supplied via environmentVariables only.
     assert "INSIGHTS_AGENT_LOGS_ENABLED" not in env_secret["stringData"]
     assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in env_secret["stringData"]
 
@@ -231,12 +232,58 @@ def test_forwarding_env_vars_pass_through(render_helm_template, base_values):
         == logs_cfg
     )
 
-    # The chart must NOT emit its own copies into stringData (no clobbering).
+    # The chart must NOT emit its own copies into stringData (no clobbering). For
+    # GOMEMLIMIT specifically, an operator-supplied value suppresses the chart's
+    # computed injection so it appears only once (in data).
     string_data = env_secret.get("stringData", {})
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in string_data
     assert "INSIGHTS_AGENT_LOGS_ENABLED" not in string_data
     assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in string_data
     assert "INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS" not in string_data
+
+
+# --------------------------------------------------------------------------- #
+# Derived INSIGHTS_AGENT_GOMEMLIMIT (forwarding mode, operator value not set)
+# --------------------------------------------------------------------------- #
+def test_gomemlimit_computed_from_size_delta(render_helm_template, base_values):
+    # No explicit limits -> effective limit is requests + per-size headroom, so
+    # GOMEMLIMIT = 80% of that headroom (the OTel collector's share).
+    # prod1k delta = 1024Mi -> 80% = 819MiB.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "prod1k"}
+    del values["insights"]["resources"]["limits"]
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sd = _env_secret(render_helm_template(values))["stringData"]
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "819MiB"
+
+
+def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_values):
+    # Explicit limit -> GOMEMLIMIT = 80% of (limit - requests) = 80% of (2048 - 256) = 1433MiB.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev"}
+    values["insights"]["resources"]["limits"]["memory"] = "2Gi"
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sd = _env_secret(render_helm_template(values))["stringData"]
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "1433MiB"
+
+
+def test_gomemlimit_not_injected_in_standard_mode(render_helm_template, base_values):
+    # Standard mode has no OTel collector, so the chart does not derive GOMEMLIMIT.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev"}
+    sd = _env_secret(render_helm_template(values))["stringData"]
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+
+
+def test_gomemlimit_fails_when_explicit_limit_has_no_headroom(render_helm_template, base_values):
+    # Explicit limit not above requests and no operator GOMEMLIMIT -> fail-fast.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "dev"}
+    values["insights"]["resources"]["limits"]["memory"] = "256Mi"  # == requests
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    with pytest.raises(Exception) as e:
+        render_helm_template(values)
+    assert "does not exceed requests" in str(e.value)
 
 
 def test_forwarding_does_not_require_api_key_or_site(render_helm_template, base_values):

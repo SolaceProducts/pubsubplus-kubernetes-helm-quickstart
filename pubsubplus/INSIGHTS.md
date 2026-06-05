@@ -53,8 +53,15 @@ insights:
 
 Routes metrics and logs through the co-resident OpenTelemetry collector. Supply the
 collector config inline with `forwarding.otelConfig` (rendered into a chart-managed Secret).
-To tune the collector's memory, set `INSIGHTS_AGENT_GOMEMLIMIT` (e.g. `"410MiB"`) under
-`environmentVariables` — it is passed through and honored only in forwarding mode.
+
+The collector's Go memory limit (`INSIGHTS_AGENT_GOMEMLIMIT`) is set automatically in
+forwarding mode: the chart derives it as 80% of the agent memory headroom (the effective
+memory limit minus `resources.requests.memory`), i.e. 80% of the per-`solace.size` headroom
+when limits are computed, or 80% of `limits.memory - requests.memory` when limits are
+explicit. To override the derived value, set `INSIGHTS_AGENT_GOMEMLIMIT` (e.g. `"410MiB"`)
+under `environmentVariables`. If you set explicit `resources.limits.memory` that does not
+exceed `requests.memory`, the chart cannot derive a value and fails fast — set
+`INSIGHTS_AGENT_GOMEMLIMIT` explicitly or raise the limit.
 
 > **Note on resource limits and `solace.systemScaling`:** when `resources.limits` are not
 > set, the chart computes the `insights-agent` limits as the requests value plus a headroom

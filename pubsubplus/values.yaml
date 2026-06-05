@@ -280,7 +280,10 @@ insights:
     INSIGHTS_AGENT_TAGS: ""
     # Additional agent settings are supplied here as plain env vars and passed through to the
     # agent verbatim. The following are honored only when forwarding.enabled=true:
-    #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"        # GOMEMLIMIT for the co-resident OTel collector
+    #   # GOMEMLIMIT for the co-resident OTel collector. Optional: when forwarding is enabled and
+    #   # this is not set, the chart derives it as 80% of the agent memory headroom (the effective
+    #   # memory limit minus requests.memory). Set it here to override the derived value.
+    #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"
     #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
     #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
     #   INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS: '{"https://app.<site>":["<key1>","<key2>"]}'

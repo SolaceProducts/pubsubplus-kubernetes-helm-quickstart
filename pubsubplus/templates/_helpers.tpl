@@ -77,3 +77,36 @@ collector. Base = insights.resources.requests.cpu when set, otherwise 200m.
 {{- else -}}{{- $baseM = mulf ($base | float64) 1000.0 -}}{{- end -}}
 {{- divf (add (ceil $baseM | int) $delta) 1000 -}}
 {{- end -}}
+
+{{/*
+Parse a Kubernetes memory quantity (Mi or Gi) to an integer number of MiB.
+Usage: include "insights.memToMi" (dict "v" "512Mi")
+*/}}
+{{- define "insights.memToMi" -}}
+{{- $s := .v | toString -}}
+{{- if hasSuffix "Gi" $s -}}{{- mulf (trimSuffix "Gi" $s | float64) 1024.0 | int -}}
+{{- else if hasSuffix "Mi" $s -}}{{- trimSuffix "Mi" $s | float64 | int -}}
+{{- else -}}{{- fail (printf "insights memory values must be specified in Mi or Gi, got %q" $s) -}}{{- end -}}
+{{- end -}}
+
+{{/*
+INSIGHTS_AGENT_GOMEMLIMIT for the co-resident OTel collector (forwarding mode only),
+used when the operator has not set it explicitly. 80% of the memory headroom allotted to
+the collector: the effective agent memory limit minus the requests memory. The effective
+limit is insights.resources.limits.memory when set, otherwise the computed
+requests + per-solace.size headroom (so this reduces to 80% of that headroom).
+Fails if the headroom is not positive (explicit limit does not exceed requests).
+*/}}
+{{- define "insights.agentGomemLimit" -}}
+{{- $limits := .Values.insights.resources.limits | default dict -}}
+{{- $requests := .Values.insights.resources.requests | default dict -}}
+{{- $effLimit := "" -}}
+{{- if $limits.memory -}}{{- $effLimit = $limits.memory -}}{{- else -}}{{- $effLimit = (include "insights.agentLimitMemory" .) -}}{{- end -}}
+{{- $limMi := int (include "insights.memToMi" (dict "v" $effLimit)) -}}
+{{- $reqMi := int (include "insights.memToMi" (dict "v" ($requests.memory | default "256Mi"))) -}}
+{{- $headroom := sub $limMi $reqMi -}}
+{{- if le $headroom 0 -}}
+{{- fail "insights: cannot derive INSIGHTS_AGENT_GOMEMLIMIT because insights.resources.limits.memory does not exceed requests.memory; set INSIGHTS_AGENT_GOMEMLIMIT explicitly or raise the limit" -}}
+{{- end -}}
+{{- printf "%dMiB" (div (mul $headroom 80) 100) -}}
+{{- end -}}
