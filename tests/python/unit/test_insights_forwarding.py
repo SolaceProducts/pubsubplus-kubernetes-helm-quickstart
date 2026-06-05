@@ -87,9 +87,10 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     assert otel_secret is not None
     assert "otel-config-0.yaml" in otel_secret["stringData"]
 
-    # Only SOLACE_CUSTOM_INSIGHTS_ENABLED is chart-managed in stringData.
+    # In forwarding mode the chart manages these two keys in stringData.
     env_secret = _env_secret(resources)
     assert env_secret["stringData"]["SOLACE_CUSTOM_INSIGHTS_ENABLED"] == "true"
+    assert env_secret["stringData"]["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
     # The chart no longer injects GOMEMLIMIT or the push env vars; those are
     # operator-supplied via environmentVariables only.
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in env_secret["stringData"]
