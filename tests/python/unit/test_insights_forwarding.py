@@ -117,6 +117,30 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     assert volume["secret"]["secretName"].endswith("-otel-config")
 
 
+def test_chart_managed_keys_not_duplicated_in_data(render_helm_template, base_values):
+    # Keys the chart manages in stringData must not also be emitted in the data block
+    # (which would create conflicting duplicate keys). Operator-supplied custom vars
+    # still pass through to data.
+    values = copy.deepcopy(base_values)
+    values["insights"]["environmentVariables"].update(
+        {
+            "INSIGHTS_AGENT_SEMP_PORT": "9999",          # chart-managed (always)
+            "SOLACE_CUSTOM_INSIGHTS_ENABLED": "false",   # chart-managed (forwarding only)
+            "MY_CUSTOM_VAR": "keepme",                    # operator-supplied
+        }
+    )
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sec = _env_secret(render_helm_template(values))
+    data, string_data = sec["data"], sec["stringData"]
+
+    assert base64.b64decode(data["MY_CUSTOM_VAR"]).decode() == "keepme"
+    assert "INSIGHTS_AGENT_SEMP_PORT" not in data
+    assert "SOLACE_CUSTOM_INSIGHTS_ENABLED" not in data
+    # They appear once, in stringData, with the chart's values (operator value ignored).
+    assert string_data["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
+    assert string_data["SOLACE_CUSTOM_INSIGHTS_ENABLED"] == "true"
+
+
 # --------------------------------------------------------------------------- #
 # Per-node otelConfig (HA)
 # --------------------------------------------------------------------------- #
