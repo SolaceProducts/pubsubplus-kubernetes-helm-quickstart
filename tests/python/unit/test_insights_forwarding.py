@@ -409,6 +409,37 @@ def test_agent_limits_partial_override(render_helm_template, base_values):
     assert float(container["resources"]["limits"]["cpu"]) == 0.7  # 200m + 500m
 
 
+_SYSTEM_SCALING = {
+    "maxConnections": 100,
+    "maxQueueMessages": 100,
+    "maxSpoolUsage": 1000,
+    "cpu": "2",
+    "memory": "4000Mi",
+}
+
+
+def test_agent_limits_unknown_size_fails_when_computed(render_helm_template, base_values):
+    # Under systemScaling the broker ignores solace.size (no "Invalid solace.size"),
+    # so an unknown size would otherwise yield silent zero headroom; the helper fails
+    # instead of computing a limit equal to the request.
+    values = copy.deepcopy(base_values)
+    del values["insights"]["resources"]["limits"]
+    values["solace"] = {"size": "bogus", "systemScaling": dict(_SYSTEM_SCALING)}
+    with pytest.raises(Exception) as e:
+        render_helm_template(values)
+    assert "unknown solace.size" in str(e.value)
+
+
+def test_agent_limits_unknown_size_ok_with_explicit_limits(render_helm_template, base_values):
+    # Explicit limits bypass the helper (and its unknown-size guard).
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "bogus", "systemScaling": dict(_SYSTEM_SCALING)}
+    values["insights"]["resources"]["limits"] = {"cpu": "1", "memory": "1Gi"}
+    container = _insights_container(render_helm_template(values))
+    assert container["resources"]["limits"]["memory"] == "1Gi"
+    assert str(container["resources"]["limits"]["cpu"]) == "1"
+
+
 # --------------------------------------------------------------------------- #
 # imagePullPolicy (DATAGO-134542)
 # --------------------------------------------------------------------------- #

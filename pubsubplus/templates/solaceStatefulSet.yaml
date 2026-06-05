@@ -269,8 +269,11 @@ spec:
             cpu: {{ .Values.insights.resources.requests.cpu | default "200m" }}
           limits:
 {{- $insightsLimits := .Values.insights.resources.limits | default dict }}
-            memory: {{ $insightsLimits.memory | default (include "insights.agentLimitMemory" .) }}
-            cpu: {{ $insightsLimits.cpu | default (include "insights.agentLimitCpu" .) }}
+            {{- /* Use the explicit limit when set; otherwise compute it. The helper is
+                   only invoked in the else branch so an explicit limit bypasses it
+                   (and its unknown-solace.size guard). */}}
+            memory: {{ if $insightsLimits.memory }}{{ $insightsLimits.memory }}{{ else }}{{ include "insights.agentLimitMemory" . }}{{ end }}
+            cpu: {{ if $insightsLimits.cpu }}{{ $insightsLimits.cpu }}{{ else }}{{ include "insights.agentLimitCpu" . }}{{ end }}
         env:
         - name: INSIGHTS_AGENT_BROKER_HOSTNAME_OVERRIDE
           valueFrom:

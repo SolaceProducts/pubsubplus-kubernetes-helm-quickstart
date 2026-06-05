@@ -46,7 +46,10 @@ Base = insights.resources.requests.memory when set, otherwise 256Mi.
 */}}
 {{- define "insights.agentLimitMemory" -}}
 {{- $deltas := dict "dev" 512 "prod1k" 1024 "prod10k" 2048 "prod100k" 4096 "prod200k" 5632 -}}
-{{- $delta := int (dig .Values.solace.size 0 $deltas) -}}
+{{- if not (hasKey $deltas .Values.solace.size) -}}
+{{- fail (printf "insights: cannot compute the agent memory limit for unknown solace.size %q; set insights.resources.limits.memory explicitly" .Values.solace.size) -}}
+{{- end -}}
+{{- $delta := int (get $deltas .Values.solace.size) -}}
 {{- $requests := .Values.insights.resources.requests | default dict -}}
 {{- $base := $requests.memory | default "256Mi" | toString -}}
 {{- $baseMi := 0.0 -}}
@@ -63,7 +66,10 @@ collector. Base = insights.resources.requests.cpu when set, otherwise 200m.
 */}}
 {{- define "insights.agentLimitCpu" -}}
 {{- $deltas := dict "dev" 500 "prod1k" 500 "prod10k" 1000 "prod100k" 2000 "prod200k" 2000 -}}
-{{- $delta := int (dig .Values.solace.size 0 $deltas) -}}
+{{- if not (hasKey $deltas .Values.solace.size) -}}
+{{- fail (printf "insights: cannot compute the agent cpu limit for unknown solace.size %q; set insights.resources.limits.cpu explicitly" .Values.solace.size) -}}
+{{- end -}}
+{{- $delta := int (get $deltas .Values.solace.size) -}}
 {{- $requests := .Values.insights.resources.requests | default dict -}}
 {{- $base := $requests.cpu | default "200m" | toString -}}
 {{- $baseM := 0.0 -}}
