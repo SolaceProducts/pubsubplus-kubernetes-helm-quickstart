@@ -144,9 +144,10 @@ is the `ha_role` attribute), supply one config per node:
 - `forwarding.otelConfigBackup` → pod-1
 - `forwarding.otelConfigMonitor` → pod-2
 
-The chart renders them into a single Secret under per-index keys
-(`otel-config-0/1/2.yaml`) and each pod mounts its own via `subPathExpr` keyed on the
-pod index. A node with an empty per-node value falls back to `forwarding.otelConfig`, so
+The chart renders them into a single Secret under per-pod keys
+(`otel-config-<release>-pubsubplus-<ordinal>.yaml`) and each pod mounts its own via
+`subPathExpr` keyed on the pod name (`metadata.name`, available on all Kubernetes
+versions). A node with an empty per-node value falls back to `forwarding.otelConfig`, so
 you can also set just one or two of them. `logsConfig` is always shared across all nodes.
 
 Because these values are whole files, load them with `--set-file` instead of pasting

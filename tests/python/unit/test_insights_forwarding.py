@@ -49,6 +49,12 @@ def _otel_secret(resources):
     )
 
 
+def _otel_key(idx):
+    # Secret keys are keyed by pod name <fullname>-<ordinal>; the render helper
+    # uses release "test-release", so fullname is "test-release-pubsubplus".
+    return "otel-config-test-release-pubsubplus-{}.yaml".format(idx)
+
+
 def _logs_configmap(resources):
     return next(
         (
@@ -85,7 +91,7 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     # Chart-managed OTel config Secret is rendered (keyed per pod index).
     otel_secret = _otel_secret(resources)
     assert otel_secret is not None
-    assert "otel-config-0.yaml" in otel_secret["stringData"]
+    assert _otel_key(0) in otel_secret["stringData"]
 
     # In forwarding mode the chart manages these two keys in stringData.
     env_secret = _env_secret(resources)
@@ -104,7 +110,7 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
         if m["name"] == "otel-config"
     )
     assert mount["mountPath"] == "/etc/datadog-agent/otel-config.yaml"
-    assert mount["subPathExpr"] == "otel-config-$(INSIGHTS_AGENT_NODE_ROLE).yaml"
+    assert mount["subPathExpr"] == "otel-config-$(POD_NAME).yaml"
     assert mount["readOnly"] is True
 
     volume = next(v for v in _volumes(resources) if v["name"] == "otel-config")
@@ -124,9 +130,9 @@ def test_otel_per_node_configs_keyed_by_pod_index(render_helm_template, base_val
         "otelConfigMonitor": "service: {role: monitor}\n",
     }
     sd = _otel_secret(render_helm_template(values))["stringData"]
-    assert "role: primary" in sd["otel-config-0.yaml"]
-    assert "role: backup" in sd["otel-config-1.yaml"]
-    assert "role: monitor" in sd["otel-config-2.yaml"]
+    assert "role: primary" in sd[_otel_key(0)]
+    assert "role: backup" in sd[_otel_key(1)]
+    assert "role: monitor" in sd[_otel_key(2)]
 
 
 def test_otel_per_node_falls_back_to_otel_config(render_helm_template, base_values):
@@ -139,9 +145,9 @@ def test_otel_per_node_falls_back_to_otel_config(render_helm_template, base_valu
         "otelConfigPrimary": "service: {role: primary}\n",
     }
     sd = _otel_secret(render_helm_template(values))["stringData"]
-    assert "role: primary" in sd["otel-config-0.yaml"]
-    assert "role: shared" in sd["otel-config-1.yaml"]
-    assert "role: shared" in sd["otel-config-2.yaml"]
+    assert "role: primary" in sd[_otel_key(0)]
+    assert "role: shared" in sd[_otel_key(1)]
+    assert "role: shared" in sd[_otel_key(2)]
 
 
 def test_otel_non_ha_renders_only_index_0(render_helm_template, base_values):
@@ -149,9 +155,9 @@ def test_otel_non_ha_renders_only_index_0(render_helm_template, base_values):
     values["solace"] = {"size": "dev"}  # redundancy defaults false
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sd = _otel_secret(render_helm_template(values))["stringData"]
-    assert "otel-config-0.yaml" in sd
-    assert "otel-config-1.yaml" not in sd
-    assert "otel-config-2.yaml" not in sd
+    assert _otel_key(0) in sd
+    assert _otel_key(1) not in sd
+    assert _otel_key(2) not in sd
 
 
 def test_otel_ha_requires_backup_config_when_no_fallback(render_helm_template, base_values):
