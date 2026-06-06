@@ -279,11 +279,11 @@ def test_gomemlimit_fails_when_explicit_limit_has_no_headroom(render_helm_templa
     # Explicit limit not above requests and no operator GOMEMLIMIT -> fail-fast.
     values = copy.deepcopy(base_values)
     values["solace"] = {"size": "dev"}
-    values["insights"]["resources"]["limits"]["memory"] = "256Mi"  # == requests
+    values["insights"]["resources"]["limits"]["memory"] = "256Mi"  # == agent base
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     with pytest.raises(Exception) as e:
         render_helm_template(values)
-    assert "does not exceed requests" in str(e.value)
+    assert "at or below the agent base" in str(e.value)
 
 
 def test_forwarding_does_not_require_api_key_or_site(render_helm_template, base_values):
@@ -429,15 +429,46 @@ def test_agent_limits_computed_from_default_base(render_helm_template, base_valu
     assert float(container["resources"]["limits"]["cpu"]) == 0.7
 
 
-def test_agent_limits_computed_base_follows_requests(render_helm_template, base_values):
+def test_computed_limit_independent_of_requests_below_it(render_helm_template, base_values):
+    # The computed limit uses a fixed base (not requests); requests below it don't change it.
     values = copy.deepcopy(base_values)
     del values["insights"]["resources"]["limits"]
     values["insights"]["resources"]["requests"] = {"cpu": "1", "memory": "1Gi"}
     values["solace"] = {"size": "prod10k"}
     container = _insights_container(render_helm_template(values))
-    # base = requests (1Gi=1024Mi / 1 core) + prod10k headroom (2048Mi / 1000m).
-    assert container["resources"]["limits"]["memory"] == "3072Mi"
-    assert float(container["resources"]["limits"]["cpu"]) == 2.0
+    # computed = 256Mi + 2048Mi = 2304Mi; 200m + 1000m = 1.2 cores. Requests (1024Mi / 1 core)
+    # are below those, so the limit stays at the computed value.
+    assert container["resources"]["limits"]["memory"] == "2304Mi"
+    assert float(container["resources"]["limits"]["cpu"]) == 1.2
+
+
+def test_requests_equal_limits_is_guaranteed_qos(render_helm_template, base_values):
+    # Set requests to the per-size value and leave limits unset -> requests == limits
+    # (Guaranteed QoS) with a valid derived GOMEMLIMIT (measured from the fixed 256Mi base).
+    values = copy.deepcopy(base_values)
+    del values["insights"]["resources"]["limits"]
+    values["solace"] = {"size": "dev"}
+    values["insights"]["resources"]["requests"] = {"cpu": "700m", "memory": "768Mi"}
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    resources = render_helm_template(values)
+    c = _insights_container(resources)
+    assert c["resources"]["limits"]["memory"] == "768Mi"
+    assert c["resources"]["limits"]["memory"] == c["resources"]["requests"]["memory"]
+    assert float(c["resources"]["limits"]["cpu"]) == 0.7
+    assert _env_secret(resources)["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "409MiB"
+
+
+def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_values):
+    # A request above base + headroom raises the limit to the request, and GOMEMLIMIT
+    # scales with it (80% of limit - 256Mi base).
+    values = copy.deepcopy(base_values)
+    del values["insights"]["resources"]["limits"]
+    values["solace"] = {"size": "dev"}
+    values["insights"]["resources"]["requests"] = {"cpu": "200m", "memory": "1Gi"}
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    resources = render_helm_template(values)
+    assert _insights_container(resources)["resources"]["limits"]["memory"] == "1024Mi"
+    assert _env_secret(resources)["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "614MiB"
 
 
 def test_agent_limits_verbatim_when_set(render_helm_template, base_values):
@@ -450,14 +481,14 @@ def test_agent_limits_verbatim_when_set(render_helm_template, base_values):
 
 
 def test_agent_limits_fractional_mi_request_not_below_request(render_helm_template, base_values):
-    # Regression: a fractional-Mi request must not parse to 0 and yield a limit
-    # below the request (which k8s would reject). 1536.5Mi ceils to 1537 + 512 = 2049Mi.
+    # Regression: a fractional-Mi request must ceil (not truncate) so the limit clamps up
+    # to a value not below the request. dev computed = 768Mi; 1536.5Mi ceils to 1537Mi.
     values = copy.deepcopy(base_values)
     del values["insights"]["resources"]["limits"]
     values["insights"]["resources"]["requests"] = {"cpu": "200m", "memory": "1536.5Mi"}
     values["solace"] = {"size": "dev"}
     container = _insights_container(render_helm_template(values))
-    assert container["resources"]["limits"]["memory"] == "2049Mi"
+    assert container["resources"]["limits"]["memory"] == "1537Mi"
 
 
 def test_agent_limits_fractional_gi_request(render_helm_template, base_values):
@@ -466,8 +497,8 @@ def test_agent_limits_fractional_gi_request(render_helm_template, base_values):
     values["insights"]["resources"]["requests"] = {"cpu": "200m", "memory": "1.5Gi"}
     values["solace"] = {"size": "prod1k"}
     container = _insights_container(render_helm_template(values))
-    # 1.5Gi = 1536Mi + prod1k headroom 1024Mi.
-    assert container["resources"]["limits"]["memory"] == "2560Mi"
+    # prod1k computed = 256+1024 = 1280Mi; request 1.5Gi=1536Mi clamps the limit up to 1536Mi.
+    assert container["resources"]["limits"]["memory"] == "1536Mi"
 
 
 def test_agent_limits_rejects_non_mi_gi_memory(render_helm_template, base_values):
@@ -527,13 +558,14 @@ def test_tls_disabled_uses_plain_semp_port(render_helm_template, base_values):
 
 
 def test_agent_limits_fractional_millicore_cpu_not_truncated(render_helm_template, base_values):
-    # "100.5m" must not truncate to 0; ceil(100.5)=101 + dev 500m = 601m = 0.601 cores.
+    # A fractional-millicore request above the computed limit must ceil (not truncate) when
+    # clamping. dev computed = 700m; request 1500.5m ceils to 1501m = 1.501 cores (not 1.5).
     values = copy.deepcopy(base_values)
     del values["insights"]["resources"]["limits"]
-    values["insights"]["resources"]["requests"] = {"cpu": "100.5m", "memory": "256Mi"}
+    values["insights"]["resources"]["requests"] = {"cpu": "1500.5m", "memory": "256Mi"}
     values["solace"] = {"size": "dev"}
     container = _insights_container(render_helm_template(values))
-    assert float(container["resources"]["limits"]["cpu"]) == 0.601
+    assert float(container["resources"]["limits"]["cpu"]) == 1.501
 
 
 def test_agent_limits_partial_override(render_helm_template, base_values):

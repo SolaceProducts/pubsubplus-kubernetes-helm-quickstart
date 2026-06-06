@@ -282,7 +282,7 @@ insights:
     # agent verbatim. The following are honored only when forwarding.enabled=true:
     #   # GOMEMLIMIT for the co-resident OTel collector. Optional: when forwarding is enabled and
     #   # this is not set, the chart derives it as 80% of the agent memory headroom (the effective
-    #   # memory limit minus requests.memory). Set it here to override the derived value.
+    #   # memory limit minus the fixed 256Mi base). Set it here to override the derived value.
     #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"
     #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
     #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
@@ -307,9 +307,12 @@ insights:
       # Minimum memory resource required by the insights-agent container
       memory: 256Mi
     # Maximum CPU/memory limits for the insights-agent container.
-    # When not set, each limit is computed per solace.size as a base plus per-size-class
-    # headroom for the co-resident OTel collector. The base is the corresponding requests
-    # value when set, otherwise 200m CPU / 256Mi memory (requests must use Mi or Gi units).
+    # When not set, each limit is computed per solace.size as a FIXED base (200m CPU /
+    # 256Mi memory) plus a per-size-class headroom for the co-resident OTel collector. The
+    # base is fixed (not the requests value), so the computed limit is a stable per-size
+    # value — set requests equal to it and leave limits unset for Guaranteed QoS. If a
+    # request is higher than base + headroom, the limit is raised to the request
+    # (requests memory must use Mi or Gi units).
     # NOTE: the headroom is selected by solace.size. When solace.systemScaling is used
     # (solace.size is ignored for broker sizing), the headroom falls back to the
     # solace.size default tier — set limits explicitly below to size the agent for a

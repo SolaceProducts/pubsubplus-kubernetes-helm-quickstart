@@ -21,14 +21,37 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 | `image.pullPolicy`                            | Image pull policy for the Insights Agent container (`Always`, `IfNotPresent`, `Never`). Set to `IfNotPresent`/`Never` for air-gapped clusters with pre-loaded images. | `Always`            |
 | `resources.requests.cpu`                      | The minimum CPU resource required by the `insights-agent` container.                                | `200m`                                       |
 | `resources.requests.memory`                   | The minimum memory resource required by the `insights-agent` container (must use `Mi`/`Gi` units).  | `256Mi`                                      |
-| `resources.limits.cpu`                        | Max CPU for the `insights-agent` container. Used verbatim if set; otherwise computed as the requests CPU plus a per-`solace.size` OTel headroom. | computed       |
-| `resources.limits.memory`                     | Max memory for the `insights-agent` container. Used verbatim if set; otherwise computed as the requests memory plus a per-`solace.size` OTel headroom. | computed   |
+| `resources.limits.cpu`                        | Max CPU for the `insights-agent` container. Used verbatim if set; otherwise computed as a fixed `200m` base plus a per-`solace.size` OTel headroom (raised to `requests.cpu` if that is higher). | computed       |
+| `resources.limits.memory`                     | Max memory for the `insights-agent` container. Used verbatim if set; otherwise computed as a fixed `256Mi` base plus a per-`solace.size` OTel headroom (raised to `requests.memory` if that is higher). | computed   |
 | `forwarding.enabled`                          | Set `true` to enable Insights Agent Pro (third-party forwarding via the co-resident OTel collector). | `false`                                     |
 | `forwarding.otelConfig`                       | Inline `otel-config.yaml` content for all nodes. Required when `forwarding.enabled=true` unless per-node configs are set; rendered into a chart-managed Secret. | `""`        |
 | `forwarding.otelConfigPrimary`                | Per-node `otel-config.yaml` for the primary node (pod-0) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                       |
 | `forwarding.otelConfigBackup`                 | Per-node `otel-config.yaml` for the backup node (pod-1) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                        |
 | `forwarding.otelConfigMonitor`                | Per-node `otel-config.yaml` for the monitor node (pod-2) in an HA deployment. Falls back to `forwarding.otelConfig` when empty. | `""`                       |
 | `forwarding.logsConfig`                       | Inline `logs.yml` to override the agent's `/etc/datadog-agent/conf.d/solace.d/logs.yml` (rendered into a chart-managed ConfigMap, same for all nodes). Only takes effect when `forwarding.enabled=true`. | `""`        |
+
+## Resource limits per broker size
+
+When `resources.limits` are not set, the chart computes them as a **fixed agent base**
+(`256Mi` / `200m`) plus a per-`solace.size` headroom for the co-resident OTel collector. The
+base is fixed (independent of `requests`), so these are stable per-size values — and the
+recommended **minimums** if you choose to set `resources.limits` explicitly:
+
+| `solace.size` | `resources.limits.memory` | `resources.limits.cpu` | Derived `INSIGHTS_AGENT_GOMEMLIMIT` |
+|---------------|---------------------------|------------------------|-------------------------------------|
+| `dev`         | `768Mi`                   | `700m`                 | `409MiB`                            |
+| `prod1k`      | `1280Mi`                  | `700m`                 | `819MiB`                            |
+| `prod10k`     | `2304Mi`                  | `1200m`                | `1638MiB`                           |
+| `prod100k`    | `4352Mi`                  | `2200m`                | `3276MiB`                           |
+| `prod200k`    | `5888Mi`                  | `2200m`                | `4505MiB`                           |
+
+Notes:
+
+- The chart renders CPU in cores (e.g. `0.7`), which Kubernetes displays as `700m` — both are equivalent.
+- The computed limit does **not** track `resources.requests`: raising requests below the value above leaves the limit unchanged. If a request *exceeds* the computed limit, the limit is raised to the request so the manifest stays valid (`limit >= request`).
+- **Guaranteed QoS:** to run the agent with `requests == limits`, set `resources.requests` to the row above for your `solace.size` and leave `resources.limits` unset — the computed limit will equal your requests.
+- If you set `resources.limits` explicitly they are used **verbatim** and are **not** validated against these minimums; set them at or above the row for your `solace.size` so the OTel collector has enough memory in forwarding mode.
+- The `INSIGHTS_AGENT_GOMEMLIMIT` column applies only in forwarding mode and reflects the computed-limits case (80% of the memory headroom); see [Forwarding-only](#forwarding-only-via-otel-collector-no-datadog-saas-push).
 
 ## Forwarding modes
 
@@ -58,15 +81,16 @@ collector config inline with `forwarding.otelConfig` (rendered into a chart-mana
 
 The collector's Go memory limit (`INSIGHTS_AGENT_GOMEMLIMIT`) is set automatically in
 forwarding mode: the chart derives it as 80% of the agent memory headroom (the effective
-memory limit minus `resources.requests.memory`), i.e. 80% of the per-`solace.size` headroom
-when limits are computed, or 80% of `limits.memory - requests.memory` when limits are
-explicit. To override the derived value, set `INSIGHTS_AGENT_GOMEMLIMIT` (e.g. `"410MiB"`)
-under `environmentVariables`. If you set explicit `resources.limits.memory` that does not
-exceed `requests.memory`, the chart cannot derive a value and fails fast — set
-`INSIGHTS_AGENT_GOMEMLIMIT` explicitly or raise the limit.
+memory limit minus the fixed `256Mi` base), i.e. 80% of the per-`solace.size` headroom when
+limits are computed, or 80% of `limits.memory - 256Mi` when limits are explicit. Measuring
+from the fixed base (not `requests`) means `requests == limits` does not zero the headroom.
+To override the derived value, set `INSIGHTS_AGENT_GOMEMLIMIT` (e.g. `"410MiB"`) under
+`environmentVariables`. If you set an explicit `resources.limits.memory` at or below the
+`256Mi` base, the chart cannot derive a value and fails fast — set `INSIGHTS_AGENT_GOMEMLIMIT`
+explicitly or raise the limit.
 
 > **Note on resource limits and `solace.systemScaling`:** when `resources.limits` are not
-> set, the chart computes the `insights-agent` limits as the requests value plus a headroom
+> set, the chart computes the `insights-agent` limits as the fixed base plus a headroom
 > selected by `solace.size`. If you scale the broker with `solace.systemScaling` (which makes
 > the chart ignore `solace.size`), that headroom falls back to the `solace.size` default tier
 > and will not track your actual broker size — set `insights.resources.limits` explicitly to
