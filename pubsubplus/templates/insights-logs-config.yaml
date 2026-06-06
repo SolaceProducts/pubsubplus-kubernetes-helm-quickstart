@@ -1,0 +1,16 @@
+{{- if and .Values.insights.enabled .Values.insights.forwarding.enabled }}
+{{- if .Values.insights.forwarding.logsConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "solace.fullname" . }}-logs-config
+  labels:
+    app.kubernetes.io/name: {{ template "solace.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+data:
+  logs.yml: |-
+{{ .Values.insights.forwarding.logsConfig | indent 4 }}
+{{- end }}
+{{- end }}

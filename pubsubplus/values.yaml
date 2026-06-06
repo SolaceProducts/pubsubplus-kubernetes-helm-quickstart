@@ -270,12 +270,24 @@ insights:
   enabled: false
 
   environmentVariables:
-    # API key for your Solace Insights subscription, available from the Solace Cloud Console. This value is required.
+    # API key for your Solace Insights subscription, available from the Solace Cloud Console.
+    # Required in standard mode; optional when forwarding.enabled=true (the agent does not use it).
     INSIGHTS_AGENT_API_KEY: ""
-    # Site location where broker metrics and logs will flow, available from the Solace Cloud Console. This value is required.
+    # Site location where broker metrics and logs will flow, available from the Solace Cloud Console.
+    # Required in standard mode; optional when forwarding.enabled=true (falls back to the agent default).
     INSIGHTS_AGENT_SITE: ""
     # Tags for metrics and logs, available from the Solace Cloud Console. This value is required.
     INSIGHTS_AGENT_TAGS: ""
+    # Additional agent settings are supplied here as plain env vars and passed through to the
+    # agent verbatim. The following are honored only when forwarding.enabled=true:
+    #   # GOMEMLIMIT for the co-resident OTel collector. Optional: when forwarding is enabled and
+    #   # this is not set, the chart derives it as 80% of the agent memory headroom (the effective
+    #   # memory limit minus the fixed 256Mi base). Set it here to override the derived value.
+    #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"
+    #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
+    #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
+    #   INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS: '{"https://app.<site>":["<key1>","<key2>"]}'
+    #   INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS: '[{"api_key":"<key1>","host":"agent-http-intake.logs.<site>","use_compression":true,"compression_level":2}]'
 
   image:
     # Image repository for the Insights Agent container
@@ -284,6 +296,9 @@ insights:
     tag: latest
     # Image pull secret name for the Insights Agent container. The pull secret is available from the Solace Cloud Console.
     pullSecretName: gcr-reg-secret
+    # Image pull policy for the Insights Agent container. Defaults to "Always".
+    # Set to "IfNotPresent" or "Never" for air-gapped clusters with pre-loaded images.
+    pullPolicy: Always
 
   resources:
     requests:
@@ -291,8 +306,60 @@ insights:
       cpu: 200m
       # Minimum memory resource required by the insights-agent container
       memory: 256Mi
-    limits:
-      # Maximum CPU resource the insights-agent container can use
-      cpu: 200m
-      # Maximum memory resource the insights-agent container can use
-      memory: 512Mi
+    # Maximum CPU/memory limits for the insights-agent container.
+    # When not set, each limit is computed per solace.size as a FIXED base (200m CPU /
+    # 256Mi memory) plus a per-size-class headroom for the co-resident OTel collector. The
+    # base is fixed (not the requests value), so the computed limit is a stable per-size
+    # value — set requests equal to it and leave limits unset for Guaranteed QoS. If a
+    # request is higher than base + headroom, the limit is raised to the request
+    # (requests memory must use Mi or Gi units).
+    # NOTE: the headroom is selected by solace.size. When solace.systemScaling is used
+    # (solace.size is ignored for broker sizing), the headroom falls back to the
+    # solace.size default tier — set limits explicitly below to size the agent for a
+    # custom-scaled broker.
+    # Set either/both here to override with explicit final values (used verbatim):
+    # limits:
+    #   cpu: "1"
+    #   memory: 1Gi
+
+  # Insights Agent Pro / third-party forwarding configuration.
+  # When forwarding.enabled is false (default), the agent ships metrics and logs
+  # directly to Datadog SaaS (standard mode) and none of the keys below take effect.
+  forwarding:
+    # Master switch for Insights Agent Pro mode. When true, the agent's
+    # custom-entrypoint.sh flips to ship through the co-resident OTel collector.
+    enabled: false
+
+    # Inline OTel collector configuration (otel-config.yaml). Used by all nodes; required
+    # when forwarding.enabled=true unless the per-node configs below are set. Rendered into
+    # a chart-managed Secret and mounted at /etc/datadog-agent/otel-config.yaml. Tip: load
+    # from a file with `--set-file insights.forwarding.otelConfig=./otel-config.yaml`.
+    #   otelConfig: |
+    #     receivers: { ... }
+    #     exporters: { ... }
+    #     service:
+    #       pipelines: { ... }
+    otelConfig: ""
+
+    # Optional per-node OTel configs for an HA deployment (solace.redundancy=true).
+    # When set, each broker node mounts its own config; a node falls back to otelConfig
+    # when its per-node value is empty. Map to the Solace HA roles (pod-0/1/2). Load each
+    # from a file, e.g.:
+    #   --set-file insights.forwarding.otelConfigPrimary=./otel-primary.yaml
+    #   --set-file insights.forwarding.otelConfigBackup=./otel-backup.yaml
+    #   --set-file insights.forwarding.otelConfigMonitor=./otel-monitor.yaml
+    otelConfigPrimary: ""   # pod-0 (primary)
+    otelConfigBackup: ""    # pod-1 (backup)
+    otelConfigMonitor: ""   # pod-2 (monitor)
+
+    # Optional inline override of the Datadog agent's Solace log-collection config
+    # (/etc/datadog-agent/conf.d/solace.d/logs.yml). Rendered into a chart-managed
+    # ConfigMap and mounted over that single file. Only takes effect when
+    # forwarding.enabled=true; leave empty to keep the agent image's default logs.yml.
+    #   logsConfig: |
+    #     logs:
+    #       - type: file
+    #         path: /jail/logs/*.log
+    #         service: solace
+    #         source: solace
+    logsConfig: ""

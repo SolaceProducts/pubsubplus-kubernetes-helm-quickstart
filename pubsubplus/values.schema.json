@@ -247,6 +247,10 @@
                         "tag": {
                             "type": "string",
                             "description": "Image tag for the Insights Agent"
+                        },
+                        "pullPolicy": {
+                            "type": "string",
+                            "description": "Image pull policy for the Insights Agent container (Always, IfNotPresent, or Never). Defaults to Always."
                         }
                     }
                 },
@@ -303,6 +307,36 @@
                                     "description": "Maximum memory resource allowed"
                                 }
                             }
+                        }
+                    }
+                },
+                "forwarding": {
+                    "type": "object",
+                    "description": "Insights Agent Pro / third-party forwarding configuration",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Enable Insights Agent Pro (third-party forwarding via the co-resident OTel collector)"
+                        },
+                        "otelConfig": {
+                            "type": "string",
+                            "description": "Inline otel-config.yaml content. Required when forwarding.enabled=true (unless per-node configs are set); rendered into a chart-managed Secret."
+                        },
+                        "otelConfigPrimary": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the primary node (pod-0) in HA. Falls back to otelConfig when empty."
+                        },
+                        "otelConfigBackup": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the backup node (pod-1) in HA. Falls back to otelConfig when empty."
+                        },
+                        "otelConfigMonitor": {
+                            "type": "string",
+                            "description": "Per-node otel-config.yaml for the monitor node (pod-2) in HA. Falls back to otelConfig when empty."
+                        },
+                        "logsConfig": {
+                            "type": "string",
+                            "description": "Inline logs.yml content overriding the agent's solace.d/logs.yml. Only takes effect when forwarding.enabled=true; rendered into a chart-managed ConfigMap."
                         }
                     }
                 }
