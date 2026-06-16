@@ -95,7 +95,7 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
 
     # In forwarding mode the chart manages these keys in stringData.
     env_secret = _env_secret(resources)
-    assert env_secret["stringData"]["SOLACE_CUSTOM_INSIGHTS_ENABLED"] == "true"
+    assert env_secret["stringData"]["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
     assert env_secret["stringData"]["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
     # GOMEMLIMIT is derived from the agent memory headroom when the operator did not
     # set it: 80% of (limits.memory - requests.memory) = 80% of (512Mi - 256Mi) = 204MiB.
@@ -126,7 +126,7 @@ def test_chart_managed_keys_not_duplicated_in_data(render_helm_template, base_va
     values["insights"]["environmentVariables"].update(
         {
             "INSIGHTS_AGENT_SEMP_PORT": "9999",          # chart-managed (always)
-            "SOLACE_CUSTOM_INSIGHTS_ENABLED": "false",   # chart-managed (forwarding only)
+            "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED": "false",   # chart-managed (forwarding only)
             "MY_CUSTOM_VAR": "keepme",                    # operator-supplied
         }
     )
@@ -136,10 +136,10 @@ def test_chart_managed_keys_not_duplicated_in_data(render_helm_template, base_va
 
     assert base64.b64decode(data["MY_CUSTOM_VAR"]).decode() == "keepme"
     assert "INSIGHTS_AGENT_SEMP_PORT" not in data
-    assert "SOLACE_CUSTOM_INSIGHTS_ENABLED" not in data
+    assert "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED" not in data
     # They appear once, in stringData, with the chart's values (operator value ignored).
     assert string_data["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
-    assert string_data["SOLACE_CUSTOM_INSIGHTS_ENABLED"] == "true"
+    assert string_data["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
 
 
 # --------------------------------------------------------------------------- #
@@ -361,7 +361,7 @@ def test_forwarding_disabled_is_noop(render_helm_template, base_values):
     assert _otel_secret(resources) is None
 
     env_secret = _env_secret(resources)
-    assert "SOLACE_CUSTOM_INSIGHTS_ENABLED" not in env_secret.get("stringData", {})
+    assert "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED" not in env_secret.get("stringData", {})
 
     assert all(v["name"] != "otel-config" for v in _volumes(resources))
     assert all(
