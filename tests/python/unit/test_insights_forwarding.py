@@ -245,16 +245,32 @@ def test_forwarding_env_vars_pass_through(render_helm_template, base_values):
 # --------------------------------------------------------------------------- #
 # Derived INSIGHTS_AGENT_GOMEMLIMIT (forwarding mode, operator value not set)
 # --------------------------------------------------------------------------- #
-def test_gomemlimit_computed_from_size_delta(render_helm_template, base_values):
-    # No explicit limits -> effective limit is requests + per-size headroom, so
-    # GOMEMLIMIT = 80% of that headroom (the OTel collector's share).
-    # prod1k delta = 1024Mi -> 80% = 819MiB.
+def test_broker_size_passed_when_limits_computed(render_helm_template, base_values):
+    # With computed limits (no explicit limits.memory override), the chart passes the
+    # broker scaling tier and lets the agent derive GOMEMLIMIT. solace.size "prod1k" is
+    # translated to the agent's vocabulary "1k" (the "prod" prefix is stripped).
     values = copy.deepcopy(base_values)
     values["solace"] = {"size": "prod1k"}
     del values["insights"]["resources"]["limits"]
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sd = _env_secret(render_helm_template(values))["stringData"]
-    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "819MiB"
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "1k"
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+
+
+def test_operator_broker_size_passes_through_and_suppresses_auto_inject(render_helm_template, base_values):
+    # An operator-supplied INSIGHTS_AGENT_BROKER_SIZE passes through the data block and
+    # suppresses the chart's auto-injected tier (no duplicate key) and its GOMEMLIMIT.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "prod10k"}
+    del values["insights"]["resources"]["limits"]
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_BROKER_SIZE"] = "100k"
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sec = _env_secret(render_helm_template(values))
+    assert base64.b64decode(sec["data"]["INSIGHTS_AGENT_BROKER_SIZE"]).decode() == "100k"
+    sd = sec.get("stringData", {})
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
 
 def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_values):
@@ -444,7 +460,8 @@ def test_computed_limit_independent_of_requests_below_it(render_helm_template, b
 
 def test_requests_equal_limits_is_guaranteed_qos(render_helm_template, base_values):
     # Set requests to the per-size value and leave limits unset -> requests == limits
-    # (Guaranteed QoS) with a valid derived GOMEMLIMIT (measured from the fixed 256Mi base).
+    # (Guaranteed QoS). Limits are computed (not an explicit limits.memory override), so
+    # the chart passes the tier and the agent derives GOMEMLIMIT (dev -> 409MiB).
     values = copy.deepcopy(base_values)
     del values["insights"]["resources"]["limits"]
     values["solace"] = {"size": "dev"}
@@ -455,12 +472,15 @@ def test_requests_equal_limits_is_guaranteed_qos(render_helm_template, base_valu
     assert c["resources"]["limits"]["memory"] == "768Mi"
     assert c["resources"]["limits"]["memory"] == c["resources"]["requests"]["memory"]
     assert float(c["resources"]["limits"]["cpu"]) == 0.7
-    assert _env_secret(resources)["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "409MiB"
+    sd = _env_secret(resources)["stringData"]
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
 
 def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_values):
-    # A request above base + headroom raises the limit to the request, and GOMEMLIMIT
-    # scales with it (80% of limit - 256Mi base).
+    # A request above base + headroom raises the container limit up to the request. The
+    # chart still passes the tier (a requests-driven clamp is not an explicit limits.memory
+    # override), so GOMEMLIMIT is left to the agent (fixed per tier, not scaled to the clamp).
     values = copy.deepcopy(base_values)
     del values["insights"]["resources"]["limits"]
     values["solace"] = {"size": "dev"}
@@ -468,7 +488,9 @@ def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_va
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     resources = render_helm_template(values)
     assert _insights_container(resources)["resources"]["limits"]["memory"] == "1024Mi"
-    assert _env_secret(resources)["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "614MiB"
+    sd = _env_secret(resources)["stringData"]
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
 
 def test_agent_limits_verbatim_when_set(render_helm_template, base_values):
@@ -512,22 +534,25 @@ def test_agent_limits_rejects_non_mi_gi_memory(render_helm_template, base_values
 
 
 # --------------------------------------------------------------------------- #
-# Full per-size matrix: computed memory/CPU limits and derived GOMEMLIMIT, with
-# default requests (256Mi / 200m). Locks the hand-maintained delta maps for every
-# solace.size tier in one place so a drift in any tier is caught.
+# Full per-size matrix: computed memory/CPU limits (chart) plus the broker scaling
+# tier passed to the agent (INSIGHTS_AGENT_BROKER_SIZE = solace.size with the "prod"
+# prefix stripped), with default requests (256Mi / 200m). Locks the hand-maintained
+# delta maps and the tier translation for every solace.size in one place so a drift in
+# any tier is caught. (The tier -> GOMEMLIMIT mapping is the agent's concern, covered by
+# the agent's own unit tests.)
 # --------------------------------------------------------------------------- #
 SIZE_MATRIX = {
-    "dev": ("768Mi", 0.7, "409MiB"),
-    "prod1k": ("1280Mi", 0.7, "819MiB"),
-    "prod10k": ("2304Mi", 1.2, "1638MiB"),
-    "prod100k": ("4352Mi", 2.2, "3276MiB"),
-    "prod200k": ("5888Mi", 2.2, "4505MiB"),
+    "dev": ("768Mi", 0.7, "dev"),
+    "prod1k": ("1280Mi", 0.7, "1k"),
+    "prod10k": ("2304Mi", 1.2, "10k"),
+    "prod100k": ("4352Mi", 2.2, "100k"),
+    "prod200k": ("5888Mi", 2.2, "200k"),
 }
 
 
 @pytest.mark.parametrize("size,expected", list(SIZE_MATRIX.items()))
-def test_computed_limits_and_gomemlimit_per_size(render_helm_template, base_values, size, expected):
-    exp_mem, exp_cpu, exp_gom = expected
+def test_computed_limits_and_broker_size_per_size(render_helm_template, base_values, size, expected):
+    exp_mem, exp_cpu, exp_broker = expected
     values = copy.deepcopy(base_values)
     values["solace"] = {"size": size}
     del values["insights"]["resources"]["limits"]  # computed
@@ -537,7 +562,8 @@ def test_computed_limits_and_gomemlimit_per_size(render_helm_template, base_valu
     assert container["resources"]["limits"]["memory"] == exp_mem
     assert float(container["resources"]["limits"]["cpu"]) == exp_cpu
     sd = _env_secret(resources)["stringData"]
-    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == exp_gom
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == exp_broker
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
 
 # --------------------------------------------------------------------------- #
