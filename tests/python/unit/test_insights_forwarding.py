@@ -38,6 +38,17 @@ def _env_secret(resources):
     )
 
 
+def _env_values(sec):
+    # Effective env the container receives via envFrom. Chart-managed keys and operator
+    # vars all live in `data` (b64-encoded) now; merge any `stringData` too for robustness.
+    out = {}
+    for k, v in (sec.get("data") or {}).items():
+        out[k] = base64.b64decode(v).decode()
+    for k, v in (sec.get("stringData") or {}).items():
+        out[k] = v
+    return out
+
+
 def _otel_secret(resources):
     return next(
         (
@@ -93,18 +104,19 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     assert otel_secret is not None
     assert _otel_key(0) in otel_secret["stringData"]
 
-    # In forwarding mode the chart manages these keys in stringData.
+    # In forwarding mode the chart manages these keys (emitted in the data block, b64).
     env_secret = _env_secret(resources)
-    assert env_secret["stringData"]["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
-    assert env_secret["stringData"]["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
+    sd = _env_values(env_secret)
+    assert sd["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
+    assert sd["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
     # base_values sets an explicit limits.memory (512Mi), so the chart computes GOMEMLIMIT
     # (80% of the headroom above the fixed 256Mi base = 204MiB) rather than passing the tier.
-    assert env_secret["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "204MiB"
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "204MiB"
     # ...and must NOT also pass the tier (the two are mutually exclusive).
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in env_secret["stringData"]
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
     # The Datadog push vars remain operator-supplied via environmentVariables only.
-    assert "INSIGHTS_AGENT_LOGS_ENABLED" not in env_secret["stringData"]
-    assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in env_secret["stringData"]
+    assert "INSIGHTS_AGENT_LOGS_ENABLED" not in sd
+    assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in sd
 
     # Volume + volumeMount wired to the chart-managed Secret.
     mount = next(
@@ -121,9 +133,9 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
 
 
 def test_chart_managed_keys_not_duplicated_in_data(render_helm_template, base_values):
-    # Keys the chart manages in stringData must not also be emitted in the data block
-    # (which would create conflicting duplicate keys). Operator-supplied custom vars
-    # still pass through to data.
+    # Chart-managed keys are excluded from the operator range loop and emitted once by the
+    # chart (in data, b64). An operator value for a managed key is ignored (chart wins);
+    # non-managed operator vars still pass through.
     values = copy.deepcopy(base_values)
     values["insights"]["environmentVariables"].update(
         {
@@ -134,14 +146,13 @@ def test_chart_managed_keys_not_duplicated_in_data(render_helm_template, base_va
     )
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sec = _env_secret(render_helm_template(values))
-    data, string_data = sec["data"], sec["stringData"]
+    ev = _env_values(sec)
 
-    assert base64.b64decode(data["MY_CUSTOM_VAR"]).decode() == "keepme"
-    assert "INSIGHTS_AGENT_SEMP_PORT" not in data
-    assert "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED" not in data
-    # They appear once, in stringData, with the chart's values (operator value ignored).
-    assert string_data["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
-    assert string_data["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
+    # non-managed operator var passes through
+    assert base64.b64decode(sec["data"]["MY_CUSTOM_VAR"]).decode() == "keepme"
+    # managed keys carry the chart's value, not the operator's override (excluded from the loop)
+    assert ev["INSIGHTS_AGENT_SEMP_PORT"] == "8080"                        # not "9999"
+    assert ev["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"   # not "false"
 
 
 # --------------------------------------------------------------------------- #
@@ -234,16 +245,12 @@ def test_forwarding_env_vars_pass_through(render_helm_template, base_values):
         == logs_cfg
     )
 
-    # The chart must NOT emit its own copies into stringData (no clobbering). For
-    # GOMEMLIMIT specifically, an operator-supplied value suppresses the chart's
-    # computed injection so it appears only once (in data) -- and it also suppresses
-    # the auto-injected broker tier (an explicit GOMEMLIMIT makes the tier moot).
-    string_data = env_secret.get("stringData", {})
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in string_data
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in string_data
-    assert "INSIGHTS_AGENT_LOGS_ENABLED" not in string_data
-    assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in string_data
-    assert "INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS" not in string_data
+    # An operator-supplied INSIGHTS_AGENT_GOMEMLIMIT suppresses the chart's auto-injection:
+    # the effective value stays the operator's (not chart-computed) and the broker tier is
+    # NOT emitted (an explicit GOMEMLIMIT makes the tier moot).
+    ev = _env_values(env_secret)
+    assert ev["INSIGHTS_AGENT_GOMEMLIMIT"] == "410MiB"
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in ev
 
 
 # --------------------------------------------------------------------------- #
@@ -257,7 +264,7 @@ def test_broker_size_passed_when_limits_computed(render_helm_template, base_valu
     values["solace"] = {"size": "prod1k"}
     del values["insights"]["resources"]["limits"]
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
-    sd = _env_secret(render_helm_template(values))["stringData"]
+    sd = _env_values(_env_secret(render_helm_template(values)))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "1k"
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
@@ -271,10 +278,11 @@ def test_operator_broker_size_passes_through_and_suppresses_auto_inject(render_h
     values["insights"]["environmentVariables"]["INSIGHTS_AGENT_BROKER_SIZE"] = "100k"
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sec = _env_secret(render_helm_template(values))
-    assert base64.b64decode(sec["data"]["INSIGHTS_AGENT_BROKER_SIZE"]).decode() == "100k"
-    sd = sec.get("stringData", {})
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    ev = _env_values(sec)
+    # operator value passes through; the chart auto-injects neither a duplicate tier nor a
+    # GOMEMLIMIT (had it emitted its own tier for prod10k it would be "10k", not "100k")
+    assert ev["INSIGHTS_AGENT_BROKER_SIZE"] == "100k"
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in ev
 
 
 def test_operator_broker_size_with_explicit_limit_emits_neither(render_helm_template, base_values):
@@ -289,10 +297,11 @@ def test_operator_broker_size_with_explicit_limit_emits_neither(render_helm_temp
     values["insights"]["environmentVariables"]["INSIGHTS_AGENT_BROKER_SIZE"] = "1k"
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sec = _env_secret(render_helm_template(values))
-    assert base64.b64decode(sec["data"]["INSIGHTS_AGENT_BROKER_SIZE"]).decode() == "1k"
-    sd = sec.get("stringData", {})
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
+    ev = _env_values(sec)
+    # operator BROKER_SIZE wins over the explicit-limit rule; the chart emits no GOMEMLIMIT and
+    # no duplicate tier (else prod10k would surface as "10k", not the operator's "1k")
+    assert ev["INSIGHTS_AGENT_BROKER_SIZE"] == "1k"
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in ev
 
 
 def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_values):
@@ -301,7 +310,7 @@ def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_valu
     values["solace"] = {"size": "dev"}
     values["insights"]["resources"]["limits"]["memory"] = "2Gi"
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
-    sd = _env_secret(render_helm_template(values))["stringData"]
+    sd = _env_values(_env_secret(render_helm_template(values)))
     assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "1433MiB"
     assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
 
@@ -310,7 +319,7 @@ def test_gomemlimit_not_injected_in_standard_mode(render_helm_template, base_val
     # Standard mode has no OTel collector, so the chart does not derive GOMEMLIMIT.
     values = copy.deepcopy(base_values)
     values["solace"] = {"size": "dev"}
-    sd = _env_secret(render_helm_template(values))["stringData"]
+    sd = _env_values(_env_secret(render_helm_template(values)))
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
 
@@ -400,7 +409,7 @@ def test_forwarding_disabled_is_noop(render_helm_template, base_values):
     assert _otel_secret(resources) is None
 
     env_secret = _env_secret(resources)
-    assert "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED" not in env_secret.get("stringData", {})
+    assert "INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED" not in _env_values(env_secret)
 
     assert all(v["name"] != "otel-config" for v in _volumes(resources))
     assert all(
@@ -495,7 +504,7 @@ def test_requests_equal_limits_is_guaranteed_qos(render_helm_template, base_valu
     assert c["resources"]["limits"]["memory"] == "768Mi"
     assert c["resources"]["limits"]["memory"] == c["resources"]["requests"]["memory"]
     assert float(c["resources"]["limits"]["cpu"]) == 0.7
-    sd = _env_secret(resources)["stringData"]
+    sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
@@ -511,7 +520,7 @@ def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_va
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     resources = render_helm_template(values)
     assert _insights_container(resources)["resources"]["limits"]["memory"] == "1024Mi"
-    sd = _env_secret(resources)["stringData"]
+    sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
@@ -585,7 +594,7 @@ def test_computed_limits_and_broker_size_per_size(render_helm_template, base_val
     container = _insights_container(resources)
     assert container["resources"]["limits"]["memory"] == exp_mem
     assert float(container["resources"]["limits"]["cpu"]) == exp_cpu
-    sd = _env_secret(resources)["stringData"]
+    sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == exp_broker
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
 
@@ -596,13 +605,13 @@ def test_computed_limits_and_broker_size_per_size(render_helm_template, base_val
 def test_tls_enabled_uses_https_semp_port(render_helm_template, base_values):
     values = copy.deepcopy(base_values)
     values["tls"] = {"enabled": True, "serverCertificatesSecret": "dummy-tls"}
-    sd = _env_secret(render_helm_template(values))["stringData"]
+    sd = _env_values(_env_secret(render_helm_template(values)))
     assert sd["INSIGHTS_AGENT_SEMP_PORT"] == "1943"
     assert sd["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "https"
 
 
 def test_tls_disabled_uses_plain_semp_port(render_helm_template, base_values):
-    sd = _env_secret(render_helm_template(base_values))["stringData"]
+    sd = _env_values(_env_secret(render_helm_template(base_values)))
     assert sd["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
     assert sd["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "http"
 

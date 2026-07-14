@@ -1,4 +1,16 @@
+import base64
+
 import pytest
+
+
+def _env_values(sec):
+    # Effective env delivered via envFrom: chart-managed keys live in `data` (b64).
+    out = {}
+    for k, v in (sec.get("data") or {}).items():
+        out[k] = base64.b64decode(v).decode()
+    for k, v in (sec.get("stringData") or {}).items():
+        out[k] = v
+    return out
 
 
 @pytest.fixture
@@ -41,8 +53,9 @@ def test_insights_semp_port_with_tls(render_helm_template, base_values):
     )
     assert env_secret is not None
 
-    assert env_secret["stringData"]["INSIGHTS_AGENT_SEMP_PORT"] == "1943"
-    assert env_secret["stringData"]["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "https"
+    ev = _env_values(env_secret)
+    assert ev["INSIGHTS_AGENT_SEMP_PORT"] == "1943"
+    assert ev["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "https"
 
 
 def test_insights_semp_port_without_tls(render_helm_template, base_values):
@@ -59,8 +72,9 @@ def test_insights_semp_port_without_tls(render_helm_template, base_values):
     )
     assert env_secret is not None
 
-    assert env_secret["stringData"]["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
-    assert env_secret["stringData"]["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "http"
+    ev = _env_values(env_secret)
+    assert ev["INSIGHTS_AGENT_SEMP_PORT"] == "8080"
+    assert ev["INSIGHTS_AGENT_SEMP_PROTOCOL"] == "http"
 
 
 def test_insights_password_generation(render_helm_template, base_values):
@@ -92,7 +106,7 @@ def test_insights_password_generation(render_helm_template, base_values):
         None,
     )
     assert env_secret is not None
-    assert "INSIGHTS_AGENT_SEMP_PASSWORD" in env_secret["stringData"]
+    assert "INSIGHTS_AGENT_SEMP_PASSWORD" in _env_values(env_secret)
 
 
 def test_missing_image_configuration(render_helm_template):
