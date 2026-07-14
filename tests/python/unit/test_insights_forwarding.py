@@ -236,9 +236,11 @@ def test_forwarding_env_vars_pass_through(render_helm_template, base_values):
 
     # The chart must NOT emit its own copies into stringData (no clobbering). For
     # GOMEMLIMIT specifically, an operator-supplied value suppresses the chart's
-    # computed injection so it appears only once (in data).
+    # computed injection so it appears only once (in data) -- and it also suppresses
+    # the auto-injected broker tier (an explicit GOMEMLIMIT makes the tier moot).
     string_data = env_secret.get("stringData", {})
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in string_data
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in string_data
     assert "INSIGHTS_AGENT_LOGS_ENABLED" not in string_data
     assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in string_data
     assert "INSIGHTS_AGENT_LOGS_CONFIG_ADDITIONAL_ENDPOINTS" not in string_data
@@ -273,6 +275,24 @@ def test_operator_broker_size_passes_through_and_suppresses_auto_inject(render_h
     sd = sec.get("stringData", {})
     assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+
+
+def test_operator_broker_size_with_explicit_limit_emits_neither(render_helm_template, base_values):
+    # Operator-supplied INSIGHTS_AGENT_BROKER_SIZE combined with an explicit
+    # limits.memory override (base_values sets 512Mi): the operator's env var wins over
+    # the explicit-limit rule, so the chart emits neither the computed GOMEMLIMIT nor
+    # the auto-injected tier. The operator's tier passes through the data block and the
+    # agent derives GOMEMLIMIT from it -- which may not reflect the custom limit, but
+    # that is the operator's explicit choice.
+    values = copy.deepcopy(base_values)
+    values["solace"] = {"size": "prod10k"}
+    values["insights"]["environmentVariables"]["INSIGHTS_AGENT_BROKER_SIZE"] = "1k"
+    values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
+    sec = _env_secret(render_helm_template(values))
+    assert base64.b64decode(sec["data"]["INSIGHTS_AGENT_BROKER_SIZE"]).decode() == "1k"
+    sd = sec.get("stringData", {})
+    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
 
 
 def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_values):
