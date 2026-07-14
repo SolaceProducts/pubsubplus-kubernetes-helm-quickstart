@@ -97,9 +97,11 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     env_secret = _env_secret(resources)
     assert env_secret["stringData"]["INSIGHTS_AGENT_THIRD_PARTY_FORWARDING_ENABLED"] == "true"
     assert env_secret["stringData"]["INSIGHTS_AGENT_TELEMETRY_ENABLED"] == "false"
-    # GOMEMLIMIT is derived from the agent memory headroom when the operator did not
-    # set it: 80% of (limits.memory - requests.memory) = 80% of (512Mi - 256Mi) = 204MiB.
+    # base_values sets an explicit limits.memory (512Mi), so the chart computes GOMEMLIMIT
+    # (80% of the headroom above the fixed 256Mi base = 204MiB) rather than passing the tier.
     assert env_secret["stringData"]["INSIGHTS_AGENT_GOMEMLIMIT"] == "204MiB"
+    # ...and must NOT also pass the tier (the two are mutually exclusive).
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in env_secret["stringData"]
     # The Datadog push vars remain operator-supplied via environmentVariables only.
     assert "INSIGHTS_AGENT_LOGS_ENABLED" not in env_secret["stringData"]
     assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in env_secret["stringData"]
@@ -281,6 +283,7 @@ def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_valu
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sd = _env_secret(render_helm_template(values))["stringData"]
     assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "1433MiB"
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
 
 
 def test_gomemlimit_not_injected_in_standard_mode(render_helm_template, base_values):
@@ -539,7 +542,8 @@ def test_agent_limits_rejects_non_mi_gi_memory(render_helm_template, base_values
 # prefix stripped), with default requests (256Mi / 200m). Locks the hand-maintained
 # delta maps and the tier translation for every solace.size in one place so a drift in
 # any tier is caught. (The tier -> GOMEMLIMIT mapping is the agent's concern, covered by
-# the agent's own unit tests.)
+# the agent's own unit tests; keep this tier list in lockstep with the agent's
+# INSIGHTS_AGENT_BROKER_SIZE map in solace-datadog-agent agent/custom-entrypoint.sh.)
 # --------------------------------------------------------------------------- #
 SIZE_MATRIX = {
     "dev": ("768Mi", 0.7, "dev"),

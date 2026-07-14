@@ -287,6 +287,8 @@ insights:
     #   # instead computes and passes GOMEMLIMIT (80% of the effective memory headroom, i.e.
     #   # the limit minus the fixed 256Mi base) so the custom limit is respected. Set this
     #   # key only to force an explicit value.
+    #   # Note: raising the footprint via insights.resources.requests.memory alone keeps the
+    #   # per-tier GOMEMLIMIT; set limits.memory too if you want GOMEMLIMIT to grow with it.
     #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"
     #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
     #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
