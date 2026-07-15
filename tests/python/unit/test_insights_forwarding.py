@@ -112,8 +112,10 @@ def test_forwarding_only_renders_otel_secret_and_mount(render_helm_template, bas
     # base_values sets an explicit limits.memory (512Mi), so the chart computes GOMEMLIMIT
     # (80% of the headroom above the fixed 256Mi base = 204MiB) rather than passing the tier.
     assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "204MiB"
-    # ...and must NOT also pass the tier (the two are mutually exclusive).
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
+    # ...and the inactive tier key is emitted EMPTY (not omitted): the agent treats "" as
+    # unset, and helm overwrites the key on upgrade instead of relying on pruning, flushing
+    # any stale value a stringData-era revision left on the live Secret.
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == ""
     # The Datadog push vars remain operator-supplied via environmentVariables only.
     assert "INSIGHTS_AGENT_LOGS_ENABLED" not in sd
     assert "INSIGHTS_AGENT_ADDITIONAL_ENDPOINTS" not in sd
@@ -266,7 +268,8 @@ def test_broker_size_passed_when_limits_computed(render_helm_template, base_valu
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sd = _env_values(_env_secret(render_helm_template(values)))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "1k"
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    # the inactive GOMEMLIMIT key is emitted empty (stale-value clobber; "" = unset to the agent)
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == ""
 
 
 def test_operator_broker_size_passes_through_and_suppresses_auto_inject(render_helm_template, base_values):
@@ -280,7 +283,8 @@ def test_operator_broker_size_passes_through_and_suppresses_auto_inject(render_h
     sec = _env_secret(render_helm_template(values))
     ev = _env_values(sec)
     # operator value passes through; the chart auto-injects neither a duplicate tier nor a
-    # GOMEMLIMIT (had it emitted its own tier for prod10k it would be "10k", not "100k")
+    # GOMEMLIMIT (had it emitted its own tier for prod10k it would be "10k", not "100k").
+    # No empty-clobber either: the whole chart-managed block is skipped on operator override.
     assert ev["INSIGHTS_AGENT_BROKER_SIZE"] == "100k"
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in ev
 
@@ -312,15 +316,18 @@ def test_gomemlimit_computed_from_explicit_limit(render_helm_template, base_valu
     values["insights"]["forwarding"] = {"enabled": True, "otelConfig": "service: {}\n"}
     sd = _env_values(_env_secret(render_helm_template(values)))
     assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == "1433MiB"
-    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
+    # the inactive tier key is emitted empty (stale-value clobber; "" = unset to the agent)
+    assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == ""
 
 
 def test_gomemlimit_not_injected_in_standard_mode(render_helm_template, base_values):
-    # Standard mode has no OTel collector, so the chart does not derive GOMEMLIMIT.
+    # Standard mode has no OTel collector, so the chart derives neither GOMEMLIMIT nor a
+    # broker tier (and no empty-clobber keys: the pair is forwarding-mode only).
     values = copy.deepcopy(base_values)
     values["solace"] = {"size": "dev"}
     sd = _env_values(_env_secret(render_helm_template(values)))
     assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    assert "INSIGHTS_AGENT_BROKER_SIZE" not in sd
 
 
 def test_gomemlimit_fails_when_explicit_limit_has_no_headroom(render_helm_template, base_values):
@@ -506,7 +513,7 @@ def test_requests_equal_limits_is_guaranteed_qos(render_helm_template, base_valu
     assert float(c["resources"]["limits"]["cpu"]) == 0.7
     sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == ""
 
 
 def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_values):
@@ -522,7 +529,7 @@ def test_computed_limit_clamps_up_to_large_request(render_helm_template, base_va
     assert _insights_container(resources)["resources"]["limits"]["memory"] == "1024Mi"
     sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == "dev"
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == ""
 
 
 def test_agent_limits_verbatim_when_set(render_helm_template, base_values):
@@ -596,7 +603,7 @@ def test_computed_limits_and_broker_size_per_size(render_helm_template, base_val
     assert float(container["resources"]["limits"]["cpu"]) == exp_cpu
     sd = _env_values(_env_secret(resources))
     assert sd["INSIGHTS_AGENT_BROKER_SIZE"] == exp_broker
-    assert "INSIGHTS_AGENT_GOMEMLIMIT" not in sd
+    assert sd["INSIGHTS_AGENT_GOMEMLIMIT"] == ""
 
 
 # --------------------------------------------------------------------------- #
