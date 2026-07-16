@@ -280,9 +280,15 @@ insights:
     INSIGHTS_AGENT_TAGS: ""
     # Additional agent settings are supplied here as plain env vars and passed through to the
     # agent verbatim. The following are honored only when forwarding.enabled=true:
-    #   # GOMEMLIMIT for the co-resident OTel collector. Optional: when forwarding is enabled and
-    #   # this is not set, the chart derives it as 80% of the agent memory headroom (the effective
-    #   # memory limit minus the fixed 256Mi base). Set it here to override the derived value.
+    #   # GOMEMLIMIT for the datadog-agent (Go soft memory limit); internal, normally unset.
+    #   # When forwarding is enabled the chart passes the broker scaling tier
+    #   # (INSIGHTS_AGENT_BROKER_SIZE, derived from solace.size) and the agent derives
+    #   # GOMEMLIMIT from it. If you override insights.resources.limits.memory, the chart
+    #   # instead computes and passes GOMEMLIMIT (80% of the effective memory headroom, i.e.
+    #   # the limit minus the fixed 256Mi base) so the custom limit is respected. Set this
+    #   # key only to force an explicit value.
+    #   # Note: raising the footprint via insights.resources.requests.memory alone keeps the
+    #   # per-tier GOMEMLIMIT; set limits.memory too if you want GOMEMLIMIT to grow with it.
     #   INSIGHTS_AGENT_GOMEMLIMIT: "<N>MiB"
     #   # Dual-write to Datadog SaaS in addition to OTel forwarding:
     #   INSIGHTS_AGENT_LOGS_ENABLED: "true"
