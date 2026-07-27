@@ -42,7 +42,7 @@ jobs:
           ddb_sort_key: repository
           ddb_item_to_be_added: |
             {
-              "squad": "ebp",
+              "squad": "temp",
               "repository": "${{ github.event.repository.name }}",
               "dev": {
                 "sha": "${{ github.sha }}",
