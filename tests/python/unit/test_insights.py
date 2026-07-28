@@ -83,6 +83,7 @@ def test_insights_container_added_to_pod(render_helm_template, test_values):
         insights_container["resources"]["requests"]["memory"]
         == test_values["insights"]["resources"]["requests"]["memory"]
     )
+    # limits are provided in test_values, so they are used verbatim.
     assert (
         insights_container["resources"]["limits"]["cpu"]
         == test_values["insights"]["resources"]["limits"]["cpu"]

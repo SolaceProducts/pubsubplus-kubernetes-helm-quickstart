@@ -22,8 +22,9 @@ Pull Secret: {{ .Values.insights.image.pullSecretName }}
 {{- end }}
 
 Insights Agent is configured with the following:
-- Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE }}
+- Site: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_SITE | default "datadoghq.com" }}
 - Tags: {{ .Values.insights.environmentVariables.INSIGHTS_AGENT_TAGS }}
+- Mode: {{ if .Values.insights.forwarding.enabled }}forwarding (Insights Agent Pro){{ else }}standard (direct to Datadog SaaS){{ end }}
 
 {{- else }}
 Solace Event Broker Insights has not been enabled for this deployment.

@@ -115,6 +115,7 @@ Refer to the detailed Solace Kubernetes documentation for:
 * [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
 * [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
 * [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
+* [Configuring PubSub+ Insights, including third-party forwarding (Insights Agent Pro)](//github.com/SolaceProducts/pubsubplus-kubernetes-helm-quickstart/blob/master/pubsubplus/INSIGHTS.md)
 
 ## Support
 
