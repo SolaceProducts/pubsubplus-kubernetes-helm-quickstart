@@ -20,7 +20,7 @@ permissions:
 jobs:
   fossa_scan:
     name: FOSSA Scan
-    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@55aba02b3ed20d1ec61684f19d660425362c2cf4 # main
+    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@39f5811c93047096a778232e065bcad666661dce # main
     with:
       git_ref: ${{ inputs.branch || github.ref_name }}
       use_vault: false

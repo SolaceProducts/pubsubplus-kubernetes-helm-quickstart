@@ -51,7 +51,7 @@ jobs:
     name: FOSSA Scan
     needs: [check_permissions]
     if: ${{ always() && !inputs.skip_fossa && (needs.check_permissions.result == 'success' || needs.check_permissions.result == 'skipped') }}
-    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@55aba02b3ed20d1ec61684f19d660425362c2cf4 # main
+    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@39f5811c93047096a778232e065bcad666661dce # main
     with:
       git_ref: ${{ github.event_name == 'push' && github.ref_name || '' }}
       use_vault: false
