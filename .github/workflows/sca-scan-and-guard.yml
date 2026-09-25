@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   sca_scan:
-    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@55aba02b3ed20d1ec61684f19d660425362c2cf4 # main
+    uses: SolaceDev/solace-public-workflows/.github/workflows/sca-scan-and-guard.yaml@39f5811c93047096a778232e065bcad666661dce # main
     secrets:
       FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
 
@@ -34,7 +34,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update solace-cloud-manifest
-        uses: SolaceDev/solace-public-workflows/.github/actions/cicd-helper@55aba02b3ed20d1ec61684f19d660425362c2cf4 # main
+        uses: SolaceDev/solace-public-workflows/.github/actions/cicd-helper@39f5811c93047096a778232e065bcad666661dce # main
         with:
           rc_step: add_item_from_json_to_dynamodb_table
           ddb_table_name: solace-cloud-manifest
