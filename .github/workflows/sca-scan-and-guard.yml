@@ -34,7 +34,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update solace-cloud-manifest
-        uses: SolaceDev/solace-public-workflows/.github/actions/cicd-helper@668d31d070ebdbbb5d6f2bdd13d406697055ae3c # main
+        uses: SolaceDev/solace-public-workflows/.github/actions/cicd-helper@842e0b85d4f91dd5d0ad9e7ac0c75cee21aa5282 # main
         with:
           rc_step: add_item_from_json_to_dynamodb_table
           ddb_table_name: solace-cloud-manifest
