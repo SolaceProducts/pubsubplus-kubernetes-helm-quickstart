@@ -298,7 +298,8 @@ insights:
   image:
     # Image repository for the Insights Agent container
     repository: gcr.io/gcp-maas-prod/solace-insights-agent
-    # Image tag for the Insights Agent container
+    # Image tag for the Insights Agent container. With the FIPS broker image use the FIPS build of the agent,
+    # e.g. latest.fips or <version>.fips (see INSIGHTS.md, FIPS brokers)
     tag: latest
     # Image pull secret name for the Insights Agent container. The pull secret is available from the Solace Cloud Console.
     pullSecretName: gcr-reg-secret
