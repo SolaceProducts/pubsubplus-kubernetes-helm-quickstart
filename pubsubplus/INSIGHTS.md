@@ -16,7 +16,7 @@ For reference, see `pubsubplus/values.yaml` from [values.yaml](values.yaml).
 | `environmentVariables.INSIGHTS_AGENT_SITE`    | The site location where broker metrics and logs will flow. Available from the Solace Cloud Console. Required in standard mode; optional when `forwarding.enabled=true`. |                                              |
 | `environmentVariables.INSIGHTS_AGENT_TAGS`    | Tags for metrics and logs. Available from the Solace Cloud Console.                                 |                                              |
 | `image.repository`                            | The image repository for the Insights Agent container                                               | `gcr.io/gcp-maas-prod/solace-insights-agent` |
-| `image.tag`                                   | The image tag for the Insights Agent container                                                      | `latest`                                     |
+| `image.tag`                                   | The image tag for the Insights Agent container. Use a `.fips` tag (e.g. `latest.fips`) with the FIPS broker image, see [FIPS brokers](#fips-brokers). | `latest`              |
 | `image.pullSecretName`                        | The name of the image pull secret for the Insights Agent container                                  | `gcr-reg-secret`                             |
 | `image.pullPolicy`                            | Image pull policy for the Insights Agent container (`Always`, `IfNotPresent`, `Never`). Set to `IfNotPresent`/`Never` for air-gapped clusters with pre-loaded images. | `Always`            |
 | `resources.requests.cpu`                      | The minimum CPU resource required by the `insights-agent` container.                                | `200m`                                       |
@@ -238,3 +238,60 @@ kubectl rollout restart statefulset/<release>-pubsubplus -n <namespace>
 ```
 
 Use this when a broker restart is acceptable.
+
+## FIPS brokers
+
+When the broker runs the FIPS broker image, run the FIPS build of the Insights Agent next to
+it. It is published in the same repository as the standard agent, under `.fips` tags:
+`latest.fips` follows the latest release, and each release is also tagged `<version>.fips`
+(for example `0.9.86.fips`, the first FIPS release). Only the tag changes, so the same pull
+secret works:
+
+```yaml
+insights:
+  enabled: true
+  image:
+    # Pin a release in production, e.g. 0.9.86.fips
+    tag: latest.fips
+  environmentVariables:
+    INSIGHTS_AGENT_API_KEY: "<your-api-key>"
+    INSIGHTS_AGENT_SITE: "datadoghq.com"
+    INSIGHTS_AGENT_TAGS: "<your-tags>"
+```
+
+`latest` without the suffix stays on the standard agent; the chart does not pick the FIPS
+build for you.
+
+How the FIPS build differs from the standard one:
+
+- It is based on the Datadog Agent FIPS image, and its OTel collector is built with the Go
+  Cryptographic Module. As of `0.9.86.fips` these are the OpenSSL FIPS provider 3.1.2 (CMVP
+  certificate #4985) and the Go Cryptographic Module v1.0.0 (CMVP certificate #5247). TLS key
+  exchange is limited to FIPS-approved groups.
+- The agent verifies the TLS certificates of the Datadog endpoints it sends to; the standard
+  build skips that check. Behind a TLS-inspecting proxy the agent would have to trust the
+  proxy's CA. It reads `SSL_CERT_FILE`, which can be set under `environmentVariables`, but the
+  chart cannot mount a CA file into the `insights-agent` container yet, so the FIPS build can't
+  send to Datadog through such a proxy with this chart.
+- The OTel collector used for [forwarding](#forwarding-modes) contains only the components
+  that Insights forwarding needs:
+  - receivers: `datadog`, `file_log`, `nop`
+  - processors: `attributes`, `batch`, `cumulative_to_delta`, `delta_to_cumulative`, `filter`,
+    `interval`, `memory_limiter`, `resource`, `transform`
+  - exporters: `otlp_grpc`, `otlp_http`, `prometheus_remote_write`, `splunk_hec`, `nop`
+  - extensions: `file_storage`, `health_check`, `oauth2client`
+
+  The older names (`otlp`, `otlphttp`, `filelog`, `cumulativetodelta`, `deltatocumulative`,
+  `prometheusremotewrite`) also work, so existing configs don't need renaming. A
+  `forwarding.otelConfig` that uses any other component (for example the `debug` exporter)
+  fails to start. The exporters accept `tls.insecure_skip_verify`, but it turns off certificate
+  checks; give them your CA instead, inline as `tls.ca_pem` in `forwarding.otelConfig`, or as a
+  file with `tls.ca_file`.
+
+To check that a pod runs the FIPS build:
+
+```bash
+kubectl exec <release>-pubsubplus-<ordinal> -c insights-agent -n <namespace> -- printenv SOLACE_DATADOG_AGENT_VARIANT
+```
+
+It prints `fips` for the FIPS build and `standard` for the standard one.
