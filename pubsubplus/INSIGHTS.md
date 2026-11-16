@@ -285,7 +285,8 @@ How the FIPS build differs from the standard one:
   `prometheusremotewrite`) also work, so existing configs don't need renaming. A
   `forwarding.otelConfig` that uses any other component (for example the `debug` exporter)
   fails to start. The exporters accept `tls.insecure_skip_verify`, but it turns off certificate
-  checks; point `tls.ca_file` at your CA instead.
+  checks; give them your CA instead, inline as `tls.ca_pem` in `forwarding.otelConfig`, or as a
+  file with `tls.ca_file`.
 
 To check that a pod runs the FIPS build:
 
