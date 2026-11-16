@@ -264,11 +264,15 @@ build for you.
 
 How the FIPS build differs from the standard one:
 
-- It is based on the Datadog Agent FIPS image, which uses the OpenSSL FIPS provider (3.1.2,
-  CMVP certificate #4985), and its OTel collector is built with the Go Cryptographic Module
-  (v1.0.0, CMVP certificate #5247). TLS key exchange is limited to FIPS-approved groups.
+- It is based on the Datadog Agent FIPS image, and its OTel collector is built with the Go
+  Cryptographic Module. As of `0.9.86.fips` these are the OpenSSL FIPS provider 3.1.2 (CMVP
+  certificate #4985) and the Go Cryptographic Module v1.0.0 (CMVP certificate #5247). TLS key
+  exchange is limited to FIPS-approved groups.
 - The agent verifies the TLS certificates of the Datadog endpoints it sends to; the standard
-  build skips that check.
+  build skips that check. Behind a TLS-inspecting proxy the agent would have to trust the
+  proxy's CA. It reads `SSL_CERT_FILE`, which can be set under `environmentVariables`, but the
+  chart cannot mount a CA file into the `insights-agent` container yet, so the FIPS build can't
+  send to Datadog through such a proxy with this chart.
 - The OTel collector used for [forwarding](#forwarding-modes) contains only the components
   that Insights forwarding needs:
   - receivers: `datadog`, `file_log`, `nop`
@@ -277,9 +281,11 @@ How the FIPS build differs from the standard one:
   - exporters: `otlp_grpc`, `otlp_http`, `prometheus_remote_write`, `splunk_hec`, `nop`
   - extensions: `file_storage`, `health_check`, `oauth2client`
 
-  A `forwarding.otelConfig` that uses any other component (for example the `debug` exporter)
-  fails to start. Don't set `tls.insecure_skip_verify` on the exporters: point `tls.ca_file`
-  at your CA instead.
+  The older names (`otlp`, `otlphttp`, `filelog`, `cumulativetodelta`, `deltatocumulative`,
+  `prometheusremotewrite`) also work, so existing configs don't need renaming. A
+  `forwarding.otelConfig` that uses any other component (for example the `debug` exporter)
+  fails to start. The exporters accept `tls.insecure_skip_verify`, but it turns off certificate
+  checks; point `tls.ca_file` at your CA instead.
 
 To check that a pod runs the FIPS build:
 
