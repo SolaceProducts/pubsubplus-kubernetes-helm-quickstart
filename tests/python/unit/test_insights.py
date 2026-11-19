@@ -205,3 +205,31 @@ def test_service_publish_not_ready_addresses(render_helm_template, test_values):
 
     if disabled_service:
         assert "publishNotReadyAddresses" not in disabled_service["spec"]
+
+
+@pytest.mark.parametrize("tag", ["latest.fips", "0.9.86.fips"])
+def test_insights_fips_tag_uses_default_repository_and_pull_secret(
+    render_helm_template, tag
+):
+    # The INSIGHTS.md "FIPS brokers" example: only the tag changes, the repository
+    # and the pull secret stay on their defaults.
+    values = {
+        "insights": {
+            "enabled": True,
+            "environmentVariables": {
+                "INSIGHTS_AGENT_API_KEY": "test-api-key",
+                "INSIGHTS_AGENT_SITE": "datadoghq.com",
+                "INSIGHTS_AGENT_TAGS": "dev test",
+            },
+            "image": {"tag": tag},
+        }
+    }
+    resources = render_helm_template(values)
+
+    pod_spec = next(r for r in resources if r["kind"] == "StatefulSet")["spec"][
+        "template"
+    ]["spec"]
+    agent = next(c for c in pod_spec["containers"] if c["name"] == "insights-agent")
+
+    assert agent["image"] == f"gcr.io/gcp-maas-prod/solace-insights-agent:{tag}"
+    assert {"name": "gcr-reg-secret"} in pod_spec["imagePullSecrets"]
